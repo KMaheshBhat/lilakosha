@@ -1,0 +1,39 @@
+# LilaKosha-Flow-MK1: General (Safe/SFW) Variant
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "general"
+    purpose: "Mainstream creative writing and safe collaborative storytelling."
+
+infrastructure:
+    base_data_dir: "${LILAKOSHA_BASE_DATA}"
+    base_process_dir: "${LILAKOSHA_BASE_PROCESS_DIR}"
+    base_model_base_dir: "${LILAKOSHA_BASE_MODEL_BASE_DIR}"
+    base_export_dir: "${LILAKOSHA_BASE_EXPORT_DIR}"
+    inference_service: "http://localhost:8033"
+
+storage_schema:
+    raw_data:
+        path: "${LILAKOSHA_BASE_DATA}/raw/general"
+        purpose: "Storage for SFW datasets and standard dialogue logs."
+    processed_data:
+        path: "${LILAKOSHA_BASE_PROCESS_DIR}/general_chunks"
+        purpose: "Output for Stage 1 Recap-Augmented SFW Chunks."
+        structure: "JSONL with [Summary] blocks; safety-aligned."
+    model_assets:
+        path: "${LILAKOSHA_BASE_MODEL_BASE_DIR}"
+        sub_paths:
+            base: "google/gemma-4-12b-it"
+            exports: "gguf_builds/general"
+        lora_rank: 128
+        lora_alpha: 256
+
+training_params:
+    context_window: 4096 # Managed context for 12GB VRAM
+    quantization: "4-bit"
+    crpo_lambdas:
+        novelty: 0.5 # Research suggests 0.5 yields best novelty gains
+        diversity: 0.5
+        surprise: 0.5
+        quality: 1.0 # 1.0 is ideal for maintaining linguistic quality

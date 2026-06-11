@@ -90,6 +90,8 @@ uv run main.py config/lilakosha-g1-12b-u.yaml prepare train bake
 - `config/lilakosha-g1-12b-g.yaml` – General variant (vanilla Gemma 4 base)
 - `config/lilakosha-g1-12b-u.yaml` – Unbound variant (abliterated base)
 
+For detailed design documentation, see [doc/design.md](doc/design.md).
+
 ## Project Deliverables
 
 | Component | Identifier | Description |
