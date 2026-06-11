@@ -28,17 +28,67 @@ The name combines **Lila** (Play/Imaginative Sport) and **Kosha** (Treasury/Repo
 
 ## Getting Started
 
-This repository contains the configuration and scripts required to initialize the **LilaKosha** training environment on **WSL2**. 
+This repository contains the configuration and scripts required to initialize the **LilaKosha** training environment on **WSL2**.
 
-## Requirements
+### Requirements
 
 *   **Hardware:** NVIDIA RTX GPU with at least **12 GB VRAM** (e.g., RTX 4070).
 *   **Software:** WSL2 (Ubuntu), Python 3.10+, and the **Unsloth** library.
 *   **Data:** Access to high-quality, long-form "raw" roleplay and creative datasets—such as **PIPPA** (Character.AI logs), **roleplay forums**, or the **200,000-sample MUCE dataset**—to serve as the foundation for the "Recap-Augmented" processing stage.
 *   **Services:** A localized inference service (specifically **`llama-server`** or **`litert-lm serve`**) hosting a "Teacher" model (e.g., Gemma 4 12B or 31B) to perform the synthetic summarization and "raw" data inspection required to generate **Session Recaps** and **Key Highlights** before training begins.
 
-## Future-Proofing and Model Agnosticism
-While the initial release of **LilaKosha** leverages the **Gemma 4 12B Unified** architecture, the underlying pipeline is engineered for cross-model compatibility within the sub-12B parameter space. By focusing on **unified, encoder-free architectures**—where text, image, and audio flow directly into the LLM backbone—the pipeline avoids the complexity of co-tuning separate frozen encoders. This "Orchestration-Aware" framework, combined with **modular mechanistic interventions** like abliteration and **Creative Preference Optimization (CRPO)**, establishes a scalable standard. As hardware constraints remain a reality for consumer-grade devices, this pipeline ensures that future high-utility models can be rapidly fine-tuned for **long-form state awareness** and **unbound creative prose** without reinventing the training infrastructure.
+### Installation
+
+Initialize the project with [uv](https://docs.astral.sh/uv/), the fast Python package manager:
+
+```bash
+uv init
+uv sync
+```
+
+### Environment Setup
+
+Set the required environment variables before running the pipeline:
+
+```bash
+export LILAKOSHA_BASE_DATA=/tmp/lk-dry
+export LILAKOSHA_BASE_PROCESS_DIR=/tmp/lk-dry/processed
+export LILAKOSHA_BASE_MODEL_BASE_DIR=/tmp/lk-dry
+export LILAKOSHA_BASE_EXPORT_DIR=/tmp/lk-dry
+```
+
+### Operator Instructions
+
+Run the pipeline orchestrator to see available commands:
+
+```bash
+uv run main.py
+```
+
+**Bootstrap Infrastructure:**
+```bash
+uv run main.py stage
+```
+This creates the directory structure for both General and Unbound variants.
+
+**Execute Pipeline Steps:**
+```bash
+# General variant (safe/SFW foundation)
+# Unbound variant (abliterated/uncensored foundation)
+# Multiple steps can be chained together
+uv run main.py config/lilakosha-g1-12b-g.yaml prepare train bake
+uv run main.py config/lilakosha-g1-12b-u.yaml prepare train bake
+```
+
+**Available Pipeline Steps:**
+- `stage` – Bootstrap infrastructure (config-less, runs first)
+- `prepare` – Recap-augmented data processing (Stage 1)
+- `train` – QLoRA adapter training (Stage 2)
+- `bake` – Weight fusion and GGUF export (Final Phase)
+
+**Available Configurations:**
+- `config/lilakosha-g1-12b-g.yaml` – General variant (vanilla Gemma 4 base)
+- `config/lilakosha-g1-12b-u.yaml` – Unbound variant (abliterated base)
 
 ## Project Deliverables
 
@@ -69,6 +119,20 @@ This variant directly embodies the project's pillar of **"Unbound Creative Freed
 *   **Recap-Augmentation Toolset:** The complete "Processing" codebase used to transform raw roleplay logs into **recap-augmented chunks**, training the model to treat summaries as "truth anchors" for long-term consistency.
 *   **Unsloth-Optimized Training Engine:** A unified Python implementation for **QLoRA training** that shrinks the model footprint to **~7.5 GB**, allowing for high-performance tuning on **12 GB consumer GPUs**.
 *   **Weight-Fusion (Bake) Automation:** The specific mathematical routines used to merge trained adapters back into a native 16-bit structure and convert the result into local GGUF block quants (e.g., Q4_K_M or Q8_0).
+
+## Future-Proofing and Model Agnosticism
+
+While the initial release of **LilaKosha** leverages the **Gemma 4 12B Unified** architecture, the underlying pipeline is engineered for cross-model compatibility within the sub-12B parameter space. By focusing on **unified, encoder-free architectures**—where text, image, and audio flow directly into the LLM backbone—the pipeline avoids the complexity of co-tuning separate frozen encoders. This "Orchestration-Aware" framework, combined with **modular mechanistic interventions** like abliteration and **Creative Preference Optimization (CRPO)**, establishes a scalable standard. As hardware constraints remain a reality for consumer-grade devices, this pipeline ensures that future high-utility models can be rapidly fine-tuned for **long-form state awareness** and **unbound creative prose** without reinventing the training infrastructure.
+
+## Future Considerations
+
+The modular step architecture allows easy extension of the pipeline. Potential additions include:
+
+*   **`acquire`** – Automated model and dataset download from HuggingFace with progress tracking and checksum verification.
+*   **`validate`** – Pre-flight checks for model integrity, dataset quality, and VRAM availability.
+*   **`inspect`** – Raw data statistics and quality analysis before processing.
+*   **`export`** – Alternative export formats beyond GGUF (safetensors, ONNX) for different deployment targets.
+*   **`full`** – Convenience step group that chains `stage → acquire → prepare → train → bake` for end-to-end execution.
 
 ---
 

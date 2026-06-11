@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0.3",
+]
 
 [tool.basedpyright]
 typeCheckingMode = "basic"
@@ -13,7 +15,6 @@ venvPath = "."
 venv = ".venv"
 
 [tool.ruff]
-line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
