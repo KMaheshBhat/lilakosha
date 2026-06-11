@@ -1,0 +1,16 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+pipeline: ["prepare"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "teacher-pass"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    teacher: "${LILAKOSHA_SERVICE_TEACHER}" # Generates Recaps/Highlights

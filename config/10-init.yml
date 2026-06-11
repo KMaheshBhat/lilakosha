@@ -1,0 +1,13 @@
+# LilaKosha-MK1: Infrastructure Staging Blueprint
+pipeline: ["init"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    model_variant: "infrastructure"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}" # Unified landing zone
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}" # Recap-augmented output
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"

@@ -1,0 +1,22 @@
+# LilaKosha-MK1: Training & Fusion Blueprint (LilaKosha G1 12B Unbound)
+pipeline: ["train", "bake"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "unbound"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+training_params:
+    base_model_path: "OpenYourMind/gemma-4-12B-it-abliterated-uncensored"
+    context_window: 4096
+    quantization: "4-bit"
+    crpo_lambdas:
+        novelty: 1.0 # High injection for intense drama
+        surprise: 1.0 # Optimized for plot twists
+        quality: 1.0 # Maintains linguistic quality

@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import yaml
 
-# Configure professional DX logging
+# Configure professional DX logging for Operator oXperience (OX)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
@@ -27,105 +27,95 @@ def interpolate_env_vars(node: Any) -> Any:
 
 
 def load_config(config_path: str) -> dict[str, Any]:
-    """Loads and interpolates the YAML config for the target variant."""
+    """Loads YAML and validates the resolution of LilaKosha Volumes and Services."""
     if not os.path.exists(config_path):
         logging.error(f"Config file not found: {config_path}")
         sys.exit(1)
+
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
-    # Cast to dict[str, Any] to satisfy basedpyright LSP
+
+    # Cast to dict[str, Any] for type-checking noise reduction (LSP)
     resolved_config = cast(dict[str, Any], interpolate_env_vars(config))
-    # Pre-flight check for infrastructure variables
-    infrastructure = resolved_config.get("infrastructure", {})
-    for key, value in infrastructure.items():
-        if isinstance(value, str) and "$" in value:
-            logging.error(f"Missing Env Var: {value} was not resolved.")
-            sys.exit(1)
+
+    # Pre-flight check for unresolved environment variables
+    # Validates $LILAKOSHA_VOLUME_* and $LILAKOSHA_SERVICE_* [User Input]
+    for section in ["volumes", "services"]:
+        data = resolved_config.get(section, {})
+        for key, value in data.items():
+            if isinstance(value, str) and ("$" in value or value == ""):
+                logging.error(
+                    f"UNRESOLVED {section.upper()}: '{key}' is missing or invalid. "
+                    "Ensure you have exported the "
+                    f"LILAKOSHA_{section[:-1].upper()}_* variable."
+                )
+                sys.exit(1)
+
     return resolved_config
 
 
 def list_available_resources():
-    """Discovers steps and configs for enhanced Operator Experience (OX)."""
-    steps_dir = "steps"
+    """Discovers configs for enhanced Operator Experience (OX)."""
     config_dir = "config"
-    available_steps = []
-    if os.path.exists(steps_dir):
-        available_steps = [
-            d
-            for d in os.listdir(steps_dir)
-            if os.path.isdir(os.path.join(steps_dir, d)) and not d.startswith("__")
-        ]
     available_configs = []
     if os.path.exists(config_dir):
         available_configs = [
             f for f in os.listdir(config_dir) if f.endswith((".yaml", ".yml"))
         ]
-    return sorted(available_configs), sorted(available_steps)
+    return sorted(available_configs)
 
 
 def main():
     # Discover resources for help screen or validation
-    configs, steps = list_available_resources()
-    # Special Case: Allow 'stage' to run without a configuration file
-    if len(sys.argv) == 2 and sys.argv[1] == "stage":
-        logging.info("--- Executing Step: STAGE (Config-Less Bootstrap) ---")
-        try:
-            step_module = importlib.import_module("steps.stage")
-            step_module.run(None)
-            return
-        except Exception as e:
-            logging.error(f"Critical failure in infrastructure staging: {e}")
-            sys.exit(1)
-
-    # Normal Case: Expecting uv run main.py <config_path> <step1> ...
-    if len(sys.argv) < 3:
+    configs = list_available_resources()
+    # Operator Help / Resource Discovery
+    if len(sys.argv) < 2:
         print("\n" + "=" * 65)
-        print("🛠️  LILAKOSHA FLOW MK1: PIPELINE ORCHESTRATOR")
+        print("🛠️  LILAKOSHA FLOW MK1: CONFIG-DRIVEN ORCHESTRATOR")
         print("=" * 65)
-        print("\nUsage (Standard): uv run main.py <config_path> <step1> [step2] ...")
-        print("Usage (Bootstrap): uv run main.py stage")
-        print(f"\nDiscovered Configurations ({len(configs)}):")
+        print("\nUsage: uv run main.py <config_path>")
+        print(f"\nDiscovered Pipeline Configurations ({len(configs)}):")
         for cfg in configs:
             print(f"  - config/{cfg}")
-        print(f"\nDiscovered Pipeline Steps ({len(steps)}):")
-        for step in steps:
-            print(f"  - {step}")
-        print("\nExample Commands:")
-        print("  uv run main.py stage")
-        if configs:
-            print(f"  uv run main.py config/{configs} prepare train")
+        print("\nExecution Workflow Examples:")
+        print("  uv run main.py config/stage.yml")
+        print("  uv run main.py config/prepare.yml")
+        print("  uv run main.py config/train-and-bake-lilakosha-1g-12b-u.yml")
         print("=" * 65 + "\n")
         return
-
     config_path = sys.argv[1]
-    requested_steps = sys.argv[2:]
-    # 1. Load configuration for the target flavor
+    # 1. Load configuration and determine the specific pipeline flavor
     config = load_config(config_path)
-    # 2. Extract Flavor Metadata for Logging
-    # Fixed nesting: model_variant is inside the 'project' block
+    pipeline = config.get("pipeline", [])
+    if not pipeline:
+        logging.error(f"No 'pipeline' steps defined in {config_path}.")
+        sys.exit(1)
+    # 2. Metadata Extraction for Flavor-Aware Logging
     project = config.get("project", {})
-    variant = project.get("model_variant", "unknown").upper()
-    logging.info(f"Loaded {project.get('name')} {project.get('mark')} configuration.")
-    logging.info(f"Target Generation: {project.get('generation')} | Flavor: {variant}")
-    # 3. OX Validation: Ensure steps exist
-    for step_name in requested_steps:
-        if step_name not in steps:
-            logging.error(f"Step '{step_name}' not found. Check 'steps/' directory.")
-            sys.exit(1)
-    # 4. VRAM Handover Warning
-    if "train" in requested_steps:
+    variant = project.get("model_variant", "infrastructure").upper()
+    logging.info(f"Target: {project.get('name', 'LilaKosha')} | Variant: {variant}")
+    logging.info(f"Pipeline: {pipeline}")
+    # 3. VRAM Handover Warning (Specific to 12GB hardware limit)
+    if "train" in pipeline:
         print("\n!!! VRAM HANDOVER WARNING !!!")
-        print(f"Training the {variant} variant requires the full 12GB buffer.")
-        print("Ensure llama-server is TERMINATED before training begins.\n")
-    # 5. Dynamic Execution Loop
-    for step_name in requested_steps:
+        print(f"Executing {variant} training on 12GB VRAM.")
+        print("Ensure ALL inference services are TERMINATED before training begins.\n")
+    # 4. Sequential Execution Loop
+    for step_name in pipeline:
         try:
+            # Dynamically import the step module from the 'steps/' directory
             step_module = importlib.import_module(f"steps.{step_name}")
             logging.info(f"--- Executing Step: {step_name.upper()} ({variant}) ---")
+            # Execute the step with the resolved config
             step_module.run(config)
+        except ImportError:
+            logging.error(
+                f"Step implementation for '{step_name}' not found in steps/ folder."
+            )
+            break
         except Exception as e:
             logging.error(f"Critical failure in step '{step_name}': {e}")
-            break
+            break  # Halt the pipeline sequence on failure
 
 
 if __name__ == "__main__":

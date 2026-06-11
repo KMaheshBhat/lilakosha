@@ -51,10 +51,17 @@ uv sync
 Set the required environment variables before running the pipeline:
 
 ```bash
-export LILAKOSHA_BASE_DATA=/tmp/lk-dry
-export LILAKOSHA_BASE_PROCESS_DIR=/tmp/lk-dry/processed
-export LILAKOSHA_BASE_MODEL_BASE_DIR=/tmp/lk-dry
-export LILAKOSHA_BASE_EXPORT_DIR=/tmp/lk-dry
+export LILAKOSHA_VOLUME_RAW=/tmp/lk-dry/raw
+export LILAKOSHA_VOLUME_PROCESSED=/tmp/lk-dry/processed
+export LILAKOSHA_VOLUME_MODELS=/tmp/lk-dry/models
+export LILAKOSHA_VOLUME_EXPORTS=/tmp/lk-dry/exports
+```
+
+For convenience, copy `example.env` to `.env` and source it:
+
+```bash
+cp example.env .env
+source .env
 ```
 
 ### Operator Instructions
@@ -67,28 +74,33 @@ uv run main.py
 
 **Bootstrap Infrastructure:**
 ```bash
-uv run main.py stage
+uv run main.py config/10-init.yml
 ```
 This creates the directory structure for both General and Unbound variants.
 
 **Execute Pipeline Steps:**
 ```bash
-# General variant (safe/SFW foundation)
-# Unbound variant (abliterated/uncensored foundation)
-# Multiple steps can be chained together
-uv run main.py config/lilakosha-g1-12b-g.yaml prepare train bake
-uv run main.py config/lilakosha-g1-12b-u.yaml prepare train bake
+# Stage 1: Data Preparation (Teacher Pass)
+uv run main.py config/30-prepare.yml
+
+# Stage 2: Training & Fusion (General variant)
+uv run main.py config/60-train-and-bake-lilakosha-1g-12b-g.yml
+
+# Stage 2: Training & Fusion (Unbound variant)
+uv run main.py config/61-train-and-bake-lilakosha-1g-12b-u.yml
 ```
 
 **Available Pipeline Steps:**
-- `stage` – Bootstrap infrastructure (config-less, runs first)
-- `prepare` – Recap-augmented data processing (Stage 1)
+- `init` – Bootstrap infrastructure (creates directories, prints acquisition instructions)
+- `prepare` – Recap-augmented data processing (Stage 1, Teacher Pass)
 - `train` – QLoRA adapter training (Stage 2)
 - `bake` – Weight fusion and GGUF export (Final Phase)
 
 **Available Configurations:**
-- `config/lilakosha-g1-12b-g.yaml` – General variant (vanilla Gemma 4 base)
-- `config/lilakosha-g1-12b-u.yaml` – Unbound variant (abliterated base)
+- `config/10-init.yml` – Infrastructure staging
+- `config/30-prepare.yml` – Data preparation with teacher model
+- `config/60-train-and-bake-lilakosha-1g-12b-g.yml` – General variant training
+- `config/61-train-and-bake-lilakosha-1g-12b-u.yml` – Unbound variant training
 
 For detailed design documentation, see [doc/design.md](doc/design.md).
 

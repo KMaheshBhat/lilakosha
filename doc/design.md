@@ -4,26 +4,29 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        main.py (Orchestrator)                   │
-│  - Discovers steps and configs                                  │
-│  - Loads YAML configuration with env var interpolation          │
-│  - Executes steps dynamically via importlib                     │
+│                        main.py (Orchestrator)                     │
+│  - Discovers configs (*.yml) in config/ directory               │
+│  - Loads YAML configuration with env var interpolation            │
+│  - Executes steps dynamically via importlib                       │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         steps/*.py                              │
-│  - Each step is a self-contained module with run(config)        │
-│  - Steps can be chained: prepare → train → bake                 │
-│  - stage is config-less, runs first for infrastructure setup    │
+│  - Each step is a self-contained module with run(config)          │
+│  - Steps can be chained: init → prepare → train → bake            │
+│  - init runs first for infrastructure setup                       │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      config/*.yaml                              │
-│  - lilakosha-g1-12b-g.yaml (General variant)                    │
-│  - lilakosha-g1-12b-u.yaml (Unbound variant)                    │
-│  - Environment variables: LILAKOSHA_BASE_*                      │
+│                      config/*.yml                               │
+│  - 10-init.yml (Infrastructure staging)                         │
+│  - 30-prepare.yml (Recap-augmented data processing)           │
+│  - 60-train-and-bake-lilakosha-1g-12b-g.yml (General variant)  │
+│  - 61-train-and-bake-lilakosha-1g-12b-u.yml (Unbound variant)  │
+│  - Environment variables: LILAKOSHA_VOLUME_*                    │
+│  - Services: LILAKOSHA_SERVICE_*                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -35,66 +38,66 @@ project:
     name: "LilaKosha"
     mark: "MK1"
     generation: "G1"
-    model_variant: "general" | "unbound"
-    purpose: "Variant-specific description"
+    model_variant: "general" | "unbound" | "infrastructure" | "teacher-pass"
 ```
 
 ### Infrastructure Paths
 ```yaml
-infrastructure:
-    base_data_dir: "${LILAKOSHA_BASE_DATA}"
-    base_process_dir: "${LILAKOSHA_BASE_PROCESS_DIR}"
-    base_model_base_dir: "${LILAKOSHA_BASE_MODEL_BASE_DIR}"
-    base_export_dir: "${LILAKOSHA_BASE_EXPORT_DIR}"
-    inference_service: "http://localhost:8033"
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"      # Unified landing zone for raw datasets
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}" # Recap-augmented output chunks
+    models: "${LILAKOSHA_VOLUME_MODELS}"     # Model storage (base + checkpoints)
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"    # GGUF builds output
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    teacher: "${LILAKOSHA_SERVICE_TEACHER}"     # Generates Recaps/Highlights
 ```
 
 ### Storage Schema
-```yaml
-storage_schema:
-    raw_data:
-        path: "${LILAKOSHA_BASE_DATA}/raw/{variant}"
-        purpose: "Storage for datasets"
-    processed_data:
-        path: "${LILAKOSHA_BASE_PROCESS_DIR}/{variant}_chunks"
-        purpose: "Output for recap-augmented chunks"
-        structure: "JSONL with [Summary] blocks"
-    model_assets:
-        path: "${LILAKOSHA_BASE_MODEL_BASE_DIR}"
-        sub_paths:
-            base: "google/gemma-4-12b-it" | "OpenYourMind/..."
-            exports: "gguf_builds/{variant}"
-        lora_rank: 128
-        lora_alpha: 256
+```
+# Directory structure created by init step:
+# {LILAKOSHA_VOLUME_RAW}/
+#   └── (raw datasets placed here - unified landing zone)
+# {LILAKOSHA_VOLUME_PROCESSED}/
+#   └── (recap-augmented chunks output)
+# {LILAKOSHA_VOLUME_MODELS}/
+#   ├── google/gemma-4-12b-it/
+#   ├── OpenYourMind/gemma-4-12b-it-abliterated-uncensored/
+#   └── checkpoints/
+# {LILAKOSHA_VOLUME_EXPORTS}/
+#   └── gguf_builds/
+#       ├── general/
+#       └── unbound/
 ```
 
 ### Training Parameters
 ```yaml
 training_params:
+    base_model_path: "google/gemma-4-12b-it" | "OpenYourMind/..."
     context_window: 4096
     quantization: "4-bit"
     crpo_lambdas:
         novelty: 0.5 | 1.0
-        diversity: 0.5 | 1.0
         surprise: 0.5 | 1.0
         quality: 1.0
 ```
 
-## Directory Structure (Created by `stage`)
+## Directory Structure (Created by `init`)
 
 ```
-{LILAKOSHA_BASE_DATA}/
-├── raw/
-│   ├── general/          # SFW datasets
-│   └── unbound/          # PIPPA, MUCE, unrestricted RP logs
-{LILAKOSHA_BASE_PROCESS_DIR}/
-├── general_chunks/       # Processed SFW data
-└── unbound_chunks/       # Processed unrestricted data
-{LILAKOSHA_BASE_MODEL_BASE_DIR}/
+{LILAKOSHA_VOLUME_RAW}/
+└── (unified landing zone for raw datasets)
+
+{LILAKOSHA_VOLUME_PROCESSED}/
+└── (recap-augmented chunks output)
+
+{LILAKOSHA_VOLUME_MODELS}/
 ├── google/gemma-4-12b-it/
 ├── OpenYourMind/gemma-4-12b-it-abliterated-uncensored/
 └── checkpoints/
-{LILAKOSHA_BASE_EXPORT_DIR}/
+
+{LILAKOSHA_VOLUME_EXPORTS}/
 └── gguf_builds/
     ├── general/
     └── unbound/
@@ -114,16 +117,16 @@ def run(config: dict[str, Any] | None = None) -> None:
 
 ### Step Execution Flow
 
-1. **`stage`** – Config-less bootstrap; creates directories; prints acquisition instructions
-2. **`prepare`** – Reads raw data; connects to inference service; generates recaps
+1. **`init`** – Infrastructure staging; creates directories; prints acquisition instructions
+2. **`prepare`** – Reads raw data; connects to teacher service; generates recaps/highlights
 3. **`train`** – Loads model; applies QLoRA; saves adapters to checkpoints
 4. **`bake`** – Merges adapters; exports to GGUF format
 
 ## Variant Isolation
 
 The General and Unbound variants are isolated at the filesystem level:
-- Separate raw data directories
-- Separate processed chunk directories
-- Separate GGUF export directories
+- Separate GGUF export directories (`gguf_builds/general` vs `gguf_builds/unbound`)
 - Different CRPO lambda weights (General: 0.5, Unbound: 1.0)
 - Different base model paths (vanilla vs abliterated)
+- Raw data is unified in a single landing zone; prepare step introspects and forks automatically
+- Processed chunks are variant-agnostic output

@@ -1,0 +1,22 @@
+# LilaKosha-MK1: Training & Fusion Blueprint (LilaKosha G1 12B General)
+pipeline: ["train", "bake"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "general"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+training_params:
+    base_model_path: "google/gemma-4-12b-it"
+    context_window: 4096 # Managed for 12GB VRAM buffer
+    quantization: "4-bit"
+    crpo_lambdas:
+        novelty: 0.5 # Balanced novelty gains
+        surprise: 0.5
+        quality: 1.0 # Maintains linguistic quality
