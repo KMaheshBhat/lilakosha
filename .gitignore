@@ -1,0 +1,18 @@
+# --- Python / uv Environment ---
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+
+# --- Local Configuration ---
+# config.yaml holds the path refs to your D: and E: storage mounts
+# and should never be committed to the repo.
+config.yaml
+.env
+
+# --- IDEs and System Noise ---
+.vscode/
+.idea/
+.DS_Store
+*.log
