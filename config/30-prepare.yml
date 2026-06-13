@@ -1,5 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-pipeline: ["prepare"]
+pipeline: ["ingest-pippa", "prepare"]
 
 project:
     name: "LilaKosha"
