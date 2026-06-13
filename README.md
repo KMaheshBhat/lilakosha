@@ -130,7 +130,7 @@ This variant directly embodies the project's pillar of **"Unbound Creative Freed
 
 ### 2. The LilaKosha-Flow-MK1 Orchestration-Aware Pipeline
 
-*   **Recap-Augmentation Toolset:** The complete "Processing" codebase used to transform raw roleplay logs into **recap-augmented chunks**, training the model to treat summaries as "truth anchors" for long-term consistency.
+*   **Recap-Augmentation Toolset:** The complete "Processing" codebase used to transform raw roleplay logs into **recap-augmented chunks**, training the model to treat summaries as "truth anchors" for long-term consistency. See [doc/cdm.md](doc/cdm.md) for the Common Data Model schema.
 *   **Unsloth-Optimized Training Engine:** A unified Python implementation for **QLoRA training** that shrinks the model footprint to **~7.5 GB**, allowing for high-performance tuning on **12 GB consumer GPUs**.
 *   **Weight-Fusion (Bake) Automation:** The specific mathematical routines used to merge trained adapters back into a native 16-bit structure and convert the result into local GGUF block quants (e.g., Q4_K_M or Q8_0).
 

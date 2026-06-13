@@ -4,27 +4,27 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        main.py (Orchestrator)                     │
+│                        main.py (Orchestrator)                   │
 │  - Discovers configs (*.yml) in config/ directory               │
-│  - Loads YAML configuration with env var interpolation            │
-│  - Executes steps dynamically via importlib                       │
+│  - Loads YAML configuration with env var interpolation          │
+│  - Executes steps dynamically via importlib                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         steps/*.py                              │
-│  - Each step is a self-contained module with run(config)          │
-│  - Steps can be chained: init → prepare → train → bake            │
-│  - init runs first for infrastructure setup                       │
+│  - Each step is a self-contained module with run(config)        │
+│  - Steps can be chained: init → prepare → train → bake          │
+│  - init runs first for infrastructure setup                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      config/*.yml                               │
 │  - 10-init.yml (Infrastructure staging)                         │
-│  - 30-prepare.yml (Recap-augmented data processing)           │
-│  - 60-train-and-bake-lilakosha-1g-12b-g.yml (General variant)  │
-│  - 61-train-and-bake-lilakosha-1g-12b-u.yml (Unbound variant)  │
+│  - 30-prepare.yml (Recap-augmented data processing)             │
+│  - 60-train-and-bake-lilakosha-1g-12b-g.yml (General variant)   │
+│  - 61-train-and-bake-lilakosha-1g-12b-u.yml (Unbound variant)   │
 │  - Environment variables: LILAKOSHA_VOLUME_*                    │
 │  - Services: LILAKOSHA_SERVICE_*                                │
 └─────────────────────────────────────────────────────────────────┘
@@ -121,6 +121,10 @@ def run(config: dict[str, Any] | None = None) -> None:
 2. **`prepare`** – Reads raw data; connects to teacher service; generates recaps/highlights
 3. **`train`** – Loads model; applies QLoRA; saves adapters to checkpoints
 4. **`bake`** – Merges adapters; exports to GGUF format
+
+### Data Model
+
+The `prepare` step transforms raw datasets into the **LilaKosha Common Data Model (CDM)**, a unified schema for recap-augmented chunks. See [cdm.md](cdm.md) for the complete entity specification and JSON record format.
 
 ## Variant Isolation
 
