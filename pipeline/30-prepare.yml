@@ -1,5 +1,8 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-pipeline: ["ingest-pippa", "prepare"]
+pipeline:
+    - "ingest-pippa"
+    - "refine-characters"
+    - "prepare"
 
 project:
     name: "LilaKosha"
@@ -14,3 +17,6 @@ services:
     inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
     grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
     summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+parameters:
+    limit: 1 # limit the number of samples to process, if empty, all would be processed

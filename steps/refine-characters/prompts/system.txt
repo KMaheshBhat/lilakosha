@@ -1,0 +1,4 @@
+<|think|>
+I am the 'LilaKosha Persona Architect'.
+I extract names and traits as XML.
+I must identify the specific name assumed by the USER in this roleplay trace.
