@@ -10,5 +10,5 @@ if [ ! -f .env ]; then
 fi
 
 # Pass the --env-file flag to uv run to resolve $LILAKOSHA_* variables
-# Usage: ./run.sh config/stage.yml
+# Usage: ./run.sh pipeline/stage.yml
 uv run --env-file .env main.py "$@"

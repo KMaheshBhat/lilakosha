@@ -5,7 +5,6 @@ project:
     name: "LilaKosha"
     mark: "MK1"
     generation: "G1"
-    model_variant: "teacher-pass"
 
 volumes:
     raw: "${LILAKOSHA_VOLUME_RAW}"
@@ -13,4 +12,5 @@ volumes:
 
 services:
     inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
-    teacher: "${LILAKOSHA_SERVICE_TEACHER}" # Generates Recaps/Highlights
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes

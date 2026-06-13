@@ -74,20 +74,20 @@ uv run main.py
 
 **Bootstrap Infrastructure:**
 ```bash
-uv run main.py config/10-init.yml
+uv run main.py pipeline/10-init.yml
 ```
 This creates the directory structure for both General and Unbound variants.
 
 **Execute Pipeline Steps:**
 ```bash
 # Stage 1: Data Preparation (Teacher Pass)
-uv run main.py config/30-prepare.yml
+uv run main.py pipeline/30-prepare.yml
 
 # Stage 2: Training & Fusion (General variant)
-uv run main.py config/60-train-and-bake-lilakosha-1g-12b-g.yml
+uv run main.py pipeline/60-train-and-bake-lilakosha-1g-12b-g.yml
 
 # Stage 2: Training & Fusion (Unbound variant)
-uv run main.py config/61-train-and-bake-lilakosha-1g-12b-u.yml
+uv run main.py pipeline/61-train-and-bake-lilakosha-1g-12b-u.yml
 ```
 
 **Available Pipeline Steps:**
@@ -97,10 +97,10 @@ uv run main.py config/61-train-and-bake-lilakosha-1g-12b-u.yml
 - `bake` – Weight fusion and GGUF export (Final Phase)
 
 **Available Configurations:**
-- `config/10-init.yml` – Infrastructure staging
-- `config/30-prepare.yml` – Data preparation with teacher model
-- `config/60-train-and-bake-lilakosha-1g-12b-g.yml` – General variant training
-- `config/61-train-and-bake-lilakosha-1g-12b-u.yml` – Unbound variant training
+- `pipeline/10-init.yml` – Infrastructure staging
+- `pipeline/30-prepare.yml` – Data preparation with teacher model
+- `pipeline/60-train-and-bake-lilakosha-1g-12b-g.yml` – General variant training
+- `pipeline/61-train-and-bake-lilakosha-1g-12b-u.yml` – Unbound variant training
 
 For detailed design documentation, see [doc/design.md](doc/design.md).
 

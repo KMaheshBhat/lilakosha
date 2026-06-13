@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict[str, Any]) -> None:
     """
-    LilaKosha MK1: Data Preparation (The Teacher Pass).
+    LilaKosha MK1: Data Preparation.
 
-    Performs single-pass introspection to fork raw data into General/Unbound
-    streams and generates Session Recaps using thinking-enabled inference.
+    Deduplication across all ledgers → Quality/Flavor
+    filtering → Final projection into training-ready
     """
     # 1. Resource Extraction
     volumes = config.get("volumes", {})
@@ -22,17 +22,19 @@ def run(config: dict[str, Any]) -> None:
     raw_path = cast(str, volumes.get("raw"))
     proc_path = cast(str, volumes.get("processed"))
     inspector_url = services.get("inspector")
-    teacher_url = services.get("teacher")
+    summarizer_url = services.get("summarizer")
+    grammar_url = services.get("grammar")
     print(f"\n{'=' * 65}")
     print(f"🚀 {project.get('name')} {project.get('mark')} FLOW: STAGE 1 (PREPARATION)")
     print(f"{'=' * 65}")
     logging.info(f"Unified Raw Source: {raw_path}")
     logging.info(f"Inspector Service: {inspector_url}")
-    logging.info(f"Teacher Service:   {teacher_url}")
+    logging.info(f"Summarizer Service: {summarizer_url}")
+    logging.info(f"Grammar Service: {grammar_url}")
     # 2. Service Handshake (VRAM Check)
     # Note: Llama-server consumes ~8.4 GB VRAM for Gemma 4 12B
     try:
-        requests.get(f"{teacher_url}/health", timeout=5)
+        requests.get(f"{inspector_url}/health", timeout=5)
     except Exception:
         logger.error("Teacher service is unreachable. Is llama-server running?")
         return

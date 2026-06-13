@@ -56,7 +56,7 @@ def load_config(config_path: str) -> dict[str, Any]:
 
 def list_available_resources():
     """Discovers configs for enhanced Operator Experience (OX)."""
-    config_dir = "config"
+    config_dir = "pipeline"
     available_configs = []
     if os.path.exists(config_dir):
         available_configs = [
@@ -76,11 +76,11 @@ def main():
         print("\nUsage: uv run main.py <config_path>")
         print(f"\nDiscovered Pipeline Configurations ({len(configs)}):")
         for cfg in configs:
-            print(f"  - config/{cfg}")
+            print(f"  - pipeline/{cfg}")
         print("\nExecution Workflow Examples:")
-        print("  uv run main.py config/stage.yml")
-        print("  uv run main.py config/prepare.yml")
-        print("  uv run main.py config/train-and-bake-lilakosha-1g-12b-u.yml")
+        print("  uv run main.py pipeline/init.yml")
+        print("  uv run main.py pipeline/prepare.yml")
+        print("  uv run main.py pipeline/train-and-bake-lilakosha-1g-12b-u.yml")
         print("=" * 65 + "\n")
         return
     config_path = sys.argv[1]

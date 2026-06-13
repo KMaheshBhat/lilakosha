@@ -4,7 +4,6 @@ pipeline: ["init"]
 project:
     name: "LilaKosha"
     mark: "MK1"
-    model_variant: "infrastructure"
 
 volumes:
     raw: "${LILAKOSHA_VOLUME_RAW}" # Unified landing zone

@@ -5,28 +5,29 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        main.py (Orchestrator)                   │
-│  - Discovers configs (*.yml) in config/ directory               │
+│  - Discovers configs (*.yml) in pipeline/ directory             │
 │  - Loads YAML configuration with env var interpolation          │
 │  - Executes steps dynamically via importlib                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                         steps/*.py                              │
-│  - Each step is a self-contained module with run(config)        │
-│  - Steps can be chained: init → prepare → train → bake          │
-│  - init runs first for infrastructure setup                     │
+│                      pipeline/*.yml                             │
+│  - 10-init.yml (Infrastructure staging)                         │
+│  - 30-prepare.yml (Recap-augmented data processing)             │
+│  - 60-train-general.yml (General variant)                       │
+│  - 61-train-unbound.yml (Unbound variant)                       │
+│  - Environment variables: LILAKOSHA_VOLUME_*                    │
+│  - Services: LILAKOSHA_SERVICE_*                                │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      config/*.yml                               │
-│  - 10-init.yml (Infrastructure staging)                         │
-│  - 30-prepare.yml (Recap-augmented data processing)             │
-│  - 60-train-and-bake-lilakosha-1g-12b-g.yml (General variant)   │
-│  - 61-train-and-bake-lilakosha-1g-12b-u.yml (Unbound variant)   │
-│  - Environment variables: LILAKOSHA_VOLUME_*                    │
-│  - Services: LILAKOSHA_SERVICE_*                                │
+│                         steps/*.py                              │
+│  - Each step is a self-contained module with run(config)        │
+│  - Steps can be chained: init → ingest-[source]                 │
+│    → refine-[aspect] → train-[variant] → bake                   │
+│  - init runs first for infrastructure setup                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
