@@ -77,9 +77,19 @@ class GenreAndThemesResponse(BaseModel):
     def sanitize_themes(cls, v: List[str]) -> List[str]:
         sanitized = []
         for tag in v:
+            # 1. Lowercase and strip outer spaces
             clean_tag = tag.lower().strip()
-            clean_tag = re.sub(r"[\s_]+", "-", clean_tag)
+            # 2. Turn spaces, underscores, and slashes/dashes into a standard hyphen
+            clean_tag = re.sub(r"[\s_/\-\:]+", "-", clean_tag)
+            # 3. Strip out any remaining weird punctuation (except alphanumeric
+            #    and hyphens)
             clean_tag = re.sub(r"[^\w-]", "", clean_tag)
+            # 4. Collapse multiple repeating hyphens (e.g., '--' or '---') into
+            #    a single '-'
+            clean_tag = re.sub(r"-+", "-", clean_tag)
+            # 5. Clean up any accidental leading or trailing hyphens
+            clean_tag = clean_tag.strip("-")
             if clean_tag:
                 sanitized.append(clean_tag)
+        # Deduplicate while preserving order
         return list(dict.fromkeys(sanitized))
