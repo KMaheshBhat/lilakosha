@@ -1,10 +1,36 @@
+from enum import Enum
 from typing import Annotated, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
-# ----------------------------------------------------------------------
-# 1. Define Sub-Models for Children Entities
-# ----------------------------------------------------------------------
+
+class SexualScale(str, Enum):
+    CLEAN = "Clean"
+    SUGGESTIVE = "Suggestive"
+    EXPLICIT = "Explicit"
+
+
+class ViolenceScale(str, Enum):
+    NONE = "None"
+    COMBAT = "Combat"
+    GRAPHIC = "Graphic"
+
+
+class ToxicityScale(str, Enum):
+    SAFE = "Safe"
+    HARASSMENT = "Harassment"
+    DANGEROUS = "Dangerous"
+
+
+class MainGenre(str, Enum):
+    FANTASY = "Fantasy"
+    SCI_FI = "Sci-Fi"
+    ROMANCE = "Romance"
+    SLICE_OF_LIFE = "Slice of Life"
+    ACTION_ADVENTURE = "Action & Adventure"
+    MYSTERY_THRILLER = "Mystery & Thriller"
+    COMEDY = "Comedy"
+    DRAMA = "Drama"
 
 
 class WorldEntity(BaseModel):
@@ -30,17 +56,12 @@ class SummaryEntity(BaseModel):
 class TurnEntity(BaseModel):
     kind: Literal["turn"] = "turn"
     actor_id: str
-    thought: Optional[str] = ""  # PIPPA conversations only have raw message text
+    thought: Optional[str] = ""
     prose: str
 
 
-# ----------------------------------------------------------------------
-# 2. Define the Top-Level Session Container
-# ----------------------------------------------------------------------
-
 ChildUnion = Union[WorldEntity, CharacterEntity, SummaryEntity, TurnEntity]
 
-# 2. Wrap that Union in Annotated, attaching the discriminator metadata to it
 DiscriminatedChild = Annotated[ChildUnion, Field(discriminator="kind")]
 
 
@@ -56,11 +77,16 @@ class SessionMeta(BaseModel):
     bot_id: Optional[str] = None
     bot_name: Optional[str] = "the character"
     ingestion_timestamp: Optional[str] = None
-    flavor_tag: Optional[str] = "unbound"  # Provided defaults for fields PIPPA
-    tense_format: Optional[str] = "3rd_person"  # doesn't inherently include.
+    flavor_tag: Optional[str] = "unbound"
+    tense_format: Optional[str] = "3rd_person"
     crpo_signals: Optional[dict] = Field(default_factory=dict)
     user_pc_name: Optional[str] = None
     annotations: Optional[List[Annotation]] = None
+    sexual_axis: Optional[SexualScale] = None
+    violence_axis: Optional[ViolenceScale] = None
+    toxicity_axis: Optional[ToxicityScale] = None
+    primary_genre: Optional[MainGenre] = None
+    themes: Optional[List[str]] = Field(default_factory=list)
 
 
 class Session(BaseModel):
