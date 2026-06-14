@@ -2,6 +2,7 @@
 pipeline:
     - "ingest-pippa"
     - "refine-characters"
+    - "refine-safety-dials"
     - "prepare"
 
 project:
