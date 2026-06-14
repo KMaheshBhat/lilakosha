@@ -1,8 +1,0 @@
-### TASK
-Synthesize roles and traits.
-
-### CHAT EVIDENCE
-{chat_history}
-
-### OUTPUT FORMAT
-Return ONLY XML with <profiles>, <user_character>, <bot_character> tags.

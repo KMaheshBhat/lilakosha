@@ -1,6 +1,6 @@
 from typing import Annotated, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ----------------------------------------------------------------------
 # 1. Define Sub-Models for Children Entities
@@ -18,6 +18,7 @@ class CharacterEntity(BaseModel):
     subkind: Literal["info", "detail"]
     entity_id: str
     content: str
+    reasoning: Optional[str] = None
 
 
 class SummaryEntity(BaseModel):
@@ -43,7 +44,14 @@ ChildUnion = Union[WorldEntity, CharacterEntity, SummaryEntity, TurnEntity]
 DiscriminatedChild = Annotated[ChildUnion, Field(discriminator="kind")]
 
 
+class Annotation(BaseModel):
+    kind: str
+    content: str
+    reasoning: Optional[str] = None
+
+
 class SessionMeta(BaseModel):
+    model_config = ConfigDict(extra="allow")
     source_identity: str
     bot_id: Optional[str] = None
     bot_name: Optional[str] = "the character"
@@ -51,6 +59,8 @@ class SessionMeta(BaseModel):
     flavor_tag: Optional[str] = "unbound"  # Provided defaults for fields PIPPA
     tense_format: Optional[str] = "3rd_person"  # doesn't inherently include.
     crpo_signals: Optional[dict] = Field(default_factory=dict)
+    user_pc_name: Optional[str] = None
+    annotations: Optional[List[Annotation]] = None
 
 
 class Session(BaseModel):

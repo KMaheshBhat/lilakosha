@@ -1,10 +1,14 @@
-from .models import (
+from .core import (
     CharacterEntity,
     Session,
     SessionMeta,
     SummaryEntity,
     TurnEntity,
     WorldEntity,
+)
+from .refine import (
+    CharacterProfile,
+    CharacterSynthesisResponse,
 )
 
 __all__ = [
@@ -14,4 +18,6 @@ __all__ = [
     "WorldEntity",
     "CharacterEntity",
     "SummaryEntity",
+    "CharacterProfile",
+    "CharacterSynthesisResponse",
 ]

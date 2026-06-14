@@ -1,12 +1,14 @@
 import logging
 import os
 from datetime import datetime
+from re import A
 
 from datasets import load_dataset
 from tqdm import tqdm
 
 # Import your unified CDM models
 from cdm import CharacterEntity, Session, SessionMeta, TurnEntity
+from cdm.core import Annotation
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +65,16 @@ def run(config: dict):
                     prose=turn.get("message", "").strip(),
                 )
                 session_trace.children.append(turn_obj)
-            # 8. Write record line-by-line (True JSONL format)
+            # 8. Annotate session meta with ingestion record
+            if not session_trace.meta.annotations:
+                session_trace.meta.annotations = []
+            session_trace.meta.annotations.append(
+                Annotation(
+                    kind="ingestion",
+                    content="created from PIPPA raw record",
+                )
+            )
+            # 9. Write record line-by-line (True JSONL format)
             # model_dump_json() outputs a fast, un-indented single-line string
             f.write(session_trace.model_dump_json() + "\n")
     logger.info(f"✅ Successfully aggregated records into {ledger_file}")

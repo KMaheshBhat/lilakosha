@@ -1,0 +1,15 @@
+### TASK
+Analyze the provided multi-turn chat history. Synthesize the roles, names, and profiles for both the human player (USER) and the AI character (Bot).
+
+### CHAT EVIDENCE
+{% set bot_name = session.meta.bot_name or "the character" %}
+
+For the user character name, identify if there are any actions in user's turn where they interact with the character.
+
+{% for child in session.children if child.kind == 'turn' -%}
+    {# Grab the top 50 turns using Jinja's slice filter #}
+    {% if loop.index0 < 50 -%}
+        {%- set role = "USER" if child.actor_id == "user" else bot_name -%}
+        {{ role }}: {{ child.prose }}
+    {% endif %}
+{%- endfor %}

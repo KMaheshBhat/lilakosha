@@ -1,0 +1,6 @@
+Name: {{ name }}
+Traits: {{ core_traits | join(", ") }}
+Appearance:
+{% for detail in appearance_details -%}
+- {{ detail }}
+{% endfor -%}
