@@ -1,0 +1,22 @@
+### TASK
+Convert the target roleplay turn into strict third-person, past-tense narrative prose while enforcing verbatim structural retention.
+
+### CHARACTER DESIGNATIONS
+- Target Actor Name: "{{ session.meta.user_pc_name if target_turn.actor_id == 'user' else session.meta.bot_name or 'The Companion' }}"
+- Secondary Character Name: "{{ session.meta.bot_name if target_turn.actor_id == 'user' else session.meta.user_pc_name or 'The User' }}"
+
+### CHRONOLOGICAL HISTORY CONTEXT
+Use this context solely for establishing continuity, tracking gender consistency, and locking down pronoun mappings. Do NOT modify or repeat this data.
+{% for past_turn in history_context %}
+* {{ session.meta.user_pc_name if past_turn.actor_id == 'user' else session.meta.bot_name or 'The Companion' }}: {{ past_turn.prose }}
+{%- endfor %}
+
+### REWRITE RULES
+1. TENSE & PERSPECTIVE CHANGE: Shift the targeted turn's active inline text exclusively to third-person past-tense.
+2. PROPER NOUN INJECTION: You must explicitly drop the proper names of BOTH characters at least once in the rewritten text to ground perspective instead of relying solely on generic pronouns.
+3. SPOKEN TEXT DIRECTIVE: Keep spoken sentences verbatim with all typos/errors intact. Append a simple dialogic tag using the proper noun or pronoun (e.g., "he said", "she noted", "{{ session.meta.user_pc_name }} asked").
+4. THOUGHT TEXT DIRECTIVE: Keep thought fragments verbatim with all typos/errors intact, wrapped exclusively in *asterisks*.
+
+### ─── TARGET TURN TO REWRITE ───
+Actor ID: {{ target_turn.actor_id }}
+Raw Prose: {{ target_turn.prose }}

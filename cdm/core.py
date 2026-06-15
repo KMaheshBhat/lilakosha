@@ -58,6 +58,8 @@ class TurnEntity(BaseModel):
     actor_id: str
     thought: Optional[str] = ""
     prose: str
+    prose_revision_comments: Optional[str] = None
+    original_prose: Optional[str] = None
 
 
 ChildUnion = Union[WorldEntity, CharacterEntity, SummaryEntity, TurnEntity]

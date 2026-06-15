@@ -93,3 +93,12 @@ class GenreAndThemesResponse(BaseModel):
                 sanitized.append(clean_tag)
         # Deduplicate while preserving order
         return list(dict.fromkeys(sanitized))
+
+
+class SingleTurnGrammarResponse(BaseModel):
+    rewritten_prose: str = Field(
+        description=(
+            "The finalized, clean third-person past-tense narrative prose "
+            "for the target turn complying with all verbatim requirements."
+        )
+    )

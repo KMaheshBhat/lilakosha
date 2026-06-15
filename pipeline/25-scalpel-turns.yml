@@ -1,9 +1,6 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
 pipeline:
-    - "refine-characters"
-    - "refine-safety-dials"
-    - "refine-genre-theme"
-    - "refine-grammar"
+    - "scalpel-turns"
 
 project:
     name: "LilaKosha"
