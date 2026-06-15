@@ -1,0 +1,19 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes

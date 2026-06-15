@@ -1,10 +1,6 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
 pipeline:
     - "ingest-pippa"
-    - "refine-characters"
-    - "refine-safety-dials"
-    - "refine-genre-theme"
-    - "prepare"
 
 project:
     name: "LilaKosha"

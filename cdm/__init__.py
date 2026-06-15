@@ -6,12 +6,14 @@ from .core import (
     TurnEntity,
     WorldEntity,
 )
+from .ledger_index import LedgerIndex
 from .refine import (
     CharacterProfile,
     CharacterSynthesisResponse,
 )
 
 __all__ = [
+    "LedgerIndex",
     "Session",
     "SessionMeta",
     "TurnEntity",

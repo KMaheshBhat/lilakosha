@@ -73,6 +73,7 @@ class Annotation(BaseModel):
 
 class SessionMeta(BaseModel):
     model_config = ConfigDict(extra="allow")
+    source_record: Optional[dict] = None
     source_identity: str
     bot_id: Optional[str] = None
     bot_name: Optional[str] = "the character"

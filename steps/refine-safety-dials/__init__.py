@@ -1,7 +1,6 @@
-import glob
 import importlib.resources
 import logging
-import os
+from pathlib import Path
 
 import requests
 from jinja2 import BaseLoader, Environment
@@ -28,81 +27,102 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
 
 
 def run(config: dict) -> None:
-    """LilaKosha Refinement Pass: Safety Dials Classification with robust parsing."""
+    """
+    LilaKosha Refinement Pass: Safety Dials Classification.
+    Iterates incrementally over individual canvas files using an explicit metadata
+    sniff test for idempotency.
+    """
     templates_str = load_jinja_templates(["system", "user"])
     jinja_env = Environment(loader=BaseLoader())
     user_tmpl = jinja_env.from_string(templates_str["user"])
     system_tmpl = jinja_env.from_string(templates_str["system"])
-    processed_vol = config["volumes"]["processed"]
-    cdm_dir = os.path.join(processed_vol, "cdm")
-    ledger_files = sorted(glob.glob(os.path.join(cdm_dir, "*.jsonl")))
-    if not ledger_files:
+
+    # Resolve paths from configuration volumes
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
         logger.error(
-            "No CDM ledgers found in processed/cdm/. Run 'ingest-pippa' first."
+            f"Records directory not found: {records_dir}. Run ingestion first."
         )
         return
-    latest_ledger = ledger_files[-1]
-    logger.info(f"Classifying Safety Dials in: {os.path.basename(latest_ledger)}")
-    with open(latest_ledger, "r", encoding="utf-8") as f_in:
-        lines = f_in.readlines()
-    updated_sessions = []
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found to evaluate inside {records_dir}")
+        return
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for Safety Dials Classification..."
+    )
     service_url = f"{config['services']['inspector']}/v1/chat/completions"
-    for i, line in enumerate(tqdm(lines, desc="Safety Dials Classification")):
-        session = Session.model_validate_json(line)
-        user_prompt = user_tmpl.render(session=session)
-        system_prompt = system_tmpl.render(session=session)
-        payload = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                },
-            ],
-            "temperature": 0.1,
-            "max_tokens": 2048,
-            "response_format": {
-                "type": "json_object",
-                "schema": SafetyDialsResponse.model_json_schema(),
-            },
-        }
+
+    for file_path in tqdm(record_files, desc="Evaluating Canvas Safety Dials"):
         try:
+            # 1. Load the standalone canvas session
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # 2. Idempotency Sniff Test
+            # Check if safety dimensions are already evaluated on this document
+            if (
+                session.meta.sexual_axis is not None
+                or session.meta.violence_axis is not None
+                or session.meta.toxicity_axis is not None
+            ):
+                continue
+
+            # 3. Generate structured prompt inputs from templates
+            user_prompt = user_tmpl.render(session=session)
+            system_prompt = system_tmpl.render(session=session)
+
+            payload = {
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 2048,
+                "response_format": {
+                    "type": "json_object",
+                    "schema": SafetyDialsResponse.model_json_schema(),
+                },
+            }
+
+            # 4. Dispatch to inspector engine endpoint
             resp = requests.post(service_url, json=payload, timeout=120)
             resp.raise_for_status()
+
             response_json = resp.json()
             message_data = response_json["choices"][0]["message"]
             raw_content = message_data["content"]
             reasoning = message_data.get("reasoning_content")
+
             extracted_data = SafetyDialsResponse.model_validate_json(raw_content)
+
+            # 5. Hydrate session metadata safety properties
             session.meta.sexual_axis = extracted_data.sexual_axis
             session.meta.violence_axis = extracted_data.violence_axis
             session.meta.toxicity_axis = extracted_data.toxicity_axis
-            print(
-                f" > [{i + 1}] "
-                f"Classified:\n"
-                f"  - Sexual: {extracted_data.sexual_axis.value}\n"
-                f"  - Violence: {extracted_data.violence_axis.value}\n"
-                f"  - Toxicity: {extracted_data.toxicity_axis.value}\n"
+
+            # 6. Append tracking annotations
+            safety_annotation = Annotation(
+                kind="refine-safety-dials",
+                content="classified safety axes for the session",
+                reasoning=reasoning,
             )
-            annotations = [
-                Annotation(
-                    kind="refine-safety-dials",
-                    content="classified safety axes for the session",
-                    reasoning=reasoning,
-                )
-            ]
             if not session.meta.annotations:
                 session.meta.annotations = []
-            session.meta.annotations.extend(annotations)
-            updated_sessions.append(session)
+            session.meta.annotations.append(safety_annotation)
+
+            # 7. Commit changes back to disk with pretty-print layout
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(session.model_dump_json(indent=2))
+
         except Exception as e:
-            logger.error(f"Failed classification pass for {session.meta.bot_name}: {e}")
-            updated_sessions.append(session)
-    # Physical Write to the Unified Ledger
-    with open(latest_ledger, "w", encoding="utf-8") as f_out:
-        for enriched_session in updated_sessions:
-            f_out.write(enriched_session.model_dump_json() + "\n")
-    logger.info("✅ Safety dials refinement complete.")
+            logger.error(
+                f"Failed safety evaluation pass for canvas "
+                f"document {file_path.name}: {e}"
+            )
+
+    logger.info("✅ Safety dials refinement script pass finished.")
