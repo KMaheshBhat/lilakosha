@@ -98,6 +98,7 @@ def run(config: dict) -> None:
                         ],
                         "temperature": 0.3,
                         "max_tokens": unbound_max_tokens,
+                        "thinking_budget_tokens": 0,
                         "response_format": {
                             "type": "json_object",
                             "schema": SingleTurnGrammarResponse.model_json_schema(),
