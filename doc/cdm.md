@@ -1,6 +1,6 @@
 ## LilaKosha Common Data Model (CDM)
 
-The **CDM** schema establishes the **Stage 1 (Ingest)** pipeline.
+The **CDM** schema is used by the `ingest-pippa` and `refine-*` steps to transform raw datasets into recap-augmented chunks.
 
 ## Entity Specification Table
 

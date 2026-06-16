@@ -7,6 +7,7 @@
 │                        main.py (Orchestrator)                   │
 │  - Discovers configs (*.yml) in pipeline/ directory             │
 │  - Loads YAML configuration with env var interpolation          │
+│  - Validates LILAKOSHA_VOLUME_* and LILAKOSHA_SERVICE_* vars    │
 │  - Executes steps dynamically via importlib                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -14,11 +15,11 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      pipeline/*.yml                             │
 │  - 10-init.yml (Infrastructure staging)                         │
-│  - 30-prepare.yml (Recap-augmented data processing)             │
+│  - 20-ingest.yml (PIPPA dataset ingestion)                      │
+│  - 25-scalpel-*.yml (Removes refinements)                       │
+│  - 30-refine.yml (Combined refinement pipeline)                 │
 │  - 60-train-general.yml (General variant)                       │
 │  - 61-train-unbound.yml (Unbound variant)                       │
-│  - Environment variables: LILAKOSHA_VOLUME_*                    │
-│  - Services: LILAKOSHA_SERVICE_*                                │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -26,7 +27,8 @@
 │                         steps/*.py                              │
 │  - Each step is a self-contained module with run(config)        │
 │  - Steps can be chained: init → ingest-[source]                 │
-│    → refine-[aspect] → train-[variant] → bake                   │
+│    → scalpel-[aspect] → refine-[aspect] → train → bake          │
+│  - scalpel-* clears state; refine-* is idempotent (skips done)  │
 │  - init runs first for infrastructure setup                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -39,7 +41,7 @@ project:
     name: "LilaKosha"
     mark: "MK1"
     generation: "G1"
-    model_variant: "general" | "unbound" | "infrastructure" | "teacher-pass"
+    model_variant: "general" | "unbound" | "infrastructure"
 ```
 
 ### Infrastructure Paths
@@ -52,7 +54,8 @@ volumes:
 
 services:
     inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
-    teacher: "${LILAKOSHA_SERVICE_TEACHER}"     # Generates Recaps/Highlights
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}"       # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Generates recaps/highlights
 ```
 
 ### Storage Schema
@@ -119,13 +122,15 @@ def run(config: dict[str, Any] | None = None) -> None:
 ### Step Execution Flow
 
 1. **`init`** – Infrastructure staging; creates directories; prints acquisition instructions
-2. **`prepare`** – Reads raw data; connects to teacher service; generates recaps/highlights
-3. **`train`** – Loads model; applies QLoRA; saves adapters to checkpoints
-4. **`bake`** – Merges adapters; exports to GGUF format
+2. **`ingest-pippa`** – PIPPA dataset ingestion and transformation
+3. **`scalpel-*`** – Removes refinements (idempotent: clears state for reprocessing)
+4. **`refine-*`** – Character and content refinement (idempotent: skips already-processed data)
+5. **`train`** – Loads model; applies QLoRA; saves adapters to checkpoints
+6. **`bake`** – Merges adapters; exports to GGUF format
 
 ### Data Model
 
-The `prepare` step transforms raw datasets into the **LilaKosha Common Data Model (CDM)**, a unified schema for recap-augmented chunks. See [cdm.md](cdm.md) for the complete entity specification and JSON record format.
+The `ingest-pippa` and `refine-*` steps transform raw datasets into the **LilaKosha Common Data Model (CDM)**, a unified schema for recap-augmented chunks. See [cdm.md](cdm.md) for the complete entity specification and JSON record format.
 
 ## Variant Isolation
 
@@ -133,5 +138,5 @@ The General and Unbound variants are isolated at the filesystem level:
 - Separate GGUF export directories (`gguf_builds/general` vs `gguf_builds/unbound`)
 - Different CRPO lambda weights (General: 0.5, Unbound: 1.0)
 - Different base model paths (vanilla vs abliterated)
-- Raw data is unified in a single landing zone; prepare step introspects and forks automatically
+- Raw data is unified in a single landing zone; ingest-pippa step processes and forks automatically
 - Processed chunks are variant-agnostic output

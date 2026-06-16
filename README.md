@@ -21,7 +21,7 @@ The name combines **Lila** (Play/Imaginative Sport) and **Kosha** (Treasury/Repo
 ## The LilaKosha Pipeline
 
 1.  **Base Selection:** Start with either the vanilla `gemma-4-12B-it` or the `gemma-4-12B-it-abliterated-uncensored` base.
-2.  **Processing (Recap-Augmentation):** Use a teacher model to generate **Session Recaps and Key Highlights** for long-form datasets. This trains the model to treat summaries as "truth anchors" for long-term consistency.
+2.  **Processing (Recap-Augmentation):** Use inference services to generate **Session Recaps and Key Highlights** for long-form datasets. This trains the model to treat summaries as "truth anchors" for long-term consistency.
 3.  **Training (The QLoRA Phase):** Attach trainable LoRA adapters to the attention and MLP projections to target roleplay and conversational style.
 4.  **The "Bake" (Weight Fusion):** Mathematically inject the trained adapter weights back into the native 16-bit structure to create a **monolithic distribution file**.
 5.  **Export (GGUF):** Convert the merged model into specialized GGUF block quants (e.g., **Q4_K_M**) for optimized local deployment.
@@ -35,7 +35,7 @@ This repository contains the configuration and scripts required to initialize th
 *   **Hardware:** NVIDIA RTX GPU with at least **12 GB VRAM** (e.g., RTX 4070).
 *   **Software:** WSL2 (Ubuntu), Python 3.10+, and the **Unsloth** library.
 *   **Data:** Access to high-quality, long-form "raw" roleplay and creative datasets—such as **PIPPA** (Character.AI logs), **roleplay forums**, or the **200,000-sample MUCE dataset**—to serve as the foundation for the "Recap-Augmented" processing stage.
-*   **Services:** A localized inference service (specifically **`llama-server`** or **`litert-lm serve`**) hosting a "Teacher" model (e.g., Gemma 4 12B or 31B) to perform the synthetic summarization and "raw" data inspection required to generate **Session Recaps** and **Key Highlights** before training begins.
+*   **Services:** A localized inference service (specifically **`llama-server`** or **`litert-lm serve`**) hosting an inference model to perform the synthetic summarization and "raw" data inspection required to generate **Session Recaps** and **Key Highlights** before training begins.
 
 ### Installation
 
@@ -80,29 +80,48 @@ This creates the directory structure for both General and Unbound variants.
 
 **Execute Pipeline Steps:**
 ```bash
-# Stage 1: Data Preparation (Teacher Pass)
-uv run main.py pipeline/30-prepare.yml
+# Stage 1: Data Ingestion (PIPPA dataset)
+uv run main.py pipeline/20-ingest.yml
 
-# Stage 2: Training & Fusion (General variant)
-uv run main.py pipeline/60-train-and-bake-lilakosha-1g-12b-g.yml
+# Stage 2: Refinement Pipeline (idempotent - skips already-processed data)
+uv run main.py pipeline/30-refine.yml
 
-# Stage 2: Training & Fusion (Unbound variant)
-uv run main.py pipeline/61-train-and-bake-lilakosha-1g-12b-u.yml
+# Stage 3: Training & Fusion (General variant)
+uv run main.py pipeline/60-train-general.yml
+
+# Stage 3: Training & Fusion (Unbound variant)
+uv run main.py pipeline/61-train-unbound.yml
+```
+
+**Rerun with Scalpel (to clear and redo refinements):**
+```bash
+# Clear refinements first
+uv run main.py pipeline/25-scalpel-genre-theme.yml
+uv run main.py pipeline/25-scalpel-grammar.yml
+uv run main.py pipeline/25-scalpel-safety-dials.yml
+
+# Then re-run refinement
+uv run main.py pipeline/30-refine.yml
 ```
 
 **Available Pipeline Steps:**
 - `init` – Bootstrap infrastructure (creates directories, prints acquisition instructions)
-- `prepare` – Recap-augmented data processing (Stage 1, Teacher Pass)
-- `train` – QLoRA adapter training (Stage 2)
-- `bake` – Weight fusion and GGUF export (Final Phase)
+- `ingest-pippa` – PIPPA dataset ingestion and transformation
+- `scalpel-*` – Removes refinements (idempotent: clears state for reprocessing)
+- `refine-*` – Character and content refinement (idempotent: skips already-processed data)
+- `train` – QLoRA adapter training
+- `bake` – Weight fusion and GGUF export
 
 **Available Configurations:**
 - `pipeline/10-init.yml` – Infrastructure staging
-- `pipeline/30-prepare.yml` – Data preparation with teacher model
-- `pipeline/60-train-and-bake-lilakosha-1g-12b-g.yml` – General variant training
-- `pipeline/61-train-and-bake-lilakosha-1g-12b-u.yml` – Unbound variant training
+- `pipeline/20-ingest.yml` – PIPPA dataset ingestion
+- `pipeline/25-scalpel-*.yml` – Removes refinements (use before re-running refine)
+- `pipeline/30-refine.yml` – Combined refinement pipeline
+- `pipeline/60-train-general.yml` – General variant training & bake
+- `pipeline/61-train-unbound.yml` – Unbound variant training & bake
 
 For detailed design documentation, see [doc/design.md](doc/design.md).
+For the Common Data Model schema, see [doc/cdm.md](doc/cdm.md).
 
 ## Project Deliverables
 
@@ -146,7 +165,7 @@ The modular step architecture allows easy extension of the pipeline. Potential a
 *   **`validate`** – Pre-flight checks for model integrity, dataset quality, and VRAM availability.
 *   **`inspect`** – Raw data statistics and quality analysis before processing.
 *   **`export`** – Alternative export formats beyond GGUF (safetensors, ONNX) for different deployment targets.
-*   **`full`** – Convenience step group that chains `stage → acquire → prepare → train → bake` for end-to-end execution.
+*   **`full`** – Convenience step group that chains `init → ingest → refine → train → bake` for end-to-end execution.
 
 ---
 
