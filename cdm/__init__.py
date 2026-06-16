@@ -1,10 +1,10 @@
 from .core import (
-    CharacterEntity,
+    CharacterItem,
     Session,
     SessionMeta,
-    SummaryEntity,
-    TurnEntity,
-    WorldEntity,
+    SummaryItem,
+    TurnItem,
+    WorldItem,
 )
 from .ledger_index import LedgerIndex
 from .refine import (
@@ -16,10 +16,10 @@ __all__ = [
     "LedgerIndex",
     "Session",
     "SessionMeta",
-    "TurnEntity",
-    "WorldEntity",
-    "CharacterEntity",
-    "SummaryEntity",
+    "TurnItem",
+    "WorldItem",
+    "CharacterItem",
+    "SummaryItem",
     "CharacterProfile",
     "CharacterSynthesisResponse",
 ]

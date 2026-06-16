@@ -33,13 +33,53 @@ class MainGenre(str, Enum):
     DRAMA = "Drama"
 
 
-class WorldEntity(BaseModel):
+class PronounSet(BaseModel):
+    subjective: str = Field(description="e.g., 'he', 'she', 'they'")
+    objective: str = Field(description="e.g., 'him', 'her', 'them'")
+    possessive: str = Field(description="e.g., 'his', 'hers', 'their'")
+
+
+class CharacterIdentity(BaseModel):
+    """
+    Authoritative actor registry. Sealing these fields blocks downstream
+    linguistic drift during zero-reasoning grammar normalization.
+    """
+
+    entity_id: str = Field(
+        description=(
+            "The unique semantic identifier for the actor "
+            "(e.g., 'user', 'bot_123', 'char_001')."
+        )
+    )
+    name: str = Field(
+        description=(
+            "The clean proper name used for 3rd-person text generation "
+            "and narrative grounding."
+        )
+    )
+    gender: Literal["male", "female", "neutral", "unknown"] = "unknown"
+    pronouns: PronounSet
+    is_player_controlled: bool = Field(
+        default=False,
+        description=(
+            "True if this entity represents a human user/PC. "
+            "False for NPCs, companion bots, or novel characters."
+        ),
+    )
+
+
+# ==========================================
+# Session Line Items
+# ==========================================
+class WorldItem(BaseModel):
     kind: Literal["world"] = "world"
     subkind: Literal["info", "detail"]
     content: str
 
 
-class CharacterEntity(BaseModel):
+class CharacterItem(BaseModel):
+    """Chronological, local deep lore extraction or behavioral snapshot."""
+
     kind: Literal["character"] = "character"
     subkind: Literal["info", "detail"]
     entity_id: str
@@ -47,24 +87,23 @@ class CharacterEntity(BaseModel):
     reasoning: Optional[str] = None
 
 
-class SummaryEntity(BaseModel):
+class SummaryItem(BaseModel):
     kind: Literal["summary"] = "summary"
     subkind: Literal["pre", "scenario", "post"]
     content: str
 
 
-class TurnEntity(BaseModel):
+class TurnItem(BaseModel):
     kind: Literal["turn"] = "turn"
-    actor_id: str
+    actor_id: str  # Maps directly back to CharacterIdentity.entity_id
     thought: Optional[str] = ""
     prose: str
     prose_revision_comments: Optional[str] = None
     original_prose: Optional[str] = None
 
 
-ChildUnion = Union[WorldEntity, CharacterEntity, SummaryEntity, TurnEntity]
-
-DiscriminatedChild = Annotated[ChildUnion, Field(discriminator="kind")]
+ItemUnion = Union[WorldItem, CharacterItem, SummaryItem, TurnItem]
+DiscriminatedItem = Annotated[ItemUnion, Field(discriminator="kind")]
 
 
 class Annotation(BaseModel):
@@ -73,6 +112,9 @@ class Annotation(BaseModel):
     reasoning: Optional[str] = None
 
 
+# ==========================================
+# Session Meta
+# ==========================================
 class SessionMeta(BaseModel):
     model_config = ConfigDict(extra="allow")
     source_record: Optional[dict] = None
@@ -80,21 +122,20 @@ class SessionMeta(BaseModel):
     bot_id: Optional[str] = None
     bot_name: Optional[str] = "the character"
     ingestion_timestamp: Optional[str] = None
-    flavor_tag: Optional[str] = "unbound"
-    tense_format: Optional[str] = "3rd_person"
-    crpo_signals: Optional[dict] = Field(default_factory=dict)
-    user_pc_name: Optional[str] = None
-    annotations: Optional[List[Annotation]] = None
+    identities: List[CharacterIdentity] = Field(
+        default_factory=list,
+        description="The sealed directory of all characters present within this trace.",
+    )
     sexual_axis: Optional[SexualScale] = None
     violence_axis: Optional[ViolenceScale] = None
     toxicity_axis: Optional[ToxicityScale] = None
     primary_genre: Optional[MainGenre] = None
     themes: Optional[List[str]] = Field(default_factory=list)
+    crpo_signals: Optional[dict] = Field(default_factory=dict)
+    annotations: Optional[List[Annotation]] = None
 
 
 class Session(BaseModel):
     kind: Literal["session"] = "session"
     meta: SessionMeta
-
-    # 3. Pass the annotated discriminated union into the List
-    children: List[DiscriminatedChild]
+    items: List[DiscriminatedItem]

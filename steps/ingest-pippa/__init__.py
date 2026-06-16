@@ -5,8 +5,16 @@ from pathlib import Path
 from datasets import load_dataset
 from tqdm import tqdm
 
-from cdm import CharacterEntity, LedgerIndex, Session, SessionMeta, TurnEntity
-from cdm.core import Annotation
+from cdm import LedgerIndex
+from cdm.core import (
+    Annotation,
+    CharacterIdentity,
+    CharacterItem,
+    PronounSet,
+    Session,
+    SessionMeta,
+    TurnItem,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +52,7 @@ def run(config: dict):
         f"records against data layer target: {records_dir}"
     )
 
-    # 4. Stream records individually without wrapping
-    #    them inside a broad macro open block
+    # 4. Stream records individually
     for i, raw_record in enumerate(tqdm(dataset, total=sample_limit)):
         if sample_limit is not None and i >= sample_limit:
             break
@@ -55,6 +62,9 @@ def run(config: dict):
 
         # Guard against dirty data rows
         if not bot_id or not sub_ts:
+            logger.warning(
+                f"Encountered malformed raw record at index row {i}. Skipping."
+            )
             continue
 
         # 5. Formulate the explicit key namespace for this source
@@ -70,45 +80,72 @@ def run(config: dict):
                 continue
         else:
             # If it hasn't been mapped yet, register it and mint a fresh
-            # target tracking file path
+            # tracking file path
             target_uuid = ledger_index.register_record("pippa", native_id)
             target_file = records_dir / f"{target_uuid}.json"
 
-        # 7. Construct CDM Session Envelope using your structural Models
+        # 7. Pre-seed Identity Registry placeholders to establish data topology
+        #    Full validation/refinement of these fields happens down-stream in
+        #    step/refine-characters
+        default_pronouns = PronounSet(
+            subjective="they", objective="them", possessive="their"
+        )
+
+        identities_pool = [
+            CharacterIdentity(
+                entity_id="user",
+                name="User",
+                gender="unknown",
+                pronouns=default_pronouns,
+                is_player_controlled=True,
+            ),
+            CharacterIdentity(
+                entity_id=bot_id,
+                name=raw_record.get("bot_name") or "the character",
+                gender="unknown",
+                pronouns=default_pronouns,
+                is_player_controlled=False,
+            ),
+        ]
+
+        # 8. Construct CDM Session Envelope using your structural Models
         meta_obj = SessionMeta(
             source_identity="PygmalionAI/PIPPA",
             bot_id=bot_id,
             bot_name=raw_record.get("bot_name"),
             ingestion_timestamp=timestamp,
+            identities=identities_pool,
+            source_record=raw_record,
+            annotations=[],
         )
 
-        session_trace = Session(kind="session", meta=meta_obj, children=[])
+        session_trace = Session(kind="session", meta=meta_obj, items=[])
 
-        # 8. Store the original data cleanly in a dedicated, unedited property
-        # Storing raw_record directly on the object scope matching your art perspective
-        session_trace.meta.source_record = raw_record
-
-        # 9. Map Primary Character (character:info)
-        character_info = CharacterEntity(
-            kind="character",
-            subkind="info",
-            entity_id=bot_id,
-            content=raw_record.get("bot_description", "").strip(),
-        )
-        session_trace.children.append(character_info)
-
-        # 10. Map Conversational Turns (Linguistic Evidence)
-        for turn in raw_record.get("conversation", []):
-            actor_id = "user" if turn.get("is_human") else bot_id
-            turn_obj = TurnEntity(
-                kind="turn",
-                actor_id=actor_id or "unknown_actor",
-                prose=turn.get("message", "").strip(),
+        # 9. Map Primary Character Initial Persona (character:info Line Item)
+        raw_desc = raw_record.get("bot_description") or ""
+        if raw_desc.strip():
+            character_info = CharacterItem(
+                kind="character",
+                subkind="info",
+                entity_id=bot_id,
+                content=raw_desc.strip(),
             )
-            session_trace.children.append(turn_obj)
+            session_trace.items.append(character_info)
+
+        # 10. Map Conversational Turns (Linguistic Evidence Line Items)
+        for turn in raw_record.get("conversation", []) or []:
+            actor_id = "user" if turn.get("is_human") else bot_id
+            raw_message = turn.get("message") or ""
+
+            turn_obj = TurnItem(
+                kind="turn",
+                actor_id=actor_id,
+                prose=raw_message.strip(),
+            )
+            session_trace.items.append(turn_obj)
 
         # 11. Append the basic lineage trace token
-        if not session_trace.meta.annotations:
+        if session_trace.meta.annotations is None:
             session_trace.meta.annotations = []
         session_trace.meta.annotations.append(
             Annotation(
@@ -118,7 +155,6 @@ def run(config: dict):
         )
 
         # 12. Write the singular living canvas artifact directly to its slot
-        # Using model_dump_json with an indent pass ensures high document readability
         with open(target_file, "w", encoding="utf-8") as f:
             f.write(session_trace.model_dump_json(indent=2))
 

@@ -6,7 +6,7 @@ import requests
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, Session, TurnEntity
+from cdm.core import Annotation, Session, TurnItem
 from cdm.refine import SingleTurnGrammarResponse
 
 logger = logging.getLogger(__name__)
@@ -65,14 +65,16 @@ def run(config: dict) -> None:
 
             history_turns = []
 
-            for child in tqdm(
-                session.children, desc=f" → {file_path.name[:12]}...", leave=False
+            # Swap from legacy session.children to the compliant
+            # transaction session.items
+            for item in tqdm(
+                session.items, desc=f" → {file_path.name[:12]}...", leave=False
             ):
-                if not isinstance(child, TurnEntity):
+                if not isinstance(item, TurnItem):
                     continue
 
-                if child.original_prose is not None:
-                    history_turns.append(child)
+                if item.original_prose is not None:
+                    history_turns.append(item)
                     continue
 
                 try:
@@ -80,15 +82,16 @@ def run(config: dict) -> None:
 
                     user_prompt = user_tmpl.render(
                         session=session,
-                        target_turn=child,
+                        target_turn=item,
                         history_context=history_context,
                     )
                     system_prompt = system_tmpl.render(session=session)
+
                     # Calculate raw token overhead (roughly 1 word ≈ 1.3 tokens)
-                    estimated_input_tokens = int(len(child.prose.split()) * 1.3)
-                    # Establish a massive baseline floor of 4096 tokens to protect
-                    # Gemma's reasoning budget. Scale up unbound if the input turn
-                    # is massive, with no upper limit constraint.
+                    estimated_input_tokens = int(len(item.prose.split()) * 1.3)
+
+                    # Establish a massive baseline floor of 8192 tokens to protect
+                    # the target engine's reasoning budget.
                     unbound_max_tokens = max(8192, int(estimated_input_tokens * 3.0))
 
                     payload = {
@@ -107,7 +110,7 @@ def run(config: dict) -> None:
                     resp = requests.post(service_url, json=payload, timeout=240)
                     resp.raise_for_status()
 
-                    # 1. Parse the top-level API envelope from llama.cpp / OpenAI spec
+                    # 1. Parse the top-level API envelope
                     resp_json = resp.json()
 
                     # 2. Extract the finish reason from the choices payload
@@ -123,14 +126,13 @@ def run(config: dict) -> None:
                         else "{}"
                     )
 
-                    # 4. Handle token truncation before trying to validate
-                    #    an incomplete string
+                    # 4. Handle token truncation safely via logger instead of bare print
                     if finish_reason == "length":
-                        print(
-                            "WARNING: Generation was cut off by token limit "
-                            "(finish_reason: length)"
+                        logger.warning(
+                            f"Generation cut off by token limit for item in "
+                            f"{file_path.name} "
+                            f"(finish_reason: length)"
                         )
-                        # TODO: Handle your backoff escalation logic here...
 
                     # 5. Fall through to standard validation if it finished normally
                     extracted_data = SingleTurnGrammarResponse.model_validate_json(
@@ -138,8 +140,8 @@ def run(config: dict) -> None:
                     )
 
                     # Update turn state inline
-                    child.original_prose = child.prose
-                    child.prose = extracted_data.rewritten_prose
+                    item.original_prose = item.prose
+                    item.prose = extracted_data.rewritten_prose
 
                     # Append tracking step annotation if not present for this run phase
                     has_annotation = any(
@@ -162,12 +164,12 @@ def run(config: dict) -> None:
 
                 except Exception as turn_err:
                     logger.error(
-                        f"\n[Turn Processing Error] Skipping corrupted "
-                        f"turn generation: {turn_err}"
+                        f"Skipping corrupted turn generation for item in "
+                        f"{file_path.name}: {turn_err}"
                     )
                     continue
 
-                history_turns.append(child)
+                history_turns.append(item)
 
         except Exception as e:
             logger.error(

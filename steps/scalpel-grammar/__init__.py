@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Session, TurnEntity
+from cdm.core import Annotation, Session, TurnItem
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +39,17 @@ def run(config: dict) -> None:
 
             modified_file = False
 
-            for child in session.children:
-                if not isinstance(child, TurnEntity):
+            # Traverse the transactional ledger items instead of legacy children array
+            for item in session.items:
+                if not isinstance(item, TurnItem):
                     continue
 
                 # Inverted Idempotency check: Only target turns that have been modified
-                if child.original_prose is not None:
+                if item.original_prose is not None:
                     # Restore the raw snapshot back to the main prose track
-                    child.prose = child.original_prose
-                    child.original_prose = None
-                    child.prose_revision_comments = None
+                    item.prose = item.original_prose
+                    item.original_prose = None
+                    item.prose_revision_comments = None
                     modified_file = True
 
             if modified_file:
@@ -64,7 +65,7 @@ def run(config: dict) -> None:
 
                 # Append a surgical track annotation for trace lineage
                 scalpel_annotation = Annotation(
-                    kind="scalpel-turns",
+                    kind="scalpel-grammar",
                     content="roll-back of grammar mutations to original prose state",
                     reasoning=None,
                 )

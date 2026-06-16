@@ -6,10 +6,10 @@ Analyze the provided multi-turn chat history. Synthesize the roles, names, and p
 
 For the user character name, identify if there are any actions in user's turn where they interact with the character.
 
-{% for child in session.children if child.kind == 'turn' -%}
+{% for item in session.items if item.kind == 'turn' -%}
     {# Grab the top 50 turns using Jinja's slice filter #}
-    {% if loop.index0 < 50 -%}
-        {%- set role = "USER" if child.actor_id == "user" else bot_name -%}
-        {{ role }}: {{ child.prose }}
+    {% if loop.index0 < 100 -%}
+        {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
+        {{ role }}: {{ item.prose }}
     {% endif %}
 {%- endfor %}

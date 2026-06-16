@@ -4,9 +4,9 @@ Analyze the provided multi-turn chat history and classify the primary genre and 
 ### CHAT EVIDENCE
 {% set bot_name = session.meta.bot_name or "the character" %}
 
-{% for child in session.children if child.kind == 'turn' -%}
-    {% if loop.index0 < 50 -%}
-        {%- set role = "USER" if child.actor_id == "user" else bot_name -%}
-        {{ role }}: {{ child.prose }}
+{% for item in session.items if item.kind == 'turn' -%}
+    {% if loop.index0 < 100 -%}
+        {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
+        {{ role }}: {{ item.prose }}
     {% endif %}
 {%- endfor %}

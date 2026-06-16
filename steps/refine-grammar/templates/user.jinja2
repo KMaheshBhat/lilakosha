@@ -2,19 +2,43 @@
 Convert the target roleplay turn into strict third-person, past-tense narrative prose while enforcing verbatim structural retention.
 
 ### CHARACTER DESIGNATIONS
-- Target Actor Name: "{{ session.meta.user_pc_name if target_turn.actor_id == 'user' else session.meta.bot_name or 'The Companion' }}"
-- Secondary Character Name: "{{ session.meta.bot_name if target_turn.actor_id == 'user' else session.meta.user_pc_name or 'The User' }}"
+{# Use a namespace object to persist assignments outside of the loop block #}
+{%- set ns = namespace(target_char=None) -%}
+{%- set secondary_chars = [] -%}
+
+{%- for identity in session.meta.identities -%}
+    {%- if identity.entity_id == target_turn.actor_id -%}
+        {%- set ns.target_char = identity -%}
+    {%- else -%}
+        {%- set _ = secondary_chars.append(identity) -%}
+    {%- endif -%}
+{%- endfor -%}
+
+- Target Actor Name: "{{ ns.target_char.name if ns.target_char else 'The Character' }}"
+  Gender/Pronouns: {{ ns.target_char.gender if ns.target_char else 'unknown' }} ({% if ns.target_char %}{{ ns.target_char.pronouns.subjective }}/{{ ns.target_char.pronouns.objective }}/{{ ns.target_char.pronouns.possessive }}{% else %}they/them/their{% endif %})
+
+- Secondary Character(s):
+{%- for sec in secondary_chars %}
+  * Name: "{{ sec.name }}" | Gender/Pronouns: {{ sec.gender }} ({{ sec.pronouns.subjective }}/{{ sec.pronouns.objective }}/{{ sec.pronouns.possessive }})
+{%- else %}
+  * None registered.
+{%- endfor %}
 
 ### CHRONOLOGICAL HISTORY CONTEXT
 Use this context solely for establishing continuity, tracking gender consistency, and locking down pronoun mappings. Do NOT modify or repeat this data.
-{% for past_turn in history_context %}
-* {{ session.meta.user_pc_name if past_turn.actor_id == 'user' else session.meta.bot_name or 'The Companion' }}: {{ past_turn.prose }}
+{% for past_item in history_context if past_item.kind == 'turn' -%}
+    {# Resolve the historical actor's name dynamically from the registry #}
+    {%- set past_char_name = "Unknown" -%}
+    {%- for identity in session.meta.identities -%}
+        {%- if identity.entity_id == past_item.actor_id -%}{%- set past_char_name = identity.name -%}{%- endif -%}
+    {%- endfor -%}
+* {{ past_char_name }}: {{ past_item.prose }}
 {%- endfor %}
 
 ### REWRITE RULES
-1. TENSE & PERSPECTIVE CHANGE: Shift the targeted turn's active inline text exclusively to third-person past-tense.
+1. TENSE & PERSPECTIVE CHANGE: Shift the targeted turn's active inline text exclusively to third-person past-tense. Use the provided pronoun set ({% if ns.target_char %}{{ ns.target_char.pronouns.subjective }}/{{ ns.target_char.pronouns.objective }}{% else %}they/them{% endif %}) to maintain absolute grammatical stability.
 2. PROPER NOUN INJECTION: You must explicitly drop the proper names of BOTH characters at least once in the rewritten text to ground perspective instead of relying solely on generic pronouns.
-3. SPOKEN TEXT DIRECTIVE: Keep spoken sentences verbatim with all typos/errors intact. Append a simple dialogic tag using the proper noun or pronoun (e.g., "he said", "she noted", "{{ session.meta.user_pc_name }} asked").
+3. SPOKEN TEXT DIRECTIVE: Keep spoken sentences verbatim with all typos/errors intact. Append a simple dialogic tag using the proper noun or pronoun (e.g., "he said", "she noted", "{{ ns.target_char.name if ns.target_char else 'he' }} asked").
 4. THOUGHT TEXT DIRECTIVE: Keep thought fragments verbatim with all typos/errors intact, wrapped exclusively in *asterisks*.
 
 ### ─── TARGET TURN TO REWRITE ───

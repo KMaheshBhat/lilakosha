@@ -64,7 +64,6 @@ def run(config: dict) -> None:
                 session = Session.model_validate_json(f.read())
 
             # 2. Idempotency Sniff Test
-            # Skip if primary genre or themes have already been cataloged
             if session.meta.primary_genre is not None or (
                 session.meta.themes and len(session.meta.themes) > 0
             ):
@@ -102,15 +101,17 @@ def run(config: dict) -> None:
             session.meta.primary_genre = extracted_data.primary_genre
             session.meta.themes = extracted_data.themes
 
-            # 6. Append tracking annotations
-            genre_annotation = Annotation(
-                kind="refine-genre-theme",
-                content="classified genre and themes for the session",
-                reasoning=reasoning,
-            )
-            if not session.meta.annotations:
+            # 6. Append tracking annotations cleanly
+            if session.meta.annotations is None:
                 session.meta.annotations = []
-            session.meta.annotations.append(genre_annotation)
+
+            session.meta.annotations.append(
+                Annotation(
+                    kind="refine-genre-theme",
+                    content="classified genre and themes for the session",
+                    reasoning=reasoning,
+                )
+            )
 
             # 7. Commit changes back to disk with pretty-print layout
             with open(file_path, "w", encoding="utf-8") as f:

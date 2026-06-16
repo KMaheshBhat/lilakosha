@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Literal
 
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import field_validator
@@ -7,12 +7,45 @@ from pydantic.functional_validators import field_validator
 from cdm.core import MainGenre, SexualScale, ToxicityScale, ViolenceScale
 
 
+class PronounSet(BaseModel):
+    subjective: str = Field(
+        description=(
+            "The subjective pronoun to use for this entity (e.g., 'he', 'she', 'they')."
+        )
+    )
+    objective: str = Field(
+        description=(
+            "The objective pronoun to use for this entity (e.g., 'him', 'her', 'them')."
+        )
+    )
+    possessive: str = Field(
+        description=(
+            "The possessive adjective/pronoun to use for this entity "
+            "(e.g., 'his', 'hers', 'their')."
+        )
+    )
+
+
 class CharacterProfile(BaseModel):
     name: str = Field(
         description=(
-            "The character's proper name where identified. "
-            "Otherwise, the formal or assumed name in this trace."
+            "The character's proper name where clearly identified. "
+            "CRITICAL FALLBACK FOR ANONYMOUS USERS: If the human player or a character "
+            "is anonymous, generic, or referred to only as 'user', 'human', or "
+            "'unknown', you MUST select a realistic, natural fallback name based on "
+            "gender context: "
+            "Male -> 'Adam', 'Jack', or 'James'; "
+            "Female -> 'Eve', 'Jane', or 'Mary'; "
+            "Gender-Neutral/Ambiguous -> 'Alex', 'Sam', or 'Robin'. "
+            "Never leave the name as 'User', 'Human', 'Unknown', or a descriptive "
+            "role title."
         )
+    )
+    gender: Literal["male", "female", "neutral", "unknown"] = Field(
+        description="The established or inferred narrative gender of the entity."
+    )
+    pronouns: PronounSet = Field(
+        description="The sealed, authoritative pronoun tokens of the character."
     )
     core_traits: List[str] = Field(
         description="Key behavioral traits, descriptions, or motivations observed."

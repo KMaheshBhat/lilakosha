@@ -63,8 +63,7 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
 
-            # 2. Idempotency Sniff Test
-            # Check if safety dimensions are already evaluated on this document
+            # 2. Idempotency Check
             if (
                 session.meta.sexual_axis is not None
                 or session.meta.violence_axis is not None
@@ -101,19 +100,23 @@ def run(config: dict) -> None:
             extracted_data = SafetyDialsResponse.model_validate_json(raw_content)
 
             # 5. Hydrate session metadata safety properties
+            #    Ensure proper type alignment depending on whether your schema uses
+            #    string literals or explicit types
             session.meta.sexual_axis = extracted_data.sexual_axis
             session.meta.violence_axis = extracted_data.violence_axis
             session.meta.toxicity_axis = extracted_data.toxicity_axis
 
-            # 6. Append tracking annotations
-            safety_annotation = Annotation(
-                kind="refine-safety-dials",
-                content="classified safety axes for the session",
-                reasoning=reasoning,
-            )
-            if not session.meta.annotations:
+            # 6. Append tracking annotations safely to satisfy static type checking
+            if session.meta.annotations is None:
                 session.meta.annotations = []
-            session.meta.annotations.append(safety_annotation)
+
+            session.meta.annotations.append(
+                Annotation(
+                    kind="refine-safety-dials",
+                    content="classified safety axes for the session",
+                    reasoning=reasoning,
+                )
+            )
 
             # 7. Commit changes back to disk with pretty-print layout
             with open(file_path, "w", encoding="utf-8") as f:

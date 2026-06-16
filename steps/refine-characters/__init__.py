@@ -6,7 +6,7 @@ import requests
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CharacterEntity, Session
+from cdm.core import Annotation, CharacterItem, Session
 from cdm.refine import CharacterSynthesisResponse
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def run(config: dict) -> None:
     """
     LilaKosha Refinement Pass: Character Synthesis.
     Operates incrementally over discrete canvas record files using an in-line
-    idempotency sniff test.
+    idempotency check, resolving pronouns and updating the sealed identity registry.
     """
     templates_str = load_jinja_templates(["system", "user", "character-detail"])
     jinja_env = Environment(loader=BaseLoader())
@@ -62,13 +62,12 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
 
-            # 2. Idempotency Sniff Test
-            # Look for an existing User Info entity to see if this script already ran
+            # 2. Idempotency Check
+            #    Check for an existing character detail item for the bot or
+            #    a refined user registry name
             already_refined = any(
-                child.kind == "character"
-                and child.subkind == "info"
-                and child.entity_id == "user"
-                for child in session.children
+                item.kind == "character" and item.subkind == "detail"
+                for item in session.items
             )
             if already_refined:
                 continue
@@ -83,7 +82,7 @@ def run(config: dict) -> None:
                     {"role": "user", "content": user_prompt},
                 ],
                 "temperature": 0.1,
-                "max_tokens": 2048,
+                "max_tokens": 4096,
                 "response_format": {
                     "type": "json_object",
                     "schema": CharacterSynthesisResponse.model_json_schema(),
@@ -100,9 +99,63 @@ def run(config: dict) -> None:
             reasoning = message_data.get("reasoning_content")
 
             extracted_data = CharacterSynthesisResponse.model_validate_json(raw_content)
+            logger.debug(f"extracted_data: {extracted_data}")
 
-            # 5. Hydrate session metadata and entities
-            session.meta.user_pc_name = extracted_data.user_character.name
+            # 5. Update the Authoritative Identity Registry in SessionMeta
+            bot_id = session.meta.bot_id or "unknown_bot"
+
+            # Dynamically import cdm.core's PronounSet to avoid namespace collisions
+            # with the refine model
+            from cdm.core import PronounSet as CorePronounSet
+
+            for identity in session.meta.identities:
+                if identity.entity_id == "user":
+                    # A. Force gender resolution to strict type-safe literals
+                    user_gender_raw = extracted_data.user_character.gender.lower()
+                    resolved_user_gender = (
+                        "male"
+                        if user_gender_raw == "male"
+                        else "female"
+                        if user_gender_raw == "female"
+                        else "neutral"
+                        if user_gender_raw == "neutral"
+                        else "unknown"
+                    )
+
+                    identity.name = extracted_data.user_character.name
+                    identity.gender = resolved_user_gender
+
+                    # B. Re-hydrate using cdm.core's expected model type
+                    identity.pronouns = CorePronounSet(
+                        subjective=extracted_data.user_character.pronouns.subjective,
+                        objective=extracted_data.user_character.pronouns.objective,
+                        possessive=extracted_data.user_character.pronouns.possessive,
+                    )
+
+                elif identity.entity_id == bot_id:
+                    # A. Force gender resolution to strict type-safe literals
+                    bot_gender_raw = extracted_data.bot_character.gender.lower()
+                    resolved_bot_gender = (
+                        "male"
+                        if bot_gender_raw == "male"
+                        else "female"
+                        if bot_gender_raw == "female"
+                        else "neutral"
+                        if bot_gender_raw == "neutral"
+                        else "unknown"
+                    )
+
+                    identity.name = extracted_data.bot_character.name
+                    identity.gender = resolved_bot_gender
+
+                    # B. Re-hydrate using cdm.core's expected model type
+                    identity.pronouns = CorePronounSet(
+                        subjective=extracted_data.bot_character.pronouns.subjective,
+                        objective=extracted_data.bot_character.pronouns.objective,
+                        possessive=extracted_data.bot_character.pronouns.possessive,
+                    )
+
+            # 6. Render deep-lore narrative line items
             user_character_content = character_detail_tmpl.render(
                 extracted_data.user_character
             )
@@ -110,35 +163,40 @@ def run(config: dict) -> None:
                 extracted_data.bot_character
             )
 
-            bot_character_detail = CharacterEntity(
+            bot_character_detail = CharacterItem(
                 kind="character",
                 subkind="detail",
-                entity_id=session.meta.bot_id or "unknown_bot",
+                entity_id=bot_id,
                 content=bot_character_content,
             )
-            user_character_info = CharacterEntity(
+            user_character_info = CharacterItem(
                 kind="character",
                 subkind="info",
                 entity_id="user",
                 content=user_character_content,
             )
 
-            # Insert profiles cleanly right behind the original raw source layout
-            session.children.insert(1, bot_character_detail)
-            session.children.insert(2, user_character_info)
+            # Prepend the newly generated character deep-lore snapshots to
+            # the transactional timeline
+            session.items.insert(0, bot_character_detail)
+            session.items.insert(1, user_character_info)
 
-            # 6. Append tracking annotations
-            refine_annotation = Annotation(
-                kind="refine-characters",
-                content="refined bot character details and user character info",
-                reasoning=reasoning,
-            )
-            if not session.meta.annotations:
+            # 7. Append tracking annotations safely to satisfy static type checking
+            if session.meta.annotations is None:
                 session.meta.annotations = []
-            session.meta.annotations.append(refine_annotation)
 
-            # 7. Commit changes back to disk with pretty printing
-            #    for engineering visibility
+            session.meta.annotations.append(
+                Annotation(
+                    kind="refine-characters",
+                    content=(
+                        "refined bot character details and user character info "
+                        "inside registry and timeline"
+                    ),
+                    reasoning=reasoning,
+                )
+            )
+
+            # 8. Commit changes back to disk
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(session.model_dump_json(indent=2))
 

@@ -1,6 +1,6 @@
-# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# LilaKosha-MK1: Scalpel Blueprints
 pipeline:
-    - "scalpel-turns"
+    - "scalpel-safety-dials"
 
 project:
     name: "LilaKosha"
