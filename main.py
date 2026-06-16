@@ -28,6 +28,44 @@ def interpolate_env_vars(node: Any) -> Any:
     return node
 
 
+def parse_cli_overrides(args: list[str]) -> dict[str, Any]:
+    """
+    Parses trailing command-line tokens into a dynamic dictionary structure.
+    Expects alternating pairs following a flag pattern: --key1 value1 --key2 value2
+    """
+    overrides = {}
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token.startswith("--"):
+            key = token.lstrip("-")
+            # Verify if there is a matching value token after the flag
+            if i + 1 < len(args) and not args[i + 1].startswith("--"):
+                val = args[i + 1]
+
+                # Deduce structural typings for standard config layers
+                if val.isdigit():
+                    overrides[key] = int(val)
+                elif re.match(r"^\d?\.\d+$", val):
+                    overrides[key] = float(val)
+                elif val.lower() == "true":
+                    overrides[key] = True
+                elif val.lower() == "false":
+                    overrides[key] = False
+                elif val.lower() in ("none", "null"):
+                    overrides[key] = None
+                else:
+                    overrides[key] = val
+                i += 2
+            else:
+                # Handle boolean flag presence implicitly without secondary values
+                overrides[key] = True
+                i += 1
+        else:
+            i += 1
+    return overrides
+
+
 def load_config(config_path: Path) -> dict[str, Any]:
     """Loads YAML and validates the resolution of LilaKosha Volumes and Services."""
     if not config_path.exists():
@@ -41,7 +79,6 @@ def load_config(config_path: Path) -> dict[str, Any]:
     resolved_config = cast(dict[str, Any], interpolate_env_vars(config))
 
     # Pre-flight check for unresolved environment variables
-    # Validates $LILAKOSHA_VOLUME_* and $LILAKOSHA_SERVICE_*
     for section in ["volumes", "services"]:
         data = resolved_config.get(section, {})
         for key, value in data.items():
@@ -76,7 +113,7 @@ def main() -> None:
             f"\n{'=' * 65}\n"
             f"🛠️  LILAKOSHA FLOW MK1: CONFIG-DRIVEN ORCHESTRATOR\n"
             f"{'=' * 65}\n\n"
-            f"Usage: uv run main.py <config_path>\n\n"
+            f"Usage: uv run main.py <config_path> [options]\n\n"
             f"Discovered Pipeline Configurations ({len(configs)}):\n"
         )
         for cfg in configs:
@@ -85,8 +122,8 @@ def main() -> None:
         help_block += (
             f"\nExecution Workflow Examples:\n"
             f"  uv run main.py pipeline/init.yml\n"
-            f"  uv run main.py pipeline/prepare.yml\n"
-            f"  uv run main.py pipeline/train-and-bake-lilakosha-1g-12b-u.yml\n"
+            f"  uv run main.py pipeline/25-scalpel-grammar.yml "
+            f"--start_uuid 019e --stop_uuid 5\n"
             f"{'=' * 65}\n"
         )
         logger.info(help_block)
@@ -101,31 +138,42 @@ def main() -> None:
         logger.error(f"No 'pipeline' steps defined in {config_path}.")
         sys.exit(1)
 
-    # 2. Metadata Extraction for High-Level Tracking
+    # Initialize parameters container if it is completely absent from the file
+    if "parameters" not in config:
+        config["parameters"] = {}
+
+    # 2. Inject Command Line Parameter Overrides
+    cli_overrides = parse_cli_overrides(sys.argv[2:])
+    if cli_overrides:
+        logger.info(f"Applying runtime overrides: {cli_overrides}")
+        config["parameters"].update(cli_overrides)
+
+    # 3. Metadata Extraction for High-Level Tracking
     project = config.get("project", {})
     project_name = project.get("name", "LilaKosha")
     logger.info(f"Target Project: {project_name}")
     logger.info(f"Pipeline Sequence: {pipeline}")
+    logger.info(f"Active Parameters: {config['parameters']}")
 
-    # 3. VRAM Handover Warning (Triggered when explicit training keys are in play)
+    # 4. VRAM Handover Warning (Triggered when explicit training keys are in play)
     if "train" in pipeline:
         warning_block = (
             "\n!!! VRAM HANDOVER WARNING !!!\n"
-            "Executing hardware-intensive training workflow "
-            "on 12GB VRAM resource pool.\n"
+            "Executing hardware-intensive training "
+            "workflow on 12GB VRAM resource pool.\n"
             "Ensure ALL inference backend services "
             "are TERMINATED before training begins.\n"
         )
         logger.warning(warning_block)
 
-    # 4. Sequential Execution Loop
+    # 5. Sequential Execution Loop
     for step_name in pipeline:
         try:
             # Dynamically import the step module from the 'steps/' directory
             step_module = importlib.import_module(f"steps.{step_name}")
             logger.info(f"--- Executing Step: {step_name.upper()} ---")
 
-            # Execute the step with the resolved config
+            # Execute the step with the updated runtime config parameters
             step_module.run(config)
         except ImportError:
             logger.error(

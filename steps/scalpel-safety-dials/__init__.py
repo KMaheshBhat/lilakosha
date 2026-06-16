@@ -13,7 +13,10 @@ def run(config: dict) -> None:
     LilaKosha Scalpel Pass: Clear Safety Dials.
     Iterates through standalone Common Data Model (CDM) records, purging
     computed safety metrics and tracking annotations to allow clean evaluations.
+    Supports optional runtime range filtering via 'start_uuid' and
+    'stop_uuid' parameters.
     """
+    # 1. Resolve Data Infrastructure
     processed_vol = Path(config["volumes"]["processed"])
     records_dir = processed_vol / "cdm" / "records"
 
@@ -25,33 +28,63 @@ def run(config: dict) -> None:
 
     record_files = sorted(records_dir.glob("*.json"))
     if not record_files:
-        logger.warning(f"No canvas records found to evaluate inside {records_dir}")
+        logger.warning(f"No canvas records found inside {records_dir}")
         return
 
-    logger.info(
-        f"Inspecting {len(record_files)} records for safety metrics clearance..."
-    )
+    # 2. Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
 
-    for file_path in tqdm(record_files, desc="Purging Safety Metrics"):
+    # Format localized diagnostic headers for clear Operator Experience (OX)
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Scalpel Scope Activated:\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Scalpel Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(f"Inspecting {len(record_files)} files for safety metrics clearance...")
+
+    # 3. Main Operational Execution Loop
+    purged_count = 0
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Processing Scalpel Operation"):
+        record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
 
-            # Check if there are active metrics to clear
+            # Evaluate state vectors for pending execution conditions
             has_metrics = (
-                session.meta.sexual_axis is not None
-                or session.meta.violence_axis is not None
-                or session.meta.toxicity_axis is not None
+                getattr(session.meta, "sexual_axis", None) is not None
+                or getattr(session.meta, "violence_axis", None) is not None
+                or getattr(session.meta, "toxicity_axis", None) is not None
             )
 
             if has_metrics:
-                # 1. Nullify the safety dimensions on the session metadata
+                # 1. Nullify structural safety layout vectors
                 session.meta.sexual_axis = None
                 session.meta.violence_axis = None
                 session.meta.toxicity_axis = None
 
-                # 2. Filter out historical safety-dials annotations to
-                #    ensure clean lineage
+                # 2. Purge stale lineage tracking details to clean up metrics
                 if session.meta.annotations:
                     session.meta.annotations = [
                         anno
@@ -61,17 +94,21 @@ def run(config: dict) -> None:
                 else:
                     session.meta.annotations = []
 
-                # 3. Append a surgical tracking trace token
+                # 3. Inject explicit scalpel audit token
                 scalpel_annotation = Annotation(
                     kind="scalpel-safety-dials",
-                    content="cleared safety dial metrics and annotations",
+                    content=(
+                        "cleared safety dial metrics and annotations via scalpel range"
+                    ),
                     reasoning=None,
                 )
                 session.meta.annotations.append(scalpel_annotation)
 
-                # 4. Save updates cleanly back to the filesystem
+                # 4. Commit modification atomicity directly to local slot
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(session.model_dump_json(indent=2))
+
+                purged_count += 1
 
         except Exception as e:
             logger.error(
@@ -79,4 +116,8 @@ def run(config: dict) -> None:
                 f"{file_path.name}: {e}"
             )
 
-    logger.info("✅ Scalpel safety dials clearance pass complete.")
+    logger.info(
+        f"✅ Scalpel pass completed. "
+        f"Purged: {purged_count} records. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
