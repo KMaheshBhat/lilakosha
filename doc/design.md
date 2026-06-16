@@ -41,7 +41,7 @@ project:
     name: "LilaKosha"
     mark: "MK1"
     generation: "G1"
-    model_variant: "general" | "unbound" | "infrastructure"
+    model_variant: "general" | "unbound"
 ```
 
 ### Infrastructure Paths
