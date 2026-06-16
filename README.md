@@ -44,7 +44,6 @@ Initialize the project with [uv](https://docs.astral.sh/uv/), the fast Python pa
 ```bash
 uv init
 uv sync
-
 ```
 
 ### Environment Setup
@@ -56,7 +55,6 @@ export LILAKOSHA_VOLUME_RAW=/tmp/lk-dry/raw
 export LILAKOSHA_VOLUME_PROCESSED=/tmp/lk-dry/processed
 export LILAKOSHA_VOLUME_MODELS=/tmp/lk-dry/models
 export LILAKOSHA_VOLUME_EXPORTS=/tmp/lk-dry/exports
-
 ```
 
 For convenience, copy `example.env` to `.env` and source it:
@@ -64,7 +62,6 @@ For convenience, copy `example.env` to `.env` and source it:
 ```bash
 cp example.env .env
 source .env
-
 ```
 
 ## Operator Instructions
@@ -73,14 +70,12 @@ The LilaKosha execution engine runs on top of `main.py`, accepting pipeline defi
 
 ```bash
 ./run.sh pipeline/<pipeline-config>.yml [options]
-
 ```
 
 ### 1. Bootstrap Infrastructure
 
 ```bash
 ./run.sh pipeline/10-init.yml
-
 ```
 
 Initializes storage volumes, maps required directory mappings, and prepares the workspace for both General and Unbound processing channels.
@@ -89,7 +84,6 @@ Initializes storage volumes, maps required directory mappings, and prepares the 
 
 ```bash
 ./run.sh pipeline/20-ingest.yml
-
 ```
 
 Streams, extracts, and normalizes incoming interaction rows (e.g., the PIPPA schema), mapping records safely into deterministic, standalone `{UUIDv7}.json` files inside the Common Data Model (CDM) ledger structure.
@@ -98,7 +92,6 @@ Streams, extracts, and normalizes incoming interaction rows (e.g., the PIPPA sch
 
 ```bash
 ./run.sh pipeline/30-refine.yml
-
 ```
 
 Executes character synthesis, narrative categorization, safety-dial assessment, and grammar normalization. This step runs under tight idempotency guardrails, skipping files that have already received their respective enrichment transformations.
@@ -113,7 +106,6 @@ The framework includes specialized `scalpel-*` interventions designed to clear m
 ./run.sh pipeline/25-scalpel-safety-dials.yml --start_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01 --stop_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01
 ./run.sh pipeline/25-scalpel-genre-theme.yml   --start_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01 --stop_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01
 ./run.sh pipeline/25-scalpel-grammar.yml       --start_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01 --stop_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01
-
 ```
 
 **Execute an Unbound or Bounded Range Sweep:**
@@ -121,7 +113,6 @@ The framework includes specialized `scalpel-*` interventions designed to clear m
 ```bash
 # Clear grammar mutations on all records starting from a specific point forward
 ./run.sh pipeline/25-scalpel-grammar.yml --start_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01
-
 ```
 
 After making necessary fixes or tweaking prompt configurations, simply re-trigger the refinement suite (`./run.sh pipeline/30-refine.yml`) to catch up the cleared records.
@@ -134,10 +125,7 @@ After making necessary fixes or tweaking prompt configurations, simply re-trigge
 
 # Stage 3: Training, Weight Fusion, and GGUF Baking (Unbound Variant)
 ./run.sh pipeline/61-train-unbound.yml
-
 ```
-
----
 
 ## Available Pipeline Architecture Mappings
 
