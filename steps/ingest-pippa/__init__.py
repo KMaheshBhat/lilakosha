@@ -68,7 +68,31 @@ def run(config: dict):
             continue
 
         # 5. Formulate the explicit key namespace for this source
-        native_id = f"{bot_id}_{sub_ts}"
+        # Base namespace tracks the character snapshot version
+        base_id = f"{bot_id}_{sub_ts}"
+
+        # Pull the conversation list safely
+        conversation_turns = raw_record.get("conversation", []) or []
+
+        if conversation_turns:
+            # Extract attributes from the initial turn to form
+            # a conversation fingerprint
+            first_turn = conversation_turns[0]
+            first_msg = first_turn.get("message") or ""
+            first_actor = "human" if first_turn.get("is_human") else "bot"
+            turn_count = len(conversation_turns)
+
+            # Create a compact, stable hash of the first interaction and session shape
+            import hashlib
+
+            convo_fingerprint = hashlib.md5(
+                f"{first_actor}:{first_msg}:{turn_count}".encode("utf-8")
+            ).hexdigest()[:12]
+
+            native_id = f"{base_id}_{convo_fingerprint}"
+        else:
+            # Fallback if a record contains an entirely empty conversation array
+            native_id = f"{base_id}_emptyconvo"
 
         # 6. Evaluate index state
         target_uuid = ledger_index.get_uuid("pippa", native_id)
