@@ -131,6 +131,7 @@ After making necessary fixes or tweaking prompt configurations, simply re-trigge
 
 * `pipeline/10-init.yml` – Workspace staging & file infrastructure allocation.
 * `pipeline/20-ingest.yml` – Multi-source dataset translation into CDM format.
+* `pipeline/25-scalpel-characters.yml` – Purges generated charactes and reverts narrative tense/POV transformations back to raw original prose.
 * `pipeline/25-scalpel-safety-dials.yml` – Purges safety evaluation arrays and metrics tracks.
 * `pipeline/25-scalpel-genre-theme.yml` – Resets thematic annotations and primary classifications.
 * `pipeline/25-scalpel-grammar.yml` – Reverts narrative tense/POV transformations back to raw original prose.
