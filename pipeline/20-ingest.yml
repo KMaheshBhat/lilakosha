@@ -17,4 +17,4 @@ services:
     summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
 
 parameters:
-    limit: 100 # limit the number of samples to process, if empty, all would be processed
+    limit: 200 # limit the number of samples to process, if empty, all would be processed

@@ -27,6 +27,14 @@ def run(config: dict) -> None:
         logger.warning("No canvas artifacts found to evaluate.")
         return
 
+    # Extract dynamic configuration parameters passed via pipeline config or CLI flags
+    params = config.get("parameters", {})
+    hide_anomaly_details = params.get("hide_anomaly_details", False)
+
+    # Normalize values in case they leak in as string literals from the CLI wrapper
+    if isinstance(hide_anomaly_details, str):
+        hide_anomaly_details = hide_anomaly_details.lower() in ("true", "1", "yes")
+
     healthy_count = 0
     failure_registry = defaultdict(list)
 
@@ -136,9 +144,13 @@ def run(config: dict) -> None:
     logger.info("=" * 60)
 
     if failure_registry:
-        logger.info("❌ DETECTED ANOMALY REGISTRY BY RECORD ID:")
-        for uuid, faults in failure_registry.items():
-            logger.info(f"  ↳ UUID: {uuid}")
-            for fault in faults:
-                logger.info(f"      - {fault}")
-        logger.info("=" * 60)
+        if hide_anomaly_details:
+            logger.info("ℹ️  Anomaly details hidden by configuration parameter flag.")
+            logger.info("=" * 60)
+        else:
+            logger.info("❌ DETECTED ANOMALY REGISTRY BY RECORD ID:")
+            for uuid, faults in failure_registry.items():
+                logger.info(f"   ↳ UUID: {uuid}")
+                for fault in faults:
+                    logger.info(f"       - {fault}")
+            logger.info("=" * 60)
