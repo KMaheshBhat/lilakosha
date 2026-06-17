@@ -133,6 +133,7 @@ class SessionMeta(BaseModel):
     themes: Optional[List[str]] = Field(default_factory=list)
     crpo_signals: Optional[dict] = Field(default_factory=dict)
     annotations: Optional[List[Annotation]] = None
+    healthy: Optional[bool] = None
 
 
 class Session(BaseModel):

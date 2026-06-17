@@ -63,6 +63,12 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
 
+            # --- Health Guard Gate ---
+            # Skip if a previous telemetry pass explicitly identified
+            # this file as defective
+            if session.meta and session.meta.healthy is False:
+                continue
+
             # 2. Idempotency Sniff Test
             if session.meta.primary_genre is not None or (
                 session.meta.themes and len(session.meta.themes) > 0

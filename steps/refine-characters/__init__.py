@@ -62,6 +62,12 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
 
+            # --- Health Guard Gate ---
+            # Skip if a previous telemetry pass explicitly identified
+            # this file as defective
+            if session.meta and session.meta.healthy is False:
+                continue
+
             # 2. Idempotency Check
             #    Check for an existing character detail item for the bot or
             #    a refined user registry name

@@ -12,6 +12,12 @@ def run(config: dict) -> None:
     """
     LilaKosha Telemetry Step: Assess structural and content health metrics
     across all canvas JSON records on disk using native Pydantic models.
+
+    Supports:
+      --reset_health true         : Clears 'healthy' tracking flags to force retries.
+      --audit_only true           : Run full health report in-memory without disk writes
+                                    (Perfect for clean dashboarding via watch -n).
+      --hide_anomaly_details true : Mutes granular issue printing.
     """
     processed_vol = Path(config["volumes"]["processed"])
     records_dir = processed_vol / "cdm" / "records"
@@ -30,18 +36,59 @@ def run(config: dict) -> None:
     # Extract dynamic configuration parameters passed via pipeline config or CLI flags
     params = config.get("parameters", {})
     hide_anomaly_details = params.get("hide_anomaly_details", False)
+    reset_health = params.get("reset_health", False)
+    audit_only = params.get("audit_only", False)
 
-    # Normalize values in case they leak in as string literals from the CLI wrapper
+    # Normalize values from the CLI wrapper strings
     if isinstance(hide_anomaly_details, str):
         hide_anomaly_details = hide_anomaly_details.lower() in ("true", "1", "yes")
+    if isinstance(reset_health, str):
+        reset_health = reset_health.lower() in ("true", "1", "yes")
+    if isinstance(audit_only, str):
+        audit_only = audit_only.lower() in ("true", "1", "yes")
+
+    # --- Mode 1: Full Health State Reset ---
+    if reset_health:
+        logger.info(
+            f"🔄 RESET MODE ACTIVATED: Clearing health states across "
+            f"{total_records} records to force pipeline retries..."
+        )
+        for file_path in canvas_files:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    raw_data = json.load(f)
+                if "meta" in raw_data and isinstance(raw_data["meta"], dict):
+                    # Pop the healthy key entirely so it drops
+                    # back to Schema default (None)
+                    raw_data["meta"].pop("healthy", None)
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        json.dump(raw_data, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                logger.error(
+                    f"Failed to clear health tag on file {file_path.stem}: {str(e)}"
+                )
+        logger.info(
+            "✅ All health tracking flags have been cleared. Exiting reset phase."
+        )
+        return
 
     healthy_count = 0
     failure_registry = defaultdict(list)
 
-    logger.info(f"Auditing data health parameters across {total_records} records...")
+    if audit_only:
+        logger.info(
+            f"📊 Running read-only telemetry audit across {total_records} records..."
+        )
+    else:
+        logger.info(
+            f"Auditing and mutating data health parameters across "
+            f"{total_records} records..."
+        )
 
+    # --- Mode 2 & 3: Standard Mutation / Audit Evaluation Pass ---
     for file_path in canvas_files:
         uuid_str = file_path.stem
+        issues = []
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -57,8 +104,6 @@ def run(config: dict) -> None:
             annotation_kinds = {
                 anno.kind for anno in annotations if hasattr(anno, "kind")
             }
-
-            issues = []
 
             # --- Rule Group 1: refine-characters ---
             if "refine-characters" not in annotation_kinds:
@@ -121,16 +166,41 @@ def run(config: dict) -> None:
                     " missing 'original_prose'"
                 )
 
-            # --- Consolidation ---
+            # --- Consolidation State Sync ---
             if not issues:
                 healthy_count += 1
+                session.meta.healthy = True
             else:
                 failure_registry[uuid_str] = issues
+                session.meta.healthy = False
+
+            # Persist mutations back to disk ONLY if audit-only mode is deactivated
+            if not audit_only:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(
+                        session.model_dump(mode="json"), f, indent=2, ensure_ascii=False
+                    )
 
         except Exception as e:
             failure_registry[uuid_str].append(
                 f"Pydantic validation/structural crash: {str(e)}"
             )
+
+            # If the session model instantiation crashed entirely,
+            # fall back to dirty JSON patch
+            if not audit_only:
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        raw_data = json.load(f)
+                    if "meta" in raw_data and isinstance(raw_data["meta"], dict):
+                        raw_data["meta"]["healthy"] = False
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            json.dump(raw_data, f, indent=2, ensure_ascii=False)
+                except Exception as backup_err:
+                    logger.error(
+                        f"Critical write-back block on file "
+                        f"{uuid_str}: {str(backup_err)}"
+                    )
 
     # --- Render Report Output ---
     health_percentage = (healthy_count / total_records) * 100
