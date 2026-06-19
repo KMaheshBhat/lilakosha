@@ -1,6 +1,9 @@
+import hashlib
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict
 
 from datasets import load_dataset
 from tqdm import tqdm
@@ -19,11 +22,23 @@ from cdm.core import (
 logger = logging.getLogger(__name__)
 
 
-def run(config: dict):
+def compute_content_address(raw_record: dict) -> str:
+    """
+    Computes a deterministic SHA-256 fingerprint by serializing the raw dictionary
+    to a standardized, key-sorted, compact JSON string representation.
+    """
+    standardized_bytes = json.dumps(
+        raw_record, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+
+    return hashlib.sha256(standardized_bytes).hexdigest()
+
+
+def run(config: dict) -> None:
     """
     LilaKosha Stage 1: PIPPA Ingestion (Source -> Individual UUIDv7 Canvas Records).
-    Utilizes an append-only mapping ledger to implement skip-friendly,
-    idempotent ingestion.
+    Utilizes an append-only mapping ledger alongside an isolated metadata envelope
+    and pure SHA-256 content-addressable keys.
     """
     # 1. Resolve Volumes from Grounded Config
     processed_vol = Path(config["volumes"]["processed"])
@@ -37,7 +52,7 @@ def run(config: dict):
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-    # 3. Load Dataset via HF API (Streaming for efficiency)
+    # 3. Load Dataset via HF API (Streaming Mode)
     logger.info("Connecting to Hugging Face Dataset: PygmalionAI/PIPPA")
     dataset = load_dataset(
         "json",
@@ -61,41 +76,17 @@ def run(config: dict):
         sub_ts = raw_record.get("submission_timestamp")
 
         # Guard against dirty data rows
-        if not bot_id or not sub_ts:
+        if not bot_id or sub_ts is None:
             logger.warning(
                 f"Encountered malformed raw record at index row {i}. Skipping."
             )
             continue
 
-        # 5. Formulate the explicit key namespace for this source
-        # Base namespace tracks the character snapshot version
-        base_id = f"{bot_id}_{sub_ts}"
+        # 5. Formulate the pure content-addressed SHA-256 native key
+        content_hash = compute_content_address(raw_record)
 
-        # Pull the conversation list safely
-        conversation_turns = raw_record.get("conversation", []) or []
-
-        if conversation_turns:
-            # Extract attributes from the initial turn to form
-            # a conversation fingerprint
-            first_turn = conversation_turns[0]
-            first_msg = first_turn.get("message") or ""
-            first_actor = "human" if first_turn.get("is_human") else "bot"
-            turn_count = len(conversation_turns)
-
-            # Create a compact, stable hash of the first interaction and session shape
-            import hashlib
-
-            convo_fingerprint = hashlib.md5(
-                f"{first_actor}:{first_msg}:{turn_count}".encode("utf-8")
-            ).hexdigest()[:12]
-
-            native_id = f"{base_id}_{convo_fingerprint}"
-        else:
-            # Fallback if a record contains an entirely empty conversation array
-            native_id = f"{base_id}_emptyconvo"
-
-        # 6. Evaluate index state
-        target_uuid = ledger_index.get_uuid("pippa", native_id)
+        # 6. Evaluate index state using the pure SHA-256 hash
+        target_uuid = ledger_index.get_uuid("pippa", content_hash)
 
         if target_uuid:
             target_file = records_dir / f"{target_uuid}.json"
@@ -103,14 +94,21 @@ def run(config: dict):
             if target_file.exists():
                 continue
         else:
-            # If it hasn't been mapped yet, register it and mint a fresh
-            # tracking file path
-            target_uuid = ledger_index.register_record("pippa", native_id)
+            # Package source-specific markers inside an isolated dict tracking envelope
+            metadata_payload: Dict[str, Any] = {
+                "bot_id": str(bot_id),
+                "submission_timestamp": str(sub_ts),
+            }
+
+            # Register it cleanly into the ledger
+            target_uuid = ledger_index.register_record(
+                source="pippa",
+                native_id=content_hash,
+                meta=metadata_payload,
+            )
             target_file = records_dir / f"{target_uuid}.json"
 
         # 7. Pre-seed Identity Registry placeholders to establish data topology
-        #    Full validation/refinement of these fields happens down-stream in
-        #    step/refine-characters
         default_pronouns = PronounSet(
             subjective="they", objective="them", possessive="their"
         )
@@ -124,7 +122,7 @@ def run(config: dict):
                 is_player_controlled=True,
             ),
             CharacterIdentity(
-                entity_id=bot_id,
+                entity_id=str(bot_id),
                 name=raw_record.get("bot_name") or "the character",
                 gender="unknown",
                 pronouns=default_pronouns,
@@ -132,10 +130,10 @@ def run(config: dict):
             ),
         ]
 
-        # 8. Construct CDM Session Envelope using your structural Models
+        # 8. Construct CDM Session Envelope using structural Models
         meta_obj = SessionMeta(
             source_identity="PygmalionAI/PIPPA",
-            bot_id=bot_id,
+            bot_id=str(bot_id),
             bot_name=raw_record.get("bot_name"),
             ingestion_timestamp=timestamp,
             identities=identities_pool,
@@ -151,14 +149,14 @@ def run(config: dict):
             character_info = CharacterItem(
                 kind="character",
                 subkind="info",
-                entity_id=bot_id,
+                entity_id=str(bot_id),
                 content=raw_desc.strip(),
             )
             session_trace.items.append(character_info)
 
         # 10. Map Conversational Turns (Linguistic Evidence Line Items)
         for turn in raw_record.get("conversation", []) or []:
-            actor_id = "user" if turn.get("is_human") else bot_id
+            actor_id = "user" if turn.get("is_human") else str(bot_id)
             raw_message = turn.get("message") or ""
 
             turn_obj = TurnItem(
