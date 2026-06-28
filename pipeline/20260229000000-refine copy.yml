@@ -1,4 +1,6 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# Running 100 records with openrouter/owl-alpha through Openrouter
+# Started mid-night 2026-06-29 00:00:00
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -56,10 +58,6 @@ bindings:
         execution:
             requests_per_minute: 20
 
-# The start and stop is set to minimum UUID to avoid erraneous overwites.
-# Inpsect the ${LILAKOSHA_VOLUME_PROCESSED}/cdm/records to pick the
-# range that should be processed and pass it as command line parameters
-# to get the refine processes run on the range.
 parameters:
-    start_uuid: 00000000-0000-7000-8000-000000000000
-    stop_uuid: 00000000-0000-7000-8000-000000000000
+    start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
+    stop_uuid: 019f0f82-c690-7a61-a0ec-e5781934e57e
