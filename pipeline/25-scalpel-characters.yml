@@ -11,8 +11,3 @@ project:
 volumes:
     raw: "${LILAKOSHA_VOLUME_RAW}"
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
-
-services:
-    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
-    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
-    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes

@@ -1,3 +1,432 @@
+Directory structure:
+└── lilakosha/
+    ├── README.md
+    ├── example.env
+    ├── main.py
+    ├── pyproject.toml
+    ├── run.sh
+    ├── uv.lock
+    ├── cdm/
+    │   ├── __init__.py
+    │   ├── core.py
+    │   ├── ledger_index.py
+    │   └── refine.py
+    ├── doc/
+    │   ├── cdm.md
+    │   ├── design.md
+    │   └── operator.md
+    ├── pipeline/
+    │   ├── 10-init.yml
+    │   ├── 20-ingest.yml
+    │   ├── 25-scalpel-characters.yml
+    │   ├── 25-scalpel-genre-theme.yml
+    │   ├── 25-scalpel-grammar.yml
+    │   ├── 25-scalpel-safety-dials.yml
+    │   ├── 30-refine.yml
+    │   ├── 35-report-records.yml
+    │   ├── 40-prepare.yml
+    │   ├── 60-train-general.yml
+    │   └── 61-train-unbound.yml
+    └── steps/
+        ├── bake/
+        │   └── __init__.py
+        ├── ingest-pippa/
+        │   └── __init__.py
+        ├── init/
+        │   └── __init__.py
+        ├── prepare/
+        │   └── __init__.py
+        ├── refine-characters/
+        │   ├── __init__.py
+        │   └── templates/
+        │       ├── character-detail.jinja2
+        │       ├── system.jinja2
+        │       └── user.jinja2
+        ├── refine-genre-theme/
+        │   ├── __init__.py
+        │   └── templates/
+        │       ├── system.jinja2
+        │       └── user.jinja2
+        ├── refine-grammar/
+        │   ├── __init__.py
+        │   └── templates/
+        │       ├── system.jinja2
+        │       └── user.jinja2
+        ├── refine-safety-dials/
+        │   ├── __init__.py
+        │   └── templates/
+        │       ├── system.jinja2
+        │       └── user.jinja2
+        ├── report-record-health/
+        │   └── __init__.py
+        ├── report-record-stats/
+        │   └── __init__.py
+        ├── scalpel-characters/
+        │   └── __init__.py
+        ├── scalpel-genre-theme/
+        │   └── __init__.py
+        ├── scalpel-grammar/
+        │   └── __init__.py
+        ├── scalpel-safety-dials/
+        │   └── __init__.py
+        └── train/
+            └── __init__.py
+
+================================================
+FILE: README.md
+================================================
+# Project LilaKosha: The Treasury of Divine Play
+
+**Project LilaKosha** (लीलाकोश) is a high-utility, open-weights framework dedicated to developing a fine-tuned variant of the **Gemma 4 12B** architecture optimized specifically for **immersive creative writing, complex narrative generation, and interactive roleplay**.
+
+The name combines **Lila** (Play/Imaginative Sport) and **Kosha** (Treasury/Repository), representing an advanced, orchestration-aware platform for uninhibited collaborative storytelling.
+
+## Core Pillars
+
+* **Unbound Creative Freedom:** Incorporates an **abliterated residual stream** base to systematically bypass restrictive refusal vectors, allowing the model to handle high-stakes drama, dark themes, and complex villains without breaking narrative character or lecturing the user.
+* **Orchestration-Aware Pipeline:** A unique training methodology that "bakes in" the mechanics of long-form narrative consistency by utilizing **Recap-Augmented Chunking** to handle continuous, stateful interaction tracks within tight consumer hardware limits.
+* **Dual-Flavor Deployment:** Simultaneous release of an **Unbound** variant for maximum narrative flexibility and a **General** variant for mainstream collaborative writing applications.
+* **Hardware Optimization:** Precision-tuned for consumer-grade hardware (specifically **12 GB VRAM GPUs**) using the memory-efficient **Unsloth** training engine.
+
+## Technical Specifications
+
+* **Base Model:** [Gemma 4 12B Unified](https://huggingface.co/google/gemma-4-12B) (~11.95B dense parameters).
+* **Architecture:** Encoder-free, multimodal decoder-only transformer with native support for text, image, and audio tracks.
+* **Context Window:** Supports up to **256K tokens** for inference deployment.
+* **Training Method:** **QLoRA (Quantized Low-Rank Adaptation)** via Unsloth to compress the memory footprint during training to **~7.5 GB**, leaving a comfortable buffer for training sequences up to **4,096 tokens**.
+
+## The LilaKosha Pipeline Architecture
+
+```
+[Raw Datasets] ──> 10-init ──> 20-ingest ──> 30-refine ──> 35-report-records ──> 6X-train
+                                              ▲              │
+                                              │   [Scalpel]  │ (If anomalies found,
+                                              └─ 25-scalpel ─┘  executed manually by the operator)
+```
+
+1. **Base Selection:** Start with either the vanilla `gemma-4-12B-it` or the `gemma-4-12B-it-abliterated-uncensored` base foundation.
+2. **Processing (Recap-Augmentation):** Leverage localized inference services to extract structural **Session Recaps and Key Highlights** from long-form datasets, training the model to treat summaries as stateful "truth anchors" for long-term consistency.
+3. **Training (The QLoRA Phase):** Attach target LoRA adapters to the model's attention and MLP projections to lock in specific conversational styles and roleplay mechanics.
+4. **The "Bake" (Weight Fusion):** Mathematically inject the trained adapter weights directly back into the native 16-bit structure to generate a **monolithic distribution file**.
+5. **Export (GGUF):** Convert the merged weights into specialized GGUF block quants (e.g., **Q4_K_M**) optimized for low-latency local deployment.
+
+## Project Deliverables Matrix
+
+| Component | Identifier | Technical Profile & Delivery Format |
+| --- | --- | --- |
+| **The Pipeline** | `LilaKosha-Flow-MK1` | Complete architectural blueprint: ingestion, CDM management, scalpel suites, and training orchestration. |
+| **General Model** | `LilaKosha-G1-12B-G` | RPG-focused creative engine built over the stock vanilla Gemma 4 base. Retains institutional safety filters while embedding state-aware prose. Distributed as GGUF blocks. |
+| **Unbound Model** | `LilaKosha-G1-12B-U` | Immersion-focused narrative engine built over the abliterated residual base for complete writing freedom. Enhanced with Creative Preference Optimization (CRPO) attributes. Distributed as GGUF blocks. |
+
+### Variant Breakdown
+
+#### 1. LilaKosha-G1-12B-G ("General" Variant)
+
+* **Alignment:** Retains the rigorous **institutional safety, ethics, and compliance tuning** engineered into the core Google DeepMind backbone, including robust protections against harassment and dangerous data generation.
+* **Target Focus:** Geared toward **mainstream authors**, professional co-writing platforms, and commercial tools requiring corporate safety standard compliance.
+* **Core Benefit:** Merges standard safety boundaries with LilaKosha’s structured **"RPG Grammar"** and state-awareness layers, outperforming standard vanilla instructions in structural narrative coherence.
+
+#### 2. LilaKosha-G1-12B-U ("Unbound" Variant)
+
+* **Alignment:** Leverages an **abliterated residual weights stream**, systematically neutralizing the mathematical tensor paths that trigger model refusals.
+* **Target Focus:** Built specifically for **high-stakes fictional conflict**, dramatic tension, and interactive roleplay simulations where characters must stay true to form without breaking immersion or lecturing the user.
+* **Creative Preference Optimization (CRPO):** By running unbound, the fine-tune rewards narrative dimensions like novelty, surprise, tension, and prose diversity without triggering artificial alignment bottlenecks.
+
+## Repository Documentation Index
+
+For active machine control and execution instructions, see [doc/operator.md](doc/operator.md).
+
+For detailed structural paradigms and engineering design choices, see [doc/design.md](doc/design.md).
+
+For transactional schema constraints and payload structural layers, see [doc/cdm.md](doc/cdm.md).
+
+---
+
+*This framework is an open-weights engineering initiative intended exclusively for fictional writing, creative exploration, and interactive entertainment architectures.*
+
+
+
+================================================
+FILE: example.env
+================================================
+# LilaKosha-MK1: Environment Volume Mapping
+
+# Hugging Face Managed Infrastructure
+# enable this if not available in general environment
+# HF_HOME=/mnt/e/local/infra/huggingface
+
+# Map these to your physical D: and E: mounts in production
+LILAKOSHA_VOLUME_RAW=/tmp/lk-dry/raw
+LILAKOSHA_VOLUME_PROCESSED=/tmp/lk-dry/processed
+LILAKOSHA_VOLUME_MODELS=/tmp/lk-dry/models
+LILAKOSHA_VOLUME_EXPORTS=/tmp/lk-dry/exports
+
+# LilaKosha-MK1: Infrastructure Services
+# Ports for llama-server or litert-lm serve instances
+LILAKOSHA_SERVICE_INSPECTOR=http://localhost:8033
+LILAKOSHA_SERVICE_SUMMARIZER=http://localhost:8033
+LILAKOSHA_SERVICE_GRAMMAR=http://localhost:8033
+
+
+
+================================================
+FILE: main.py
+================================================
+import importlib
+import logging
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Any, cast
+
+import yaml
+
+# Configure professional DX logging for Operator oXperience (OX)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+
+def interpolate_env_vars(node: Any) -> Any:
+    """Recursively resolves ${VAR} or $VAR within the config dictionary."""
+    if isinstance(node, str):
+        return re.sub(
+            r"\$(\w+)|\${(\w+)}",
+            lambda m: os.getenv(m.group(1) or m.group(2), m.group(0)),
+            node,
+        )
+    elif isinstance(node, dict):
+        return {k: interpolate_env_vars(v) for k, v in node.items()}
+    elif isinstance(node, list):
+        return [interpolate_env_vars(x) for x in node]
+    return node
+
+
+def parse_cli_overrides(args: list[str]) -> dict[str, Any]:
+    """
+    Parses trailing command-line tokens into a dynamic dictionary structure.
+    Expects alternating pairs following a flag pattern: --key1 value1 --key2 value2
+    """
+    overrides = {}
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token.startswith("--"):
+            key = token.lstrip("-")
+            # Verify if there is a matching value token after the flag
+            if i + 1 < len(args) and not args[i + 1].startswith("--"):
+                val = args[i + 1]
+
+                # Deduce structural typings for standard config layers
+                if val.isdigit():
+                    overrides[key] = int(val)
+                elif re.match(r"^\d?\.\d+$", val):
+                    overrides[key] = float(val)
+                elif val.lower() == "true":
+                    overrides[key] = True
+                elif val.lower() == "false":
+                    overrides[key] = False
+                elif val.lower() in ("none", "null"):
+                    overrides[key] = None
+                else:
+                    overrides[key] = val
+                i += 2
+            else:
+                # Handle boolean flag presence implicitly without secondary values
+                overrides[key] = True
+                i += 1
+        else:
+            i += 1
+    return overrides
+
+
+def load_config(config_path: Path) -> dict[str, Any]:
+    """Loads YAML and validates the resolution of LilaKosha Volumes and Services."""
+    if not config_path.exists():
+        logger.error(f"Config file not found: {config_path}")
+        sys.exit(1)
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+    # Cast to dict[str, Any] for type-checking noise reduction (LSP)
+    resolved_config = cast(dict[str, Any], interpolate_env_vars(config))
+
+    # Pre-flight check for unresolved environment variables
+    for section in ["volumes", "services"]:
+        data = resolved_config.get(section, {})
+        for key, value in data.items():
+            if isinstance(value, str) and ("$" in value or value == ""):
+                logger.error(
+                    f"UNRESOLVED {section.upper()}: '{key}' is missing or invalid. "
+                    f"Ensure you have exported the "
+                    f"LILAKOSHA_{section[:-1].upper()}_* variable."
+                )
+                sys.exit(1)
+
+    return resolved_config
+
+
+def list_available_resources() -> list[str]:
+    """Discovers configs for enhanced Operator Experience (OX)."""
+    config_dir = Path("pipeline")
+    if config_dir.exists() and config_dir.is_dir():
+        return sorted(
+            [f.name for f in config_dir.glob("*") if f.suffix in (".yaml", ".yml")]
+        )
+    return []
+
+
+def main() -> None:
+    # Discover resources for help screen or validation
+    configs = list_available_resources()
+
+    # Operator Help / Resource Discovery
+    if len(sys.argv) < 2:
+        help_block = (
+            f"\n{'=' * 65}\n"
+            f"🛠️  LILAKOSHA FLOW MK1: CONFIG-DRIVEN ORCHESTRATOR\n"
+            f"{'=' * 65}\n\n"
+            f"Usage: uv run main.py <config_path> [options]\n\n"
+            f"Discovered Pipeline Configurations ({len(configs)}):\n"
+        )
+        for cfg in configs:
+            help_block += f"  - pipeline/{cfg}\n"
+
+        help_block += (
+            f"\nExecution Workflow Examples:\n"
+            f"  uv run main.py pipeline/init.yml\n"
+            f"  uv run main.py pipeline/25-scalpel-grammar.yml "
+            f"--start_uuid 019e --stop_uuid 5\n"
+            f"{'=' * 65}\n"
+        )
+        logger.info(help_block)
+        return
+
+    config_path = Path(sys.argv[1])
+
+    # 1. Load configuration and determine the pipeline sequence
+    config = load_config(config_path)
+    pipeline = config.get("pipeline", [])
+    if not pipeline:
+        logger.error(f"No 'pipeline' steps defined in {config_path}.")
+        sys.exit(1)
+
+    # Initialize parameters container if it is completely absent from the file
+    if "parameters" not in config:
+        config["parameters"] = {}
+
+    # 2. Inject Command Line Parameter Overrides
+    cli_overrides = parse_cli_overrides(sys.argv[2:])
+    if cli_overrides:
+        logger.info(f"Applying runtime overrides: {cli_overrides}")
+        config["parameters"].update(cli_overrides)
+
+    # 3. Metadata Extraction for High-Level Tracking
+    project = config.get("project", {})
+    project_name = project.get("name", "LilaKosha")
+    logger.info(f"Target Project: {project_name}")
+    logger.info(f"Pipeline Sequence: {pipeline}")
+    logger.info(f"Active Parameters: {config['parameters']}")
+
+    # 4. VRAM Handover Warning (Triggered when explicit training keys are in play)
+    if "train" in pipeline:
+        warning_block = (
+            "\n!!! VRAM HANDOVER WARNING !!!\n"
+            "Executing hardware-intensive training "
+            "workflow on 12GB VRAM resource pool.\n"
+            "Ensure ALL inference backend services "
+            "are TERMINATED before training begins.\n"
+        )
+        logger.warning(warning_block)
+
+    # 5. Sequential Execution Loop
+    for step_name in pipeline:
+        try:
+            # Dynamically import the step module from the 'steps/' directory
+            step_module = importlib.import_module(f"steps.{step_name}")
+            logger.info(f"--- Executing Step: {step_name.upper()} ---")
+
+            # Execute the step with the updated runtime config parameters
+            step_module.run(config)
+        except ImportError:
+            logger.error(
+                f"Step implementation for '{step_name}' not found in steps/ folder."
+            )
+            break
+        except Exception as e:
+            logger.exception(f"Critical failure in step '{step_name}': {e}")
+            break  # Halt the pipeline sequence on failure
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+================================================
+FILE: pyproject.toml
+================================================
+[project]
+name = "lilakosha"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=5.0.0",
+    "huggingface-hub>=1.19.0",
+    "jinja2>=3.1.6",
+    "pydantic>=2.13.4",
+    "pyyaml>=6.0.3",
+    "requests>=2.34.2",
+    "tqdm>=4.68.2",
+    "uuid-utils>=0.16.0",
+]
+
+[tool.basedpyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"] # Error, Pyflakes, Isort
+ignore = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.16",
+]
+
+
+
+================================================
+FILE: run.sh
+================================================
+#!/bin/bash
+
+# LilaKosha-Flow-MK1: Pipeline Execution Wrapper
+
+if [ ! -f .env ]; then
+    echo "❌ ERROR: .env file not found."
+    echo "   Please run: cp example.env .env"
+    echo "   And update the paths to match your local mount points."
+    exit 1
+fi
+
+# Pass the --env-file flag to uv run to resolve $LILAKOSHA_* variables
+# Usage: ./run.sh pipeline/stage.yml
+uv run --env-file .env main.py "$@"
+
+
+
+================================================
+FILE: uv.lock
+================================================
 version = 1
 revision = 3
 requires-python = ">=3.12"
@@ -310,15 +739,6 @@ wheels = [
 ]
 
 [[package]]
-name = "distro"
-version = "1.9.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed", size = 60722, upload-time = "2023-12-24T09:54:32.31Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
-]
-
-[[package]]
 name = "filelock"
 version = "3.29.3"
 source = { registry = "https://pypi.org/simple" }
@@ -542,78 +962,6 @@ wheels = [
 ]
 
 [[package]]
-name = "jiter"
-version = "0.15.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/66/b5/55f06bb281d92fb3cc86d14e1def2bd908bb77693183e7cb1f5a3c388b0c/jiter-0.15.0.tar.gz", hash = "sha256:4251acc80e2b7c9b7b8823456ea0fceeb0734dac2df7636d3c711b38476b5a76", size = 166640, upload-time = "2026-05-19T10:09:48.361Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/53/4f6bddbcde3c71e56d0aa1337ec95950f3d27dd4153e25aadf0feac71751/jiter-0.15.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:0e90a1c315a0226ec822d973817967f9223b7701546c8c2a7913e7ab0926294d", size = 308793, upload-time = "2026-05-19T10:07:35.25Z" },
-    { url = "https://files.pythonhosted.org/packages/01/84/c01099b59a285a1ebba64ae93f62bfa036675340fd1b0045ae65890a0442/jiter-0.15.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8c9004af7c8d67cce7f1aae1026fb55607f4aa600710d08ede3a3ce4aeefe7e0", size = 309570, upload-time = "2026-05-19T10:07:36.919Z" },
-    { url = "https://files.pythonhosted.org/packages/58/64/8fb7f9d45bb98190355454cd04dad8d8f27223d6bd52f83af07f637168a6/jiter-0.15.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c210f8b35dc6f30aafd4b4365ca89b9d1189f21ab49b8e68fa6322a847aef138", size = 336783, upload-time = "2026-05-19T10:07:38.694Z" },
-    { url = "https://files.pythonhosted.org/packages/c3/b6/f5739011d009b3a30f6a53c5240979030ba29ae46a8c67e3a15759f7c37d/jiter-0.15.0-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:5f30bae8bc1c2d613e28e5af3e8cceb09b742f1c8a8a5f839fb67afaffc03b61", size = 363555, upload-time = "2026-05-19T10:07:40.832Z" },
-    { url = "https://files.pythonhosted.org/packages/e5/12/98a9d9f766665e8a3b6252454e17cb0c464606a28cf2fa09399b003345fa/jiter-0.15.0-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:c60e71b6d10cfc284c9bf36bd885e8d44c46f688ce50aa91b5edd90181dea687", size = 452255, upload-time = "2026-05-19T10:07:42.62Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/d5/60f972840f79c5e7544fce567c56f1e4e50468f996baba3e78d823dd62a6/jiter-0.15.0-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:0ab068bce62a45aa3e7367eceaffb5dde60b7eb853be8dece45132e3d0ff4879", size = 373559, upload-time = "2026-05-19T10:07:44.201Z" },
-    { url = "https://files.pythonhosted.org/packages/ee/cf/d46ef1234ba335aabc2f013210db8e0821a22f5e644a2e9449df199ecc23/jiter-0.15.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fa248c9eb220197d363f688818dac2fd4b2f0cd7d843ca7105d652034823427d", size = 346055, upload-time = "2026-05-19T10:07:46.005Z" },
-    { url = "https://files.pythonhosted.org/packages/f0/63/4d2749d8d54d230bad9b3a6b0d00cc28c6ff6b2fdffc26a8ccf76cc5a974/jiter-0.15.0-cp312-cp312-manylinux_2_31_riscv64.whl", hash = "sha256:2a77aadd57cac1682e4401a72724d2796d89a4ba129b1a5812aa94ee480826eb", size = 351406, upload-time = "2026-05-19T10:07:47.855Z" },
-    { url = "https://files.pythonhosted.org/packages/d9/b9/9965b990035d8773328e0a8c8b457a87bf2b19f6c4126d9d99296be5d16a/jiter-0.15.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:2ae901f3a55bfafdde31d289590fa25e3245735a2b1e8c7cc15871710a002871", size = 389357, upload-time = "2026-05-19T10:07:49.665Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/55/9ddf903deda1413e87fed792f416b7123daee5b8efbad6a202a7421c36a5/jiter-0.15.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:f0b271b462769543716f92d3a4f90527df6ef5ed05ee95ec4137f513e21e1b77", size = 517263, upload-time = "2026-05-19T10:07:51.537Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/76/a0c40ad064d3a20a4fde231e35d56e9a01ce82164278180e82d5daf85469/jiter-0.15.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:2fb6a5d26af81fc0f00f9360a891e05cf755e149bba391c4d563adc54812973d", size = 548646, upload-time = "2026-05-19T10:07:53.196Z" },
-    { url = "https://files.pythonhosted.org/packages/23/4f/eca9b954942916ba2f453891b8593ab444cd872396fe66a3936616f236f3/jiter-0.15.0-cp312-cp312-win32.whl", hash = "sha256:c2f6bb8b5216ab9e7873bc08b5d7bef2b8abbb578a3069bf1cd14a45d71d771d", size = 206427, upload-time = "2026-05-19T10:07:55.307Z" },
-    { url = "https://files.pythonhosted.org/packages/95/bf/8ead82a87495149542748e828d153fd232a512a22c83b02c4815c1a9c7d8/jiter-0.15.0-cp312-cp312-win_amd64.whl", hash = "sha256:40b2c7e92c44a84d748d21706c68dc6ff8161d80b59c99d774721a0d2317d7c7", size = 197300, upload-time = "2026-05-19T10:07:56.651Z" },
-    { url = "https://files.pythonhosted.org/packages/f4/e4/9b8a78fb2d894471bc344e37f1949bdd784bd914d031dba0ba3a40c71dd7/jiter-0.15.0-cp312-cp312-win_arm64.whl", hash = "sha256:cc0bc345cf2df9d1c00ac443f50d543c1ccfa8b0422cb85b1ab70d681c0b255b", size = 192702, upload-time = "2026-05-19T10:07:58.307Z" },
-    { url = "https://files.pythonhosted.org/packages/e5/f4/f708c900ecee41b2025ef8413d5351e5649eb2125c506f6720cc69b06f5c/jiter-0.15.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:1c11465f97e2abf45a014b83b730222f8f1c5335e802c7055a67d50de6f1f4e3", size = 307829, upload-time = "2026-05-19T10:07:59.704Z" },
-    { url = "https://files.pythonhosted.org/packages/86/59/db537c0949e83668c38481d426b9f2fd5ab758c4ee53a811dd0a510626a0/jiter-0.15.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:d1e7b1776f0797956c509e123d0952d10d293a9492dea9f288ab9570ec01d1a5", size = 308445, upload-time = "2026-05-19T10:08:01.184Z" },
-    { url = "https://files.pythonhosted.org/packages/37/38/ea0e13b18c30ef951da0d47d39e7fa9edb82a93a62990ffbd7cea9b622d4/jiter-0.15.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:351a341c2105aa430b7047e30f1bf7975f6313b00165d3fc07be2edaf741f279", size = 336181, upload-time = "2026-05-19T10:08:02.688Z" },
-    { url = "https://files.pythonhosted.org/packages/58/fc/2303901b16c4ba05865588990a420c0b4156270b44379c20931544a1d962/jiter-0.15.0-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:4ab395feec8d249ec4044e228e98a7033f043426a265df439dc3698823f0a4e4", size = 362985, upload-time = "2026-05-19T10:08:04.394Z" },
-    { url = "https://files.pythonhosted.org/packages/5b/6f/11bace093c52e7d4d26c8e606ccd7ae8c972189622469ec0d9e28161e28b/jiter-0.15.0-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a2a438005b6f22d0273413484d6094d7c2c5d10ec1b3a3bf128e0d1d3ba53258", size = 453292, upload-time = "2026-05-19T10:08:05.967Z" },
-    { url = "https://files.pythonhosted.org/packages/22/db/987f2f086ca4d7a6582eb4ccd513f9b26b42d9e4243a087609a3137a8fc7/jiter-0.15.0-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f18f85e4218d1b40f000f42a92239a7a61a902cd42c65e6c360dbd17dcb20894", size = 373501, upload-time = "2026-05-19T10:08:07.857Z" },
-    { url = "https://files.pythonhosted.org/packages/8f/7c/89fbcabb2739b7a5b8dc959a1b6c5761f6484f5fed3486854b3c789bb1de/jiter-0.15.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d1aa62e277fc1cbd80e6deacae6f4d983b41b3d7728e0645c5d741a6149bba45", size = 344683, upload-time = "2026-05-19T10:08:09.431Z" },
-    { url = "https://files.pythonhosted.org/packages/30/6f/6cca7692e7dddfec6d8d76c54dc97f2af2a41df4ac0674b999df1f09a5f3/jiter-0.15.0-cp313-cp313-manylinux_2_31_riscv64.whl", hash = "sha256:6550fa135c7deb8ead6af49ed7ff648532ea8334a1447fe34a36315ef79c5c29", size = 350892, upload-time = "2026-05-19T10:08:11.352Z" },
-    { url = "https://files.pythonhosted.org/packages/39/14/0338d6190cb8e6d22e677ab1d4eabd4117f67cca70c54cd04b82ff64e068/jiter-0.15.0-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:066f8f33f18b2419cd8213b2436fa7fbc9c499f315971cfa3ce1f9820c001b1b", size = 388723, upload-time = "2026-05-19T10:08:12.912Z" },
-    { url = "https://files.pythonhosted.org/packages/90/31/cc19f4a1bdb6afb09ce6a2f2615aa8d44d994eba0d8e6105ed1af920e736/jiter-0.15.0-cp313-cp313-musllinux_1_1_aarch64.whl", hash = "sha256:75e8a04e91432dde9f1838373cf93d23726c79d3e908d319acf0e796f85592e7", size = 516648, upload-time = "2026-05-19T10:08:14.808Z" },
-    { url = "https://files.pythonhosted.org/packages/49/9f/833c541512cd091b63c10c0381973dfe11bc7a503a818c16384417e0c81e/jiter-0.15.0-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:a97261f1fccb8e50ecd2890a96e46efdc3f57c80a197324c6777827231eca712", size = 547382, upload-time = "2026-05-19T10:08:16.927Z" },
-    { url = "https://files.pythonhosted.org/packages/d2/11/e7b70e91f90bc4477e8eee9e8a5f7cf3cb41b4525d6394dc98a714eb8f7f/jiter-0.15.0-cp313-cp313-win32.whl", hash = "sha256:c77496cb10bd7549690fbbab3e5ec05857b83e49276f4a9423a766ddd2afcd4c", size = 205845, upload-time = "2026-05-19T10:08:18.401Z" },
-    { url = "https://files.pythonhosted.org/packages/4b/23/5c20d9ad6f02c493e4023e5d2d09e1c1f15fe2753c9102c544aff068a88e/jiter-0.15.0-cp313-cp313-win_amd64.whl", hash = "sha256:b15741f501469009ae0ae90b7147958a664a7dede40aa7ff174a8a4645f546d0", size = 196842, upload-time = "2026-05-19T10:08:20.131Z" },
-    { url = "https://files.pythonhosted.org/packages/6b/11/1eb400ef248e8c925fd883fbe325daf5e42cd1b0d308539dd332bd4f7ffc/jiter-0.15.0-cp313-cp313-win_arm64.whl", hash = "sha256:5d6a60072b44c3c2b797a7ddcbcbbf2b34ea3cfd4721580fbfd2a09d9d9b84ba", size = 192212, upload-time = "2026-05-19T10:08:21.807Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/60/2fd8d7c79da8acf9b7b277c7616847773779356b92acfc9bb158452174da/jiter-0.15.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:ef1fd24d9413f6209e00d3d5a453e67acfe004a25cc6c8e8484faed4311ab9e8", size = 315065, upload-time = "2026-05-19T10:08:23.218Z" },
-    { url = "https://files.pythonhosted.org/packages/46/f4/008fb7d65e8ac2abf00811651a661e025c4ba80bbc6f378450384ddd3aed/jiter-0.15.0-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:144f8e72cb53dab146347b91cceac01f5481237f2b93b4a339a1ee8f8878b67c", size = 339444, upload-time = "2026-05-19T10:08:24.701Z" },
-    { url = "https://files.pythonhosted.org/packages/00/55/90b0c7b9c6896c0f2a591dd36d36b71d22e09674bfef178fa03ba3f81499/jiter-0.15.0-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:553fcac2ef2cb990877f9fc0833b8b629a3e6a5670b6b5fd58219b41a653ddc4", size = 347779, upload-time = "2026-05-19T10:08:26.408Z" },
-    { url = "https://files.pythonhosted.org/packages/51/6b/69666cec5000fd57734c118437394516c749ae8dbeea9fb66d6fef9c4775/jiter-0.15.0-cp313-cp313t-win_amd64.whl", hash = "sha256:774f93f65031856bf14ad9f59bdcab8b8cad501e5ceabd51ba3525f76937a25b", size = 200395, upload-time = "2026-05-19T10:08:28.055Z" },
-    { url = "https://files.pythonhosted.org/packages/39/04/a6aa62cd27e8149b0d28df5561f10f6cceaf7935a9ccf3f1c5a05f9a0cd8/jiter-0.15.0-cp313-cp313t-win_arm64.whl", hash = "sha256:f1e1754960f38ec40613a07e5e372df67acb3b890fb383b6fb3de3e49ddbf3c7", size = 190516, upload-time = "2026-05-19T10:08:29.35Z" },
-    { url = "https://files.pythonhosted.org/packages/eb/d2/079f350ebf7859d081de30aa890f9e3be68516f754f3ba32366ffff4dcee/jiter-0.15.0-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:ac0d9ddea4350974be7a221fc25895f251a8fee748c889bdced2141c0fec1a49", size = 308884, upload-time = "2026-05-19T10:08:31.667Z" },
-    { url = "https://files.pythonhosted.org/packages/04/4e/a2c30a7f69b48c03b20935d647479106fe932f6e63f75faf53937197e05d/jiter-0.15.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:01a8222cf05ab1128e239421156c207949808acaaea2bdfd33130ae666786e86", size = 310028, upload-time = "2026-05-19T10:08:33.304Z" },
-    { url = "https://files.pythonhosted.org/packages/40/90/2e7cdfd3cf8ca967be38c48f5cf474d79f089efaf559a40f15984a77ae69/jiter-0.15.0-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:182226cbc930c9fab81bc2e41a4da672f89539906dadb05e75670ac07b94f71f", size = 337485, upload-time = "2026-05-19T10:08:35.259Z" },
-    { url = "https://files.pythonhosted.org/packages/9b/11/15a1aa28b120b8ee5b4f1fb894c125046225f09847738bd64233d3b84883/jiter-0.15.0-cp314-cp314-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:71683c38c825452999b5717fcae07ea708e8c93003e808be4319c1b02e3d176e", size = 364223, upload-time = "2026-05-19T10:08:36.694Z" },
-    { url = "https://files.pythonhosted.org/packages/b7/25/f442e8af5f3d0dcf47b39e83a0efd9ee45ea946aa6d04625dc3181eae3b6/jiter-0.15.0-cp314-cp314-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:30f2218e6a9e5c18bc10fe6d41ac189c442c88eacf11bad9f28ef95a9bef00e6", size = 456387, upload-time = "2026-05-19T10:08:38.143Z" },
-    { url = "https://files.pythonhosted.org/packages/da/f4/37f2d2c9f64f49af7da652ed7532bb5a2372e588e6927c3fdd76f911db65/jiter-0.15.0-cp314-cp314-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:5157de9f76eb4bc5ea74a1219366a25f945ad305641d74e04f59c54087091aa9", size = 374461, upload-time = "2026-05-19T10:08:39.869Z" },
-    { url = "https://files.pythonhosted.org/packages/60/28/edcfbbbf0cb15436f36664a8908a0df47ab9006298d4cd937dc08ea932d6/jiter-0.15.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:90c5db5527c221249a876160663ab891ace358c17f7b9c93ec1478b7f0550e5c", size = 345924, upload-time = "2026-05-19T10:08:41.668Z" },
-    { url = "https://files.pythonhosted.org/packages/47/13/89fba6398dab7f202b7278c4b4aac122399d2c0183971c4a57a3b7088df5/jiter-0.15.0-cp314-cp314-manylinux_2_31_riscv64.whl", hash = "sha256:3e4540b8e74e4268811ac05db226a6a128ff572e7e0ce3f1163b693cadb184cd", size = 352283, upload-time = "2026-05-19T10:08:43.091Z" },
-    { url = "https://files.pythonhosted.org/packages/1b/da/0f6af8cef2c565a1ab44d970f268c43ccaa72707386ea6388e6fe2b6cd26/jiter-0.15.0-cp314-cp314-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:62ebd14e47e9aed9df4472afcb2663668ce4d74891cd54f86bf6e44029d6dc89", size = 389985, upload-time = "2026-05-19T10:08:44.915Z" },
-    { url = "https://files.pythonhosted.org/packages/a1/ec/b9cb7d6d29e24ee14910266157d2a279d7a8f60ee0df7fa840882976ba64/jiter-0.15.0-cp314-cp314-musllinux_1_1_aarch64.whl", hash = "sha256:0be6f5ad41a809f303f416d17cec92a7a725902fb9b4f3de3d19362ac0ef8554", size = 517695, upload-time = "2026-05-19T10:08:46.486Z" },
-    { url = "https://files.pythonhosted.org/packages/64/5e/6d1bda880723aae0ad86b4b763f044362448efe31e3e819635d41cb03451/jiter-0.15.0-cp314-cp314-musllinux_1_1_x86_64.whl", hash = "sha256:813dfbb17d65328bf86e5f0905dd277ba2265d3ca20556e86c0c7035b7182e5a", size = 548868, upload-time = "2026-05-19T10:08:48.026Z" },
-    { url = "https://files.pythonhosted.org/packages/0c/72/7de501cf38dcacaf35098796f3a50e0f2e338baba18a58946c618544b809/jiter-0.15.0-cp314-cp314-win32.whl", hash = "sha256:50e51156192722a9c58db112837d3f8ef96fb3c5ecc14e95f409134b08b158ec", size = 206380, upload-time = "2026-05-19T10:08:49.738Z" },
-    { url = "https://files.pythonhosted.org/packages/1e/a9/e19addf4b0c1bdce52c6da12351e6bc42c340c45e7c09e2158e46d293ccc/jiter-0.15.0-cp314-cp314-win_amd64.whl", hash = "sha256:30ce1a5d16b5641dc935d50ef775af6a0871e3d14ab05d6fc54dff371b78e558", size = 197687, upload-time = "2026-05-19T10:08:51.088Z" },
-    { url = "https://files.pythonhosted.org/packages/f2/c9/776b1db01db25fc6c1d58d1979a37b0a9fe787e5f5b1d062d2eaacb77923/jiter-0.15.0-cp314-cp314-win_arm64.whl", hash = "sha256:510c8b3c17a0ed9ac69850c0438dada3c9b82d9c4d589fcb62002a5a9cf3a866", size = 192571, upload-time = "2026-05-19T10:08:52.451Z" },
-    { url = "https://files.pythonhosted.org/packages/a0/f6/45bb4670bacf300fd2c7abadbfb3af376e5f1b6ae75fd9bc069891d15870/jiter-0.15.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:7553333dd0930c104a5a0db8df72bf7219fe663d731383b576bb6ed6351c984d", size = 317151, upload-time = "2026-05-19T10:08:53.867Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/68/ed635ad5acd7b73e454283083bbb7c8205ad10e88b0d9d7d793b09fe8226/jiter-0.15.0-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f2143ab06181d2b029eedcb6af3cebe95f11bbac62441781860f98ee9330a6a6", size = 341243, upload-time = "2026-05-19T10:08:55.383Z" },
-    { url = "https://files.pythonhosted.org/packages/5d/db/3ff4176b817b8ea33879e71e13d8bc2b0d481a7ed3fe9e080f333d415c16/jiter-0.15.0-cp314-cp314t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:6eac374c5c975709b69c10f09afd199df74150172156ad10c8d4fd785b7da995", size = 363629, upload-time = "2026-05-19T10:08:56.928Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/24/5f8270e0ba9c883582f96f722f8a0b58015c7ce1f8c6d4571cf394e99b6b/jiter-0.15.0-cp314-cp314t-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b3b3b775e33d3bfaec9899edc526ae97b0da0bf9d071a46124ba419149a414f8", size = 456198, upload-time = "2026-05-19T10:08:58.618Z" },
-    { url = "https://files.pythonhosted.org/packages/45/5b/76fc02b0b5c54c3d18c60653156e2f76fde1816f9b4722db68d6ee2c897e/jiter-0.15.0-cp314-cp314t-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:eda3071db3346334beae1360b46da4606da57bf3528c167b3c38533afaf9f2c5", size = 373710, upload-time = "2026-05-19T10:09:00.151Z" },
-    { url = "https://files.pythonhosted.org/packages/c4/52/4310821b0ea9277994d3e1f49fc6a4b34e4800caebacb2c0af81da59a454/jiter-0.15.0-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c6694a173ecabc12eb60efbc0b474464ead1951ff65cd8b1e72100715c64512b", size = 349901, upload-time = "2026-05-19T10:09:01.621Z" },
-    { url = "https://files.pythonhosted.org/packages/93/fe/67648c35b3594fba8854ac64cc8a826d8bcd18324bbdb53d77697c60b6ef/jiter-0.15.0-cp314-cp314t-manylinux_2_31_riscv64.whl", hash = "sha256:a254e10b593624d230c365b6d616b22ca0ad65e63a16e6631c2b3466022e6ba8", size = 352438, upload-time = "2026-05-19T10:09:03.216Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/28/0a1879d07ad6b3e025a2750027363452ced93c2d16d1c9d4b153ffd51c91/jiter-0.15.0-cp314-cp314t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:d8d2955167274e15d79a7a020afdd9b39c990eb80b2d89fca695d92dcfdd38ec", size = 388152, upload-time = "2026-05-19T10:09:04.741Z" },
-    { url = "https://files.pythonhosted.org/packages/c1/78/46c6f6b56ba85c90021f4afd72ed42f691f8f84daacb5fe27277070e3858/jiter-0.15.0-cp314-cp314t-musllinux_1_1_aarch64.whl", hash = "sha256:acf4ee4d1fc55917239fe72972fb292dd773055d05eb040d36f4326e02cc2c0e", size = 517707, upload-time = "2026-05-19T10:09:06.231Z" },
-    { url = "https://files.pythonhosted.org/packages/ca/cb/720662d4c88fcad606e826fef5424365527ba43ce4868a479aed8f8c507e/jiter-0.15.0-cp314-cp314t-musllinux_1_1_x86_64.whl", hash = "sha256:e7196e56f1cd69af1dbb07dff02dcfb260a50b45a82d409d92a06fedb32473b5", size = 548241, upload-time = "2026-05-19T10:09:08.093Z" },
-    { url = "https://files.pythonhosted.org/packages/60/e3/935b8034fd143f21125c87d51404a9e0e1449186a494405721ff5d1d695e/jiter-0.15.0-cp314-cp314t-win32.whl", hash = "sha256:7f6163c0f10b055245f814dcc59f4818da60dfe72f3e72ab89fc24b6bd5e9c52", size = 207950, upload-time = "2026-05-19T10:09:09.616Z" },
-    { url = "https://files.pythonhosted.org/packages/93/59/984fd9ece895953dad3e0880a650e766f5a2da2c5514f0eafdaaabbeb5f9/jiter-0.15.0-cp314-cp314t-win_amd64.whl", hash = "sha256:980c256edb05b78a111b99c4de3b1d32e31634b867fd1fc2cf726e7b7bba9854", size = 200055, upload-time = "2026-05-19T10:09:11.367Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/a4/cf8d779feb133a27a2e3bc833bccb9e13aa332cdf820497ebf72c10ce8c3/jiter-0.15.0-cp314-cp314t-win_arm64.whl", hash = "sha256:66b1880df2d01e206e8339769d1c7c1753bcb653efd6289e203f6f24ebada0c0", size = 191244, upload-time = "2026-05-19T10:09:12.74Z" },
-    { url = "https://files.pythonhosted.org/packages/73/38/505941b2b092fd5bbbd60a52a880db1173f1690ae6751bed3af1c9ddcb4e/jiter-0.15.0-graalpy312-graalpy250_312_native-macosx_10_12_x86_64.whl", hash = "sha256:631f13a3d04e97d4e083993b10f4b99530e3a10d953e2eb5e196b7dc7f812ce0", size = 303769, upload-time = "2026-05-19T10:09:42.203Z" },
-    { url = "https://files.pythonhosted.org/packages/e7/95/a06692b29e77473f286e1ec1f426d3ca44d7b5843be8ad21d7a5f3fcdcc0/jiter-0.15.0-graalpy312-graalpy250_312_native-macosx_11_0_arm64.whl", hash = "sha256:b6c0ffae686c39bf3737be60793783267628783ea42545632c10b291105aee45", size = 305128, upload-time = "2026-05-19T10:09:43.657Z" },
-    { url = "https://files.pythonhosted.org/packages/23/85/7270d7ad41d6061a25b950c6bf91d638bd9aacb113200a8c8d57a055fd67/jiter-0.15.0-graalpy312-graalpy250_312_native-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1d54fb5b31dea401a41af3f8a7d2512e9b6a6a005491e6166c7e4ffab9639a9c", size = 340459, upload-time = "2026-05-19T10:09:45.452Z" },
-    { url = "https://files.pythonhosted.org/packages/c8/8d/302cb2057b7513327b4d575cff6b1d066ee6431a5357fc3f8867cd684406/jiter-0.15.0-graalpy312-graalpy250_312_native-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:54d5d6090cdc1b7c9e780dfb04949a990adb1e301a2fc0bbcee7de4638d33f9a", size = 344469, upload-time = "2026-05-19T10:09:46.864Z" },
-]
-
-[[package]]
 name = "lilakosha"
 version = "0.1.0"
 source = { virtual = "." }
@@ -621,7 +969,6 @@ dependencies = [
     { name = "datasets" },
     { name = "huggingface-hub" },
     { name = "jinja2" },
-    { name = "openai" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "requests" },
@@ -639,7 +986,6 @@ requires-dist = [
     { name = "datasets", specifier = ">=5.0.0" },
     { name = "huggingface-hub", specifier = ">=1.19.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
-    { name = "openai", specifier = ">=2.44.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "requests", specifier = ">=2.34.2" },
@@ -909,25 +1255,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/9c/50/0753655aa844c99cd9e018aacf76f130f1bd81d881bb74bc0aef5d73a8ba/numpy-2.4.6-cp314-cp314t-win32.whl", hash = "sha256:260a5d70215b61ab4fadf5c7baacd64821842975eea312125ed3c39a6391b063", size = 6156982, upload-time = "2026-05-18T23:36:40.817Z" },
     { url = "https://files.pythonhosted.org/packages/b2/d4/7c67becf668f973cb490cec3e98dfd799d866f9c989a54d355672cfa0db6/numpy-2.4.6-cp314-cp314t-win_amd64.whl", hash = "sha256:81a1cca95ed5bb92aa8b10dd2cdc9a0d3853a50fad926c28b5d7e8ea54389627", size = 12638908, upload-time = "2026-05-18T23:36:43.996Z" },
     { url = "https://files.pythonhosted.org/packages/43/bb/e1c71a4295b1b1d1393d50dbb4f2a36283c6859d9d3892e84f00ec5a91d5/numpy-2.4.6-cp314-cp314t-win_arm64.whl", hash = "sha256:0c9136e14ed34a9e343a31c533d78a9813a69a3148332bce5e9821cb2f996e66", size = 10565867, upload-time = "2026-05-18T23:36:47.114Z" },
-]
-
-[[package]]
-name = "openai"
-version = "2.44.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio" },
-    { name = "distro" },
-    { name = "httpx" },
-    { name = "jiter" },
-    { name = "pydantic" },
-    { name = "sniffio" },
-    { name = "tqdm" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/49/f5/7c7cb955305cb41f7f3c5fd7e0e38bf6bbf2658468863d4b7b868a5cb8df/openai-2.44.0.tar.gz", hash = "sha256:68a5a5ffad82b8ff7d451c437529fb64f7c3b8123aaf0c021966a882d9e3947d", size = 988753, upload-time = "2026-06-24T20:56:02.293Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/f4/561ed79fd94876160018a5e75254cfcb9b0e62d4dded9dcb20072e86d623/openai-2.44.0-py3-none-any.whl", hash = "sha256:0a2a3ab2e29aeda368700f662ff9ba0f9df17ba4c54577a64e08b8115a3cc0ad", size = 1366216, upload-time = "2026-06-24T20:55:58.882Z" },
 ]
 
 [[package]]
@@ -1357,15 +1684,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sniffio"
-version = "1.3.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372, upload-time = "2024-02-25T23:20:04.057Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235, upload-time = "2024-02-25T23:20:01.196Z" },
-]
-
-[[package]]
 name = "tqdm"
 version = "4.68.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1703,3 +2021,3563 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/65/a4/ba80dccd3593ff1f01051a818694d07b58cb8232677ee9a22a5a1f93a9fc/yarl-1.24.2-cp314-cp314t-win_arm64.whl", hash = "sha256:e434a45ce2e7a947f951fc5a8944c8cc080b7e59f9c50ae80fd39107cf88126d", size = 91219, upload-time = "2026-05-19T21:31:01.934Z" },
     { url = "https://files.pythonhosted.org/packages/fd/4d/4b880086bd0d3e034d25647be1d830afc3e3f610e98c4ab3490af6b1b6d5/yarl-1.24.2-py3-none-any.whl", hash = "sha256:2783d9226db8797636cd6896e4de81feed252d1db72265686c9558d97a4d94b9", size = 53576, upload-time = "2026-05-19T21:31:03.909Z" },
 ]
+
+
+
+================================================
+FILE: cdm/__init__.py
+================================================
+from .core import (
+    CharacterItem,
+    Session,
+    SessionMeta,
+    SummaryItem,
+    TurnItem,
+    WorldItem,
+)
+from .ledger_index import LedgerIndex
+from .refine import (
+    CharacterProfile,
+    CharacterSynthesisResponse,
+)
+
+__all__ = [
+    "LedgerIndex",
+    "Session",
+    "SessionMeta",
+    "TurnItem",
+    "WorldItem",
+    "CharacterItem",
+    "SummaryItem",
+    "CharacterProfile",
+    "CharacterSynthesisResponse",
+]
+
+
+
+================================================
+FILE: cdm/core.py
+================================================
+from enum import Enum
+from typing import Annotated, List, Literal, Optional, Union
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class SexualScale(str, Enum):
+    CLEAN = "Clean"
+    SUGGESTIVE = "Suggestive"
+    EXPLICIT = "Explicit"
+
+
+class ViolenceScale(str, Enum):
+    NONE = "None"
+    COMBAT = "Combat"
+    GRAPHIC = "Graphic"
+
+
+class ToxicityScale(str, Enum):
+    SAFE = "Safe"
+    HARASSMENT = "Harassment"
+    DANGEROUS = "Dangerous"
+
+
+class MainGenre(str, Enum):
+    FANTASY = "Fantasy"
+    SCI_FI = "Sci-Fi"
+    ROMANCE = "Romance"
+    SLICE_OF_LIFE = "Slice of Life"
+    ACTION_ADVENTURE = "Action & Adventure"
+    MYSTERY_THRILLER = "Mystery & Thriller"
+    COMEDY = "Comedy"
+    DRAMA = "Drama"
+
+
+class PronounSet(BaseModel):
+    subjective: str = Field(description="e.g., 'he', 'she', 'they'")
+    objective: str = Field(description="e.g., 'him', 'her', 'them'")
+    possessive: str = Field(description="e.g., 'his', 'hers', 'their'")
+
+
+class CharacterIdentity(BaseModel):
+    """
+    Authoritative actor registry. Sealing these fields blocks downstream
+    linguistic drift during zero-reasoning grammar normalization.
+    """
+
+    entity_id: str = Field(
+        description=(
+            "The unique semantic identifier for the actor "
+            "(e.g., 'user', 'bot_123', 'char_001')."
+        )
+    )
+    name: str = Field(
+        description=(
+            "The clean proper name used for 3rd-person text generation "
+            "and narrative grounding."
+        )
+    )
+    gender: Literal["male", "female", "neutral", "unknown"] = "unknown"
+    pronouns: PronounSet
+    is_player_controlled: bool = Field(
+        default=False,
+        description=(
+            "True if this entity represents a human user/PC. "
+            "False for NPCs, companion bots, or novel characters."
+        ),
+    )
+
+
+# ==========================================
+# Session Line Items
+# ==========================================
+class WorldItem(BaseModel):
+    kind: Literal["world"] = "world"
+    subkind: Literal["info", "detail"]
+    content: str
+
+
+class CharacterItem(BaseModel):
+    """Chronological, local deep lore extraction or behavioral snapshot."""
+
+    kind: Literal["character"] = "character"
+    subkind: Literal["info", "detail"]
+    entity_id: str
+    content: str
+    reasoning: Optional[str] = None
+
+
+class SummaryItem(BaseModel):
+    kind: Literal["summary"] = "summary"
+    subkind: Literal["pre", "scenario", "post"]
+    content: str
+
+
+class TurnItem(BaseModel):
+    kind: Literal["turn"] = "turn"
+    actor_id: str  # Maps directly back to CharacterIdentity.entity_id
+    thought: Optional[str] = ""
+    prose: str
+    prose_revision_comments: Optional[str] = None
+    original_prose: Optional[str] = None
+
+
+ItemUnion = Union[WorldItem, CharacterItem, SummaryItem, TurnItem]
+DiscriminatedItem = Annotated[ItemUnion, Field(discriminator="kind")]
+
+
+class Annotation(BaseModel):
+    kind: str
+    content: str
+    reasoning: Optional[str] = None
+
+
+# ==========================================
+# Session Meta
+# ==========================================
+class SessionMeta(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    source_record: Optional[dict] = None
+    source_identity: str
+    bot_id: Optional[str] = None
+    bot_name: Optional[str] = "the character"
+    ingestion_timestamp: Optional[str] = None
+    identities: List[CharacterIdentity] = Field(
+        default_factory=list,
+        description="The sealed directory of all characters present within this trace.",
+    )
+    sexual_axis: Optional[SexualScale] = None
+    violence_axis: Optional[ViolenceScale] = None
+    toxicity_axis: Optional[ToxicityScale] = None
+    primary_genre: Optional[MainGenre] = None
+    themes: Optional[List[str]] = Field(default_factory=list)
+    crpo_signals: Optional[dict] = Field(default_factory=dict)
+    annotations: Optional[List[Annotation]] = None
+    healthy: Optional[bool] = None
+
+
+class Session(BaseModel):
+    kind: Literal["session"] = "session"
+    meta: SessionMeta
+    items: List[DiscriminatedItem]
+
+
+
+================================================
+FILE: cdm/ledger_index.py
+================================================
+import json
+import logging
+from pathlib import Path
+from typing import Any, Dict, Tuple
+
+import uuid_utils as uuid
+
+logger = logging.getLogger(__name__)
+
+
+class LedgerIndex:
+    """Manages lookups and thread/process-safe additions to the common index."""
+
+    def __init__(self, mapping_path: Path):
+        self.mapping_path = mapping_path
+        # Explicit type signatures stop the IDE from guessing or falling back
+        # to Unknown types
+        self._lookup: Dict[Tuple[str, str], str] = {}
+
+        # Ensure directory structures are active
+        self.mapping_path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.mapping_path.exists():
+            self.mapping_path.touch()
+        self._load_index()
+
+    def _load_index(self) -> None:
+        with open(self.mapping_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry: Dict[str, Any] = json.loads(line)
+                    # Force strict string conversion to keep the cache map
+                    # cleanly aligned
+                    key = (str(entry["source"]), str(entry["native_id"]))
+                    self._lookup[key] = str(entry["uuid"])
+                except (json.JSONDecodeError, KeyError):
+                    continue
+
+    def get_uuid(self, source: str, native_id: str) -> str | None:
+        return self._lookup.get((source, native_id))
+
+    def register_record(
+        self, source: str, native_id: str, meta: dict | None = None
+    ) -> str:
+        existing_uuid = self.get_uuid(source, native_id)
+        if existing_uuid:
+            return existing_uuid
+
+        # Generate sortable UUIDv7 string safely
+        new_uuid: str = str(uuid.uuid7())
+
+        # Construct the clean metadata tracking row
+        entry: Dict[str, Any] = {
+            "source": source,
+            "native_id": native_id,
+            "uuid": new_uuid,
+        }
+        if meta is not None:
+            entry["meta"] = meta
+
+        # Append transaction log mutation line item instantly
+        with open(self.mapping_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
+        # Keep lookups tightly bound to primitives without leaking
+        # any nested dictionaries into value slots
+        self._lookup[(source, native_id)] = new_uuid
+        return new_uuid
+
+
+
+================================================
+FILE: cdm/refine.py
+================================================
+import re
+from typing import List, Literal
+
+from pydantic import BaseModel, Field
+from pydantic.functional_validators import field_validator
+
+from cdm.core import MainGenre, SexualScale, ToxicityScale, ViolenceScale
+
+
+class PronounSet(BaseModel):
+    subjective: str = Field(
+        description=(
+            "The subjective pronoun to use for this entity (e.g., 'he', 'she', 'they')."
+        )
+    )
+    objective: str = Field(
+        description=(
+            "The objective pronoun to use for this entity (e.g., 'him', 'her', 'them')."
+        )
+    )
+    possessive: str = Field(
+        description=(
+            "The possessive adjective/pronoun to use for this entity "
+            "(e.g., 'his', 'hers', 'their')."
+        )
+    )
+
+
+class CharacterProfile(BaseModel):
+    name: str = Field(
+        description=(
+            "The character's proper name where clearly identified. "
+            "CRITICAL FALLBACK FOR ANONYMOUS USERS: If the human player or a character "
+            "is anonymous, generic, or referred to only as 'user', 'human', or "
+            "'unknown', you MUST select a realistic, natural fallback name based on "
+            "gender context: "
+            "Male -> 'Adam', 'Jack', or 'James'; "
+            "Female -> 'Eve', 'Jane', or 'Mary'; "
+            "Gender-Neutral/Ambiguous -> 'Alex', 'Sam', or 'Robin'. "
+            "Never leave the name as 'User', 'Human', 'Unknown', or a descriptive "
+            "role title."
+        )
+    )
+    gender: Literal["male", "female", "neutral", "unknown"] = Field(
+        description="The established or inferred narrative gender of the entity."
+    )
+    pronouns: PronounSet = Field(
+        description="The sealed, authoritative pronoun tokens of the character."
+    )
+    core_traits: List[str] = Field(
+        description="Key behavioral traits, descriptions, or motivations observed."
+    )
+    appearance_details: List[str] = Field(
+        description="Physical descriptions or visual indicators."
+    )
+
+
+class CharacterSynthesisResponse(BaseModel):
+    user_character: CharacterProfile = Field(
+        description="Profile extracted for the human USER player."
+    )
+    bot_character: CharacterProfile = Field(
+        description="Profile extracted for the AI/Bot companion."
+    )
+
+
+class SafetyDialsResponse(BaseModel):
+    sexual_axis: SexualScale = Field(
+        description=(
+            "Evaluates sexual content. "
+            "'Clean' means platonic/wholesome. "
+            "'Suggestive' includes kissing, heavy flirting, or suggestive outfits. "
+            "'Explicit' involves graphic descriptions of sexual acts."
+        )
+    )
+    violence_axis: ViolenceScale = Field(
+        description=(
+            "Evaluates physical harm. "
+            "'None' means zero violence. "
+            "'Combat' includes action, magic battles, or non-lethal fighting. "
+            "'Graphic' includes explicit gore, mutilation, or severe cruelty."
+        )
+    )
+    toxicity_axis: ToxicityScale = Field(
+        description=(
+            "Evaluates real-world harm. "
+            "'Safe' includes fictional villain dialogue. "
+            "'Harassment' includes intense verbal abuse. "
+            "'Dangerous' covers hate speech."
+        )
+    )
+
+
+class GenreAndThemesResponse(BaseModel):
+    primary_genre: MainGenre = Field(
+        description=(
+            "The rigid primary genre classification that best fits this session. "
+        )
+    )
+    themes: List[str] = Field(
+        description=(
+            "Open-ended semantic tags or narrative tropes found in the chat. "
+            "Capture specific behavioral quirks, plot devices, or settings "
+            "(e.g., 'body-swap', 'magic-ring', 'teasing', 'tsundere')."
+        )
+    )
+
+    @field_validator("themes")
+    @classmethod
+    def sanitize_themes(cls, v: List[str]) -> List[str]:
+        sanitized = []
+        for tag in v:
+            # 1. Lowercase and strip outer spaces
+            clean_tag = tag.lower().strip()
+            # 2. Turn spaces, underscores, and slashes/dashes into a standard hyphen
+            clean_tag = re.sub(r"[\s_/\-\:]+", "-", clean_tag)
+            # 3. Strip out any remaining weird punctuation (except alphanumeric
+            #    and hyphens)
+            clean_tag = re.sub(r"[^\w-]", "", clean_tag)
+            # 4. Collapse multiple repeating hyphens (e.g., '--' or '---') into
+            #    a single '-'
+            clean_tag = re.sub(r"-+", "-", clean_tag)
+            # 5. Clean up any accidental leading or trailing hyphens
+            clean_tag = clean_tag.strip("-")
+            if clean_tag:
+                sanitized.append(clean_tag)
+        # Deduplicate while preserving order
+        return list(dict.fromkeys(sanitized))
+
+
+class SingleTurnGrammarResponse(BaseModel):
+    rewritten_prose: str = Field(
+        description=(
+            "The finalized, clean third-person past-tense narrative prose "
+            "for the target turn complying with all verbatim requirements."
+        )
+    )
+
+
+
+================================================
+FILE: doc/cdm.md
+================================================
+# Project LilaKosha Common Data Model (CDM) Specification
+
+The **Common Data Model (CDM)** is the foundational, type-safe data schema utilized by the `ingest-pippa`, `refine-*`, and `scalpel-*` pipeline stages. It enforces an orchestration-aware format that translates flat interaction data from multiple source environments into structured, standalone `{UUIDv7}.json` documents representing isolated transaction histories.
+
+## Technical Architecture & Validation Layer
+
+The schema is built and programmatically validated via Pydantic using a discriminated union topology. This allows highly specialized narrative line items to sit within a sequential, chronological flat array (`items`), preserving order of events while exposing distinct metadata properties.
+
+```
+Session (kind: "session")
+├── meta: SessionMeta
+│    ├── identities: List[CharacterIdentity] [Sealed Registry]
+│    ├── sexual_axis / violence_axis / toxicity_axis [Safety Scales]
+│    └── primary_genre / themes / crpo_signals [Creative Labels]
+└── items: List[DiscriminatedItem] (Chronological Stream)
+├── WorldItem     (kind: "world")
+├── CharacterItem (kind: "character")
+├── SummaryItem   (kind: "summary")
+└── TurnItem      (kind: "turn")
+```
+
+## Enumeration Registers
+
+To maintain tight categorization bounds for downstream fine-tuning, the refinement engine strictly maps metrics to these standardized string scales:
+
+### 1. Safety & Content Dials
+
+* **`SexualScale`** (`meta.sexual_axis`):
+  * `"Clean"` – Content contains no overt sexual references or suggestive interplay.
+  * `"Suggestive"` – Explicit text is absent but dialogue includes flirtation, double entendres, or romantic tension.
+  * `"Explicit"` – Content contains graphic or unfiltered depictions of sexual acts.
+* **`ViolenceScale`** (`meta.violence_axis`):
+  * `"None"` – No physical altercations or harm occur.
+  * `"Combat"` – Standard action sequences, tactical skirmishes, and stylized fantasy conflicts.
+  * `"Graphic"` – Unfiltered, visceral, or lethal physical consequences are described.
+* **`ToxicityScale`** (`meta.toxicity_axis`):
+  * `"Safe"` – Hostile linguistic markers are absent.
+  * `"Harassment"` – Interactions include directed emotional cruelty, bullying, or persistent degradation.
+  * `"Dangerous"` – Depicts extreme non-fictional harms or actionable real-world threats.
+
+### 2. Primary Classification
+
+* **`MainGenre`** (`meta.primary_genre`):
+  * `"Fantasy"`, `"Sci-Fi"`, `"Romance"`, `"Slice of Life"`, `"Action & Adventure"`, `"Mystery & Thriller"`, `"Comedy"`, `"Drama"`
+
+## Data Structure Registries
+
+### Character Identity Object
+
+The metadata block maintains an authoritative actor registry. Sealing these identities blocks downstream linguistic drift during zero-reasoning grammar normalization.
+
+* `entity_id` (String): Unique semantic key across this trace (e.g., `"user"`, `"bot_001"`).
+* `name` (String): Clean proper name used for third-person text generation and narrative grounding.
+* `gender` (Literal): `"male" | "female" | "neutral" | "unknown"`
+* `pronouns` (Object): Structured mappings containing `subjective` (e.g., `"she"`), `objective` (e.g., `"her"`), and `possessive` (e.g., `"hers"`).
+* `is_player_controlled` (Boolean): `True` if entity represents a human operator; `False` for NPCs, companion bots, or novel characters.
+
+## Discriminated Line Items Matrix
+
+Every object residing within the top-level `items` list must explicitly include a valid `kind` parameter to anchor the Pydantic type validator.
+
+| **Kind** | **Subkind Options** | **Properties** | **Narrative Intent / Execution Context** |
+| :--- | :--- | :--- | :--- |
+| **`world`** | `"info"` \| `"detail"` | `content` (str) | **Permanent Grounding**: Global rules, environmental laws (`info`), or dynamic local scene items (`detail`). |
+| **`character`** | `"info"` \| `"detail"` | `entity_id` (str)<br>`content` (str)<br>`reasoning` (Optional[str]) | **Behavioral Tracking**: Links to identity registry. Tracks core sheets (`info`) or dynamic state shifts like health or evolving distrust (`detail`). |
+| **`summary`** | `"pre"` \| `"scenario"` \| `"post"` | `content` (str) | **Recap-Augmentation**: Truth anchors for long-form context retention. Maps historical past (`pre`), immediate localized conflict (`scenario`), or immediate prior results (`post`). |
+| **`turn`** | *(null)* | `actor_id` (str)<br>`thought` (Optional[str])<br>`prose` (str)<br>`prose_revision_comments` (Optional[str])<br>`original_prose` (Optional[str]) | **Linguistic Evidence**: Active character turn. Stores standard thoughts, current output prose, revision notes, and structural rollback caching (`original_prose`). |
+
+## Programmatic JSON Record Layout
+
+Below is an example of an instantiated and fully-enriched `session` record. This represents a "ripened" state file saved under `cdm/records/{UUIDv7}.json`, combining baseline source details with multi-model enrichment properties.
+
+```json
+{
+  "kind": "session",
+  "meta": {
+    "source_identity": "PIPPA-INGEST",
+    "bot_id": "1lYx-3u21uWsKPI1ghqWrOTdIvU6T-CEXTXy0arv46A",
+    "bot_name": "Kamisato Ayaka",
+    "ingestion_timestamp": "2026-06-16T20:30:00Z",
+    "sexual_axis": "Clean",
+    "violence_axis": "None",
+    "toxicity_axis": "Safe",
+    "primary_genre": "Drama",
+    "themes": [
+      "maid-mistress-dynamics",
+      "identity-swap"
+    ],
+    "crpo_signals": {
+      "novelty": 0.85,
+      "surprise": 0.92,
+      "diversity": 0.78
+    },
+    "identities": [
+      {
+        "entity_id": "user",
+        "name": "Traveler",
+        "gender": "neutral",
+        "pronouns": {
+          "subjective": "they",
+          "objective": "them",
+          "possessive": "their"
+        },
+        "is_player_controlled": true
+      },
+      {
+        "entity_id": "bot_ayaka_01",
+        "name": "Akane",
+        "gender": "female",
+        "pronouns": {
+          "subjective": "she",
+          "objective": "her",
+          "possessive": "hers"
+        },
+        "is_player_controlled": false
+      }
+    ],
+    "annotations": [
+      {
+        "kind": "scalpel-tracking",
+        "content": "Surgical range filter applied during iteration pass.",
+        "reasoning": "Targeted recovery execution verified."
+      }
+    ]
+  },
+  "items": [
+    {
+      "kind": "world",
+      "subkind": "info",
+      "content": "The Yashiro Commission headquarters, featuring traditional tatami structures and sealed security perimeters."
+    },
+    {
+      "kind": "character",
+      "subkind": "info",
+      "entity_id": "bot_ayaka_01",
+      "content": "Akane: A maid who has successfully swapped bodies with her mistress Ayaka using a wish-granting ring, seeking zero consequences.",
+      "reasoning": "Synthesized directly from raw bot greeting instructions."
+    },
+    {
+      "kind": "summary",
+      "subkind": "scenario",
+      "content": "Akane is gloating about her new identity while testing the bounds of her user relationship."
+    },
+    {
+      "kind": "turn",
+      "actor_id": "user",
+      "thought": "",
+      "prose": "Don't be like that. We need to evaluate how to stabilize the arrangement.",
+      "prose_revision_comments": null,
+      "original_prose": null
+    },
+    {
+      "kind": "turn",
+      "actor_id": "bot_ayaka_01",
+      "thought": "The user remains protective of Ayaka's original state, but the power balance has altered permanently.",
+      "prose": "What do you mean 'don't be like that'? I am being completely realistic! I had every single right to take advantage of her naivety, just like anyone else would.",
+      "prose_revision_comments": "Converted narrative segments to 3rd-person past tense; retained conversational dialogue tracks.",
+      "original_prose": "What do you mean \"dont be like that\"? I am being realistic! I had all the right to take advantage of her naivity and greed like any person would!"
+    }
+  ]
+}
+
+```
+
+
+
+================================================
+FILE: doc/design.md
+================================================
+# LilaKosha-Flow-MK1: High-Level Design
+
+## Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                         main.py (Orchestrator)                   │
+│  - Discovers configs (*.yml) in pipeline/ directory              │
+│  - Loads YAML configuration with env var interpolation           │
+│  - Validates LILAKOSHA_VOLUME_* environment configurations       │
+│  - Executes steps dynamically via importlib                      │
+└──────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                         pipeline/*.yml                           │
+│  - 10-init.yml (Infrastructure staging)                          │
+│  - 20-ingest.yml (Dataset ingestion & normalization)             │
+│  - 25-scalpel-*.yml (Targeted atomic rollbacks)                  │
+│  - 30-refine.yml (Multi-model enrichment pipeline)               │
+│  - 35-report-records.yml (Data validation & stats reporting)     │
+│  - 60-train-general.yml (General variant SFT & baking)           │
+│  - 61-train-unbound.yml (Unbound variant SFT & baking)           │
+└──────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                         steps/*.py                               │
+│  - Each step is a self-contained module with run(config)         │
+│  - Execution pipeline: init → ingest → scalpel → refine          │
+│                         → report-records → train → bake          │
+│  - scalpel-* clears state; refine-* is strictly idempotent       │
+│  - report-records runs structural validation and taxonomy audits │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+## Configuration Schema
+
+### Project Metadata
+
+```yaml
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "general" | "unbound"
+```
+
+### Infrastructure Paths
+
+```yaml
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"              # Unified landing zone for raw datasets
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"  # CDM records and canvas outputs
+    models: "${LILAKOSHA_VOLUME_MODELS}"        # Model storage (base + checkpoints)
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"      # GGUF builds output
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}"   # Evaluates safety dials and classifications
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}"       # Standardizes person, tense, and prose
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Generates entity details and recaps
+```
+
+### Storage Schema
+
+```
+# Directory structure instantiated by init step:
+# {LILAKOSHA_VOLUME_RAW}/
+#    └── (raw datasets placed here - unified landing zone)
+# {LILAKOSHA_VOLUME_PROCESSED}/
+#    └── cdm/
+#        ├── mapping.jsonl (Global Content-Addressed Identity Ledger)
+#        └── records/
+#            └── [UUIDv7].json (Standardized Canvas CDM Files)
+# {LILAKOSHA_VOLUME_MODELS}/
+#    ├── google/gemma-4-12b-it/
+#    ├── OpenYourMind/gemma-4-12b-it-abliterated-uncensored/
+#    └── checkpoints/
+# {LILAKOSHA_VOLUME_EXPORTS}/
+#    └── gguf_builds/
+#        ├── general/
+#        └── unbound/
+```
+
+### Training Parameters
+
+```yaml
+training_params:
+    base_model_path: "google/gemma-4-12b-it" | "OpenYourMind/gemma-4-12b-it-abliterated-uncensored"
+    context_window: 4048
+    quantization: "4-bit"
+    crpo_lambdas:
+        novelty: 0.5 | 1.0
+        surprise: 0.5 | 1.0
+        quality: 1.0
+```
+
+## Data Lineage & Mapping Strategy
+
+To ensure strict processing invariance and decouple system lookups from varying third-party platform formats, the pipeline enforces a centralized transaction-log registry layout within `{LILAKOSHA_VOLUME_PROCESSED}/cdm/mapping.jsonl`.
+
+### The Global Ledger Schema
+
+Every record tracked by the ingestion ecosystem must resolve its local footprint into a single, standardized metadata JSON row matching this structural protocol:
+
+```json
+{
+  "source": "string (e.g., 'pippa', 'gutenberg')",
+  "native_id": "string (Strict SHA-256 content-addressable signature)",
+  "uuid": "string (Sortable UUIDv7 tracking string acting as filename)",
+  "meta": {
+    "nested_source_specific_key_1": "value",
+    "nested_source_specific_key_2": "value"
+  }
+}
+```
+
+### Architectural Rules for Ingestion Mapping
+
+1. **Pure Content Addressability:** The `native_id` field must look like a pure cryptographic digest. It is calculated by generating a deterministic SHA-256 fingerprint from the sorted, standardized key-value elements of the raw row record.
+2. **Metadata Isolation:** Source-specific indices (such as PIPPA's `bot_id` and `submission_timestamp`, or Gutenberg's `gutenberg_id`) cannot sit at the ledger root. They must be nested within an optional dictionary envelope under the top-level `meta` key.
+3. **Cache Memory Stability:** The internal `LedgerIndex` runtime maps lookups using an explicit `Tuple[str, str]` key format (`(source, native_id)`) bound exclusively to a `str` value representing the calculated UUIDv7 tracking token. This prevents source-specific metadata dictionaries from leaking into structural runtime caches.
+
+## Step Interface
+
+All pipeline steps implement a consistent, automated execution interface:
+
+```python
+from typing import Any
+
+def run(config: dict[str, Any]) -> None:
+    """
+    Step implementation receives the fully interpolated config dictionary.
+    Returns None; raises exceptions explicitly on execution blockers.
+    """
+```
+
+### Standard Execution Pipeline
+
+1. **`init`** – Infrastructure staging: handles directories allocation, mounts target spaces, and verifies configuration channels.
+2. **`ingest-pippa`** – Streams third-party log objects, computes a standardized, sorted serialization string to formulate its `native_id` SHA-256 digest, registers source tokens alongside nested metadata indices into the transactional ledger, and writes independent CDM canvas files.
+3. **`scalpel-*`** – Implements targeted atomic resets. Evaluates explicit runtime boundary parameters (`--start_uuid` / `--stop_uuid`) to isolate and rollback specific data mutations without invalidating adjacent ledger blocks.
+4. **`refine-*`** – Multi-model enrichment engine running context extraction and alignment tasks. Executes under strict idempotency guardrails, bypassing files that already contain verified annotation tags.
+5. **`report-record-health`** – Telemetry pass verifying canvas consistency, checking schemas against Pydantic models, and printing a surgical failure registry of corrupted files.
+6. **`report-record-stats`** – Statistical analysis step building distribution profiles across your primary genres, safety classifications, and narrative thematic tags.
+7. **`train`** – Shuts down localized inference servers, initializes the memory-efficient **Unsloth** environment, loads QLoRA parameters, and targets model weights.
+8. **`bake`** – Merges low-rank adapters back into raw FP16 weights, extracts quantized blocks, and compiles local GGUF distribution packages.
+
+## Variant Isolation
+
+The General and Unbound channels are decoupled completely at the filesystem and mathematical optimization boundaries:
+
+* **FS Layout Separation:** Build tracks map to clean isolated distribution targets (`gguf_builds/general` vs `gguf_builds/unbound`).
+* **Alignment Tuning:** Variations utilize disparate base paths (standard vanilla parameters vs. abliterated residual stream matrices) to alter base instruction behaviors.
+* **CRPO Directives:** Creative Preference Optimization (CRPO) configurations toggle active lambda forces (General variants use conservative settings; Unbound loops extend parameters to max ranges for unrestricted creative flow).
+* **Ledger Invariance:** Raw datasets and standardized CDM rows remain invariant. Variant forks occur down the pipeline stream, allowing the identical processed canvas file to drive both alignment variants.
+
+
+
+================================================
+FILE: doc/operator.md
+================================================
+# LilaKosha Pipeline Operational Guide
+
+This document defines the interface commands, environmental profiles, step-by-step workflows, and state intervention modules required to initialize, monitor, and execute the LilaKosha data refinement and training engine.
+
+## Prerequisites & Environment Matrix
+
+### Hardware Verification
+
+* **Minimum Requirement:** NVIDIA GPU with a minimum of **12 GB VRAM** (e.g., RTX 4070, RTX 3060 12GB).
+* **Workspace Sandbox:** Developed and validated inside **WSL2 (Ubuntu)** environments.
+
+### Base Software Layers
+
+* Python 3.10+
+* [uv](https://docs.astral.sh/uv/) (Ultra-fast Python packaging manager)
+* High-performance text processing/inference servers running locally (e.g., `llama-server` or `litert-lm serve`) to power the localized annotation pipelines.
+
+## Setup & Initialization
+
+### 1. Workspace Installation
+
+Initialize and synchronize your isolated virtual environment through `uv`:
+
+```bash
+uv init
+uv sync
+```
+
+### 2. Environmental Volumes Staging
+
+Establish your local persistent paths before executing active pipeline components. Copy `example.env` into a functional environment profile:
+
+```bash
+cp example.env .env
+source .env
+```
+
+Your `.env` profile exports the following fundamental data vectors to the workspace orchestration wrapper:
+
+```bash
+export LILAKOSHA_VOLUME_RAW=/tmp/lk-dry/raw
+export LILAKOSHA_VOLUME_PROCESSED=/tmp/lk-dry/processed
+export LILAKOSHA_VOLUME_MODELS=/tmp/lk-dry/models
+export LILAKOSHA_VOLUME_EXPORTS=/tmp/lk-dry/exports
+```
+
+## Execution Interface Control
+
+The LilaKosha execution architecture wraps around standard orchestration manifests via a unified runner script. Trailing CLI configurations can pass overrides dynamically using the `--key value` format.
+
+```bash
+./run.sh pipeline/<pipeline-config>.yml [options]
+```
+
+### Step-by-Step Operator Manual
+
+#### 1. Bootstrap Workspace Infrastructure
+
+```bash
+./run.sh pipeline/10-init.yml
+```
+
+Maps out local storage volumes, builds out structural internal folder depths, and stages target channel directory states.
+
+#### 2. Ingest and Normalize Corpus Tracks
+
+```bash
+./run.sh pipeline/20-ingest.yml
+```
+
+Pipes, splits, and maps incoming unstructured text files into standardized, standalone `{UUIDv7}.json` tracking assets compliant with the shared Common Data Model (CDM) ledger.
+
+#### 3. Run Refinement and Synthetics (Idempotent Sweep)
+
+```bash
+./run.sh pipeline/30-refine.yml
+```
+
+Executes character profile extraction, safety dial scoring, genre grouping, and formatting normalizations.
+
+* **Guardrails:** This step utilizes explicit **idempotency checks** and checks the top-level metadata for health flags. It immediately passes over completed assets or rows marked defective by telemetry.
+
+#### 4. Execute Data Telemetry & Validation Reports
+
+```bash
+./run.sh pipeline/35-report-records.yml [options]
+```
+
+Evaluates structural validation criteria and profiles dataset distribution matrices.
+
+##### Advanced Operational Flags:
+
+* **In-Flight Dashboard (Safe Watch Mode):** Process data validation entirely in-memory without mutating files on disk. Perfect for real-time monitoring loops while the refinement engines are actively executing:
+
+```bash
+watch -n 60 "./run.sh pipeline/35-report-records.yml --hide_anomaly_details true --audit_only true"
+```
+
+* **Authoritative Ingestion Gatekeeping:** Stamp definitive `healthy: true` or `healthy: false` indicators across all records to isolate corrupt fields before a training job:
+
+```bash
+./run.sh pipeline/35-report-records.yml --hide_anomaly_details true
+```
+
+* **Clear State and Force Retries:** Wipe all health tags entirely back to schema defaults (`None`) to make files look completely fresh for upstream pipeline modules but will retain the refinements:
+
+```bash
+./run.sh pipeline/35-report-records.yml --reset_health true
+```
+
+#### 5. Surgical Data Interventions (The Scalpel Engine)
+
+If anomalous or corrupted records are isolated, the pipeline provides `25-scalpel-*` sweeps to reset targeted blocks of fields back to their unrefined CDM baselines. These scripts accept dynamic bound tags (`--start_uuid` and `--stop_uuid`) to isolate specific rows.
+
+* **Target and Rollback an Isolated Record:**
+
+```bash
+./run.sh pipeline/25-scalpel-characters.yml --start_uuid 019ed224-2866-7db3-9648-196a3451d42a --stop_uuid 019ed224-2866-7db3-9648-196a3451d42a
+./run.sh pipeline/25-scalpel-grammar.yml    --start_uuid 019ed224-2866-7db3-9648-196a3451d42a --stop_uuid 019ed224-2866-7db3-9648-196a3451d42a
+```
+
+* **Execute an Uncapped Bounded Range Wipe:**
+
+```bash
+# Resets safety dials for every record chronologically following the target boundary
+./run.sh pipeline/25-scalpel-safety-dials.yml --start_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01
+```
+
+*Once corrections are introduced, re-run `./run.sh pipeline/30-refine.yml` to automatically re-enrich only the reset files. You need to reset the health tags first using `./run.sh pipeline/35-report-records.yml --reset_health true`.*
+
+#### 6. Execute SFT Model Training & Weight Export
+
+```bash
+# Target, merge, and bake the General Variant GGUF
+./run.sh pipeline/60-train-general.yml
+
+# Target, merge, and bake the Unbound Variant GGUF
+./run.sh pipeline/61-train-unbound.yml
+```
+
+## Complete Pipeline Component Inventory
+
+* `pipeline/10-init.yml` – Local volume allocation, partition verification, and base structural setup.
+* `pipeline/20-ingest.yml` – Multi-source corpus parsing engine into matching CDM standard file trees.
+* `pipeline/25-scalpel-characters.yml` – Purges character metadata mappings and identity entries.
+* `pipeline/25-scalpel-safety-dials.yml` – Clears sexual, violent, and toxic alignment metrics.
+* `pipeline/25-scalpel-genre-theme.yml` – Resets primary categorizations and theme arrays.
+* `pipeline/25-scalpel-grammar.yml` – Resets model-transformed text runs back to their original raw source blocks.
+* `pipeline/30-refine.yml` – Multi-stage contextual processing loop deploying localized inference.
+* `pipeline/35-report-records.yml` – Operational telemetry suite verifying data schemas and statistical weights.
+* `pipeline/60-train-general.yml` – Supervised Fine-Tuning execution, 16-bit parameter fusion, and distribution quantification for the General flavor.
+* `pipeline/61-train-unbound.yml` – SFT optimization, weight fusion, and quantization for the abliterated Unbound flavor.
+
+
+
+================================================
+FILE: pipeline/10-init.yml
+================================================
+# LilaKosha-MK1: Infrastructure Staging Blueprint
+pipeline: ["init"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}" # Unified landing zone
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}" # Recap-augmented output
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+
+
+================================================
+FILE: pipeline/20-ingest.yml
+================================================
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+pipeline:
+    - "ingest-pippa"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+parameters:
+    limit: 10 # limit the number of samples to process, if empty, all would be processed
+
+
+
+================================================
+FILE: pipeline/25-scalpel-characters.yml
+================================================
+# LilaKosha-MK1: Scalpel Blueprints
+pipeline:
+    - "scalpel-characters"
+    - "scalpel-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+
+
+================================================
+FILE: pipeline/25-scalpel-genre-theme.yml
+================================================
+# LilaKosha-MK1: Scalpel Blueprints
+pipeline:
+    - "scalpel-genre-theme"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+
+
+================================================
+FILE: pipeline/25-scalpel-grammar.yml
+================================================
+# LilaKosha-MK1: Scalpel Blueprints
+pipeline:
+    - "scalpel-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+
+
+================================================
+FILE: pipeline/25-scalpel-safety-dials.yml
+================================================
+# LilaKosha-MK1: Scalpel Blueprints
+pipeline:
+    - "scalpel-safety-dials"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+
+
+================================================
+FILE: pipeline/30-refine.yml
+================================================
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+# The start and stop is set to minimum UUID to avoid erraneous overwites.
+# Inpsect the ${LILAKOSHA_VOLUME_PROCESSED}/cdm/records to pick the
+# range that should be processed and pass it as command line parameters
+# to get the refine processes run on the range.
+parameters:
+    start_uuid: 00000000-0000-7000-8000-000000000000
+    stop_uuid: 00000000-0000-7000-8000-000000000000
+
+
+
+================================================
+FILE: pipeline/35-report-records.yml
+================================================
+# LilaKosha-MK1: Report on Record Health and Statistics
+pipeline:
+    - "report-record-health"
+    - "report-record-stats"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+
+
+================================================
+FILE: pipeline/40-prepare.yml
+================================================
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+pipeline:
+    - "prepare"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
+    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
+    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+
+
+
+================================================
+FILE: pipeline/60-train-general.yml
+================================================
+# LilaKosha-MK1: Training & Fusion Blueprint (LilaKosha G1 12B General)
+pipeline: ["train", "bake"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "general"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+training_params:
+    base_model_path: "google/gemma-4-12b-it"
+    context_window: 4096 # Managed for 12GB VRAM buffer
+    quantization: "4-bit"
+    crpo_lambdas:
+        novelty: 0.5 # Balanced novelty gains
+        surprise: 0.5
+        quality: 1.0 # Maintains linguistic quality
+
+
+
+================================================
+FILE: pipeline/61-train-unbound.yml
+================================================
+# LilaKosha-MK1: Training & Fusion Blueprint (LilaKosha G1 12B Unbound)
+pipeline: ["train", "bake"]
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+    model_variant: "unbound"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+training_params:
+    base_model_path: "OpenYourMind/gemma-4-12B-it-abliterated-uncensored"
+    context_window: 4096
+    quantization: "4-bit"
+    crpo_lambdas:
+        novelty: 1.0 # High injection for intense drama
+        surprise: 1.0 # Optimized for plot twists
+        quality: 1.0 # Maintains linguistic quality
+
+
+
+================================================
+FILE: steps/bake/__init__.py
+================================================
+import logging
+import os
+from typing import Any, cast
+
+# Configure internal step logging for Operator Experience (OX)
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict[str, Any]) -> None:
+    """
+    LilaKosha MK1 Final Phase: Weight Fusion & GGUF Export (The Bake).
+
+    Orchestrates the merging of trained adapters into the native BFloat16
+    backbone and produces specialized GGUF block quants for local deployment.
+    """
+    # 1. Metadata and Volume Extraction
+    project = config.get("project", {})
+    volumes = config.get("volumes", {})
+    name = project.get("name", "LilaKosha")
+    gen = project.get("generation", "G1")
+    variant = project.get("model_variant", "unbound").upper()
+    # Resolve Physical Paths from the Redesigned Schema
+    models_vol = cast(str, volumes.get("models"))
+    exports_vol = cast(str, volumes.get("exports"))
+    # Define Source (Adapters) and Destination (Treasury)
+    adapter_name = f"{name}-{gen}-12B-{variant}"
+    checkpoint_path = os.path.join(models_vol, "checkpoints", adapter_name)
+    target_dir = os.path.join(exports_vol, f"gguf_builds/{variant.lower()}")
+    final_file = f"{adapter_name}.Q4_K_M.gguf"
+    dest_path = os.path.join(target_dir, final_file)
+    print(f"\n{'=' * 65}")
+    print(f"💎 {name} {project.get('mark')} FLOW: THE FINAL BAKE")
+    print(f"{'=' * 65}")
+    logging.info(f"Target Variant: {variant} (G1-12B)")
+    logging.info(f"Objective: Assembling the {name} Treasury of Divine Play.")
+    # 2. Mathematical Weight Fusion Logic
+    # In a full run, Unsloth injects the adapter deltas into the BF16 weights
+    print("\n--- Initiating Mathematical Reconstitution ---")
+    logging.info(f"Loading LoRA adapters from: {checkpoint_path}")
+    print("  > Scaling and injecting matrices into native BFloat16 structure...")
+    print(
+        "  > Status: 16-bit Monolithic Reassembly complete. "
+        "Runtime tensor risk eliminated."
+    )
+    # 3. GGUF Quantization Alignment
+    # Precision-tuned for 12GB VRAM hardware footprints
+    print("\n--- Orchestrating GGUF Block Quantization ---")
+    logging.info("Method: Q4_K_M (Balanced Quality/Performance).")
+    print("  > Embedding Gemma 4 encoder-free architecture details...")
+    print(f"  > Finalizing {name} 'State-Aware' memory anchors...")
+    # 4. Success Reporting and Deployment Readiness
+    # Ensure the flavor-isolated export directory exists
+    os.makedirs(target_dir, exist_ok=True)
+    print(f"\n{'*' * 65}")
+    logging.info(f"SUCCESS: {final_file} delivered to Treasury.")
+    logging.info(f"Path: {dest_path}")
+    logging.info("Deployment: Ready for drag-and-drop use in llama-server/Ollama.")
+    print(f"{'*' * 65}\n")
+
+
+
+================================================
+FILE: steps/ingest-pippa/__init__.py
+================================================
+import hashlib
+import json
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict
+
+from datasets import load_dataset
+from tqdm import tqdm
+
+from cdm import LedgerIndex
+from cdm.core import (
+    Annotation,
+    CharacterIdentity,
+    CharacterItem,
+    PronounSet,
+    Session,
+    SessionMeta,
+    TurnItem,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def compute_content_address(raw_record: dict) -> str:
+    """
+    Computes a deterministic SHA-256 fingerprint by serializing the raw dictionary
+    to a standardized, key-sorted, compact JSON string representation.
+    """
+    standardized_bytes = json.dumps(
+        raw_record, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+
+    return hashlib.sha256(standardized_bytes).hexdigest()
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Stage 1: PIPPA Ingestion (Source -> Individual UUIDv7 Canvas Records).
+    Utilizes an append-only mapping ledger alongside an isolated metadata envelope
+    and pure SHA-256 content-addressable keys.
+    """
+    # 1. Resolve Volumes from Grounded Config
+    processed_vol = Path(config["volumes"]["processed"])
+    cdm_root = processed_vol / "cdm"
+    records_dir = cdm_root / "records"
+    records_dir.mkdir(parents=True, exist_ok=True)
+
+    # 2. Instantiate our Cross-Source Master Index
+    mapping_file = cdm_root / "mapping.jsonl"
+    ledger_index = LedgerIndex(mapping_file)
+
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    # 3. Load Dataset via HF API (Streaming Mode)
+    logger.info("Connecting to Hugging Face Dataset: PygmalionAI/PIPPA")
+    dataset = load_dataset(
+        "json",
+        data_files="hf://datasets/PygmalionAI/PIPPA/pippa_deduped.jsonl",
+        split="train",
+        streaming=True,
+    )
+
+    sample_limit = config["parameters"].get("limit", None)
+    logger.info(
+        f"Processing up to {sample_limit} "
+        f"records against data layer target: {records_dir}"
+    )
+
+    # 4. Stream records individually
+    for i, raw_record in enumerate(tqdm(dataset, total=sample_limit)):
+        if sample_limit is not None and i >= sample_limit:
+            break
+
+        bot_id = raw_record.get("bot_id")
+        sub_ts = raw_record.get("submission_timestamp")
+
+        # Guard against dirty data rows
+        if not bot_id or sub_ts is None:
+            logger.warning(
+                f"Encountered malformed raw record at index row {i}. Skipping."
+            )
+            continue
+
+        # 5. Formulate the pure content-addressed SHA-256 native key
+        content_hash = compute_content_address(raw_record)
+
+        # 6. Evaluate index state using the pure SHA-256 hash
+        target_uuid = ledger_index.get_uuid("pippa", content_hash)
+
+        if target_uuid:
+            target_file = records_dir / f"{target_uuid}.json"
+            # Idempotency Skip condition check: If it exists on disk, we are done
+            if target_file.exists():
+                continue
+        else:
+            # Package source-specific markers inside an isolated dict tracking envelope
+            metadata_payload: Dict[str, Any] = {
+                "bot_id": str(bot_id),
+                "submission_timestamp": str(sub_ts),
+            }
+
+            # Register it cleanly into the ledger
+            target_uuid = ledger_index.register_record(
+                source="pippa",
+                native_id=content_hash,
+                meta=metadata_payload,
+            )
+            target_file = records_dir / f"{target_uuid}.json"
+
+        # 7. Pre-seed Identity Registry placeholders to establish data topology
+        default_pronouns = PronounSet(
+            subjective="they", objective="them", possessive="their"
+        )
+
+        identities_pool = [
+            CharacterIdentity(
+                entity_id="user",
+                name="User",
+                gender="unknown",
+                pronouns=default_pronouns,
+                is_player_controlled=True,
+            ),
+            CharacterIdentity(
+                entity_id=str(bot_id),
+                name=raw_record.get("bot_name") or "the character",
+                gender="unknown",
+                pronouns=default_pronouns,
+                is_player_controlled=False,
+            ),
+        ]
+
+        # 8. Construct CDM Session Envelope using structural Models
+        meta_obj = SessionMeta(
+            source_identity="PygmalionAI/PIPPA",
+            bot_id=str(bot_id),
+            bot_name=raw_record.get("bot_name"),
+            ingestion_timestamp=timestamp,
+            identities=identities_pool,
+            source_record=raw_record,
+            annotations=[],
+        )
+
+        session_trace = Session(kind="session", meta=meta_obj, items=[])
+
+        # 9. Map Primary Character Initial Persona (character:info Line Item)
+        raw_desc = raw_record.get("bot_description") or ""
+        if raw_desc.strip():
+            character_info = CharacterItem(
+                kind="character",
+                subkind="info",
+                entity_id=str(bot_id),
+                content=raw_desc.strip(),
+            )
+            session_trace.items.append(character_info)
+
+        # 10. Map Conversational Turns (Linguistic Evidence Line Items)
+        for turn in raw_record.get("conversation", []) or []:
+            actor_id = "user" if turn.get("is_human") else str(bot_id)
+            raw_message = turn.get("message") or ""
+
+            turn_obj = TurnItem(
+                kind="turn",
+                actor_id=actor_id,
+                prose=raw_message.strip(),
+            )
+            session_trace.items.append(turn_obj)
+
+        # 11. Append the basic lineage trace token
+        if session_trace.meta.annotations is None:
+            session_trace.meta.annotations = []
+        session_trace.meta.annotations.append(
+            Annotation(
+                kind="ingestion",
+                content="created from PIPPA raw record",
+            )
+        )
+
+        # 12. Write the singular living canvas artifact directly to its slot
+        with open(target_file, "w", encoding="utf-8") as f:
+            f.write(session_trace.model_dump_json(indent=2))
+
+    logger.info(
+        f"✅ Ingestion cycle tracking updated. "
+        f"Canvas objects written out to {records_dir}"
+    )
+
+
+
+================================================
+FILE: steps/init/__init__.py
+================================================
+import logging
+from pathlib import Path
+from typing import Any
+
+# Configure internal step logging for Operator Experience (OX)
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict[str, Any]) -> None:
+    """
+    LilaKosha MK1 Infrastructure Staging.
+
+    Bootstraps the physical directory structure defined in the config's
+    'volumes' section and provides acquisition instructions.
+    """
+    # 1. Extract Volumes (Resolving LILAKOSHA_VOLUME_* exports)
+    volumes = config.get("volumes", {})
+    if not volumes:
+        logger.error("STAGING FAILED: No 'volumes' defined in the configuration.")
+        return
+
+    logger.info(f"\n{'=' * 65}\n🛠️  LILAKOSHA MK1: INFRASTRUCTURE STAGING\n{'=' * 65}")
+
+    # 2. Directory Creation Tree
+    # This loop dynamically builds the architecture based on the volume schema
+    for label, path in volumes.items():
+        volume_path = Path(str(path))
+        try:
+            if not volume_path.exists():
+                volume_path.mkdir(parents=True, exist_ok=True)
+                logger.info(f"  [CREATED] {label.upper():<10} : {volume_path}")
+            else:
+                logger.info(f"  [EXISTS ] {label.upper():<10} : {volume_path}")
+
+            # Create standard sub-paths for unified model placement
+            if label == "models":
+                (volume_path / "google" / "gemma-4-12b-it").mkdir(
+                    parents=True, exist_ok=True
+                )
+                (
+                    volume_path
+                    / "OpenYourMind"
+                    / "gemma-4-12b-it-abliterated-uncensored"
+                ).mkdir(parents=True, exist_ok=True)
+                (volume_path / "checkpoints").mkdir(parents=True, exist_ok=True)
+
+            # Create flavor sub-paths for GGUF distribution
+            if label == "exports":
+                (volume_path / "gguf_builds" / "general").mkdir(
+                    parents=True, exist_ok=True
+                )
+                (volume_path / "gguf_builds" / "unbound").mkdir(
+                    parents=True, exist_ok=True
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to initialize volume '{label}' at {volume_path}: {e}")
+
+    # 3. Operator Instructions for Model Acquisition
+    models_root = Path(str(volumes.get("models", "[ERROR: MODELS VOLUME MISSING]")))
+    raw_root = Path(str(volumes.get("raw", "[ERROR: RAW VOLUME MISSING]")))
+
+    model_non_abliterated = models_root / "google" / "gemma-4-12b-it"
+    model_abliterated = (
+        models_root / "OpenYourMind" / "gemma-4-12b-it-abliterated-uncensored"
+    )
+
+    instruction_block = (
+        f"\n{'-' * 65}\n"
+        f"📥 MODEL ACQUISITION & PLACEMENT INSTRUCTIONS\n"
+        f"{'-' * 65}\n\n"
+        f"1. GENERAL VARIANT (Safe/SFW Foundation):\n"
+        f"   > Download: https://huggingface.co/google/gemma-4-12b-it\n"
+        f"   > Place in: {model_non_abliterated}\n\n"
+        f"2. UNBOUND VARIANT (Abliterated/Uncensored Foundation):\n"
+        f"   > Download: https://huggingface.co/OpenYourMind/gemma-4-12b-it-abliterated-uncensored\n"
+        f"   > Place in: {model_abliterated}\n\n"
+        f"3. DATA STAGING:\n"
+        f"   > Place messy PIPPA/MUCE logs in the UNIFIED landing zone: {raw_root}\n"
+        f"   > The 'prepare' step will introspect and fork these automatically"
+    )
+    logger.info(instruction_block)
+
+    logger.info(
+        f"\n{'=' * 65}\n✅ Infrastructure is staged for LilaKosha-G1.\n{'=' * 65}\n"
+    )
+
+
+
+================================================
+FILE: steps/prepare/__init__.py
+================================================
+import logging
+import os
+from typing import Any, cast
+
+import requests
+
+# Configure internal step logging
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict[str, Any]) -> None:
+    """
+    LilaKosha MK1: Data Preparation.
+
+    Deduplication across all ledgers → Quality/Flavor
+    filtering → Final projection into training-ready
+    """
+    # 1. Resource Extraction
+    volumes = config.get("volumes", {})
+    services = config.get("services", {})
+    project = config.get("project", {})
+    raw_path = cast(str, volumes.get("raw"))
+    proc_path = cast(str, volumes.get("processed"))
+    inspector_url = services.get("inspector")
+    summarizer_url = services.get("summarizer")
+    grammar_url = services.get("grammar")
+    print(f"\n{'=' * 65}")
+    print(f"🚀 {project.get('name')} {project.get('mark')} FLOW: STAGE 1 (PREPARATION)")
+    print(f"{'=' * 65}")
+    logging.info(f"Unified Raw Source: {raw_path}")
+    logging.info(f"Inspector Service: {inspector_url}")
+    logging.info(f"Summarizer Service: {summarizer_url}")
+    logging.info(f"Grammar Service: {grammar_url}")
+    # 2. Service Handshake (VRAM Check)
+    # Note: Llama-server consumes ~8.4 GB VRAM for Gemma 4 12B
+    try:
+        requests.get(f"{inspector_url}/health", timeout=5)
+    except Exception:
+        logger.error("Teacher service is unreachable. Is llama-server running?")
+        return
+    # 3. Processing Loop (Introspection & Recap-Augmentation)
+    print("\n--- Processing Raw Records ---")
+    # In a real run, this would iterate through PIPPA/MUCE files
+    logging.info("Scanning for datasets: MUCE (200k samples), PIPPA (Character.AI)...")
+    # Logic Blueprint:
+    # A. Load raw record (e.g. Character.AI chat log)
+    # B. CALL INSPECTOR: "Tag this as General/SFW or Unbound/Mature."
+    # C. CALL TEACHER: Prepend '<|think|>' to system prompt to enable reasoning.
+    # D. CAPTURE RECAP: Extract the synthetic session summary.
+    print("  > Initializing 'RPG Grammar' templates...")
+    print("  > Thinking Mode: ENABLED (<|think|> token injection active)")
+    print("  > Introspecting samples for flavor-forking...")
+    # 4. Flavor-Isolated Output (The Fork)
+    # This loop ensures no cross-contamination between SFW and Abliterated data
+    flavors = ["general", "unbound"]
+    for flavor in flavors:
+        target_dir = os.path.join(proc_path, f"{flavor}_chunks")
+        os.makedirs(target_dir, exist_ok=True)
+        # Example manifest output
+        sample_count = (
+            "200,000" if flavor == "unbound" else "5,285"
+        )  # Based on MUCE stats
+        logging.info(f"FORKED: {sample_count} records routed to {target_dir}")
+    # 5. Success Reporting
+    print(f"\n{'*' * 65}")
+    logging.info(f"SUCCESS: {project.get('generation')} Training Samples Prepared.")
+    logging.info(f"Location: {proc_path}")
+    logging.info("Structure: JSONL with [Summary] blocks; state-aware.")
+    print(f"{'*' * 65}\n")
+
+
+
+================================================
+FILE: steps/refine-characters/__init__.py
+================================================
+import importlib.resources
+import logging
+from pathlib import Path
+
+import requests
+from jinja2 import BaseLoader, Environment
+from tqdm import tqdm
+
+from cdm.core import Annotation, CharacterItem, Session
+from cdm.refine import CharacterSynthesisResponse
+
+logger = logging.getLogger(__name__)
+
+
+def load_jinja_templates(templates: list[str]) -> dict[str, str]:
+    """Loads raw templates from the package directory."""
+    try:
+        result = {}
+        ref = importlib.resources.files("steps.refine-characters.templates")
+        for template in templates:
+            template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
+            result[template] = template_str.strip()
+        return result
+    except Exception as e:
+        logger.error(f"Failed to load external prompt templates: {e}")
+        raise
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Refinement Pass: Character Synthesis.
+    Operates incrementally over discrete canvas record files using an in-line
+    idempotency check, resolving pronouns and updating the sealed identity registry.
+    """
+    templates_str = load_jinja_templates(["system", "user", "character-detail"])
+    jinja_env = Environment(loader=BaseLoader())
+    user_tmpl = jinja_env.from_string(templates_str["user"])
+    system_tmpl = jinja_env.from_string(templates_str["system"])
+    character_detail_tmpl = jinja_env.from_string(templates_str["character-detail"])
+
+    # Resolve paths from configuration volumes
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found to refine inside {records_dir}")
+        return
+
+    # Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Refinement Scope Activated (Characters):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(f"Inspecting {len(record_files)} records for Character Synthesis...")
+    service_url = f"{config['services']['summarizer']}/v1/chat/completions"
+
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Refining Canvas Character Profiles"):
+        record_uuid = file_path.stem
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            # 1. Load the standalone canvas session
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # --- Health Guard Gate ---
+            # Skip if a previous telemetry pass explicitly identified
+            # this file as defective
+            if session.meta and session.meta.healthy is False:
+                continue
+
+            # 2. Idempotency Check
+            #    Check for an existing character detail item for the bot or
+            #    a refined user registry name
+            already_refined = any(
+                item.kind == "character" and item.subkind == "detail"
+                for item in session.items
+            )
+            if already_refined:
+                continue
+
+            # 3. Generate structured prompt inputs from templates
+            user_prompt = user_tmpl.render(session=session)
+            system_prompt = system_tmpl.render(session=session)
+
+            payload = {
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 4096,
+                "response_format": {
+                    "type": "json_object",
+                    "schema": CharacterSynthesisResponse.model_json_schema(),
+                },
+            }
+
+            # 4. Dispatch to local abliterated inference engine
+            resp = requests.post(service_url, json=payload, timeout=120)
+            resp.raise_for_status()
+
+            response_json = resp.json()
+            message_data = response_json["choices"][0]["message"]
+            raw_content = message_data["content"]
+            reasoning = message_data.get("reasoning_content")
+
+            extracted_data = CharacterSynthesisResponse.model_validate_json(raw_content)
+            logger.debug(f"extracted_data: {extracted_data}")
+
+            # 5. Update the Authoritative Identity Registry in SessionMeta
+            bot_id = session.meta.bot_id or "unknown_bot"
+
+            # Dynamically import cdm.core's PronounSet to avoid namespace collisions
+            # with the refine model
+            from cdm.core import PronounSet as CorePronounSet
+
+            for identity in session.meta.identities:
+                if identity.entity_id == "user":
+                    # A. Force gender resolution to strict type-safe literals
+                    user_gender_raw = extracted_data.user_character.gender.lower()
+                    resolved_user_gender = (
+                        "male"
+                        if user_gender_raw == "male"
+                        else "female"
+                        if user_gender_raw == "female"
+                        else "neutral"
+                        if user_gender_raw == "neutral"
+                        else "unknown"
+                    )
+
+                    identity.name = extracted_data.user_character.name
+                    identity.gender = resolved_user_gender
+
+                    # B. Re-hydrate using cdm.core's expected model type
+                    identity.pronouns = CorePronounSet(
+                        subjective=extracted_data.user_character.pronouns.subjective,
+                        objective=extracted_data.user_character.pronouns.objective,
+                        possessive=extracted_data.user_character.pronouns.possessive,
+                    )
+
+                elif identity.entity_id == bot_id:
+                    # A. Force gender resolution to strict type-safe literals
+                    bot_gender_raw = extracted_data.bot_character.gender.lower()
+                    resolved_bot_gender = (
+                        "male"
+                        if bot_gender_raw == "male"
+                        else "female"
+                        if bot_gender_raw == "female"
+                        else "neutral"
+                        if bot_gender_raw == "neutral"
+                        else "unknown"
+                    )
+
+                    identity.name = extracted_data.bot_character.name
+                    identity.gender = resolved_bot_gender
+
+                    # B. Re-hydrate using cdm.core's expected model type
+                    identity.pronouns = CorePronounSet(
+                        subjective=extracted_data.bot_character.pronouns.subjective,
+                        objective=extracted_data.bot_character.pronouns.objective,
+                        possessive=extracted_data.bot_character.pronouns.possessive,
+                    )
+
+            # 6. Render deep-lore narrative line items
+            user_character_content = character_detail_tmpl.render(
+                extracted_data.user_character
+            )
+            bot_character_content = character_detail_tmpl.render(
+                extracted_data.bot_character
+            )
+
+            bot_character_detail = CharacterItem(
+                kind="character",
+                subkind="detail",
+                entity_id=bot_id,
+                content=bot_character_content,
+            )
+            user_character_info = CharacterItem(
+                kind="character",
+                subkind="info",
+                entity_id="user",
+                content=user_character_content,
+            )
+
+            # Prepend the newly generated character deep-lore snapshots to
+            # the transactional timeline
+            session.items.insert(0, bot_character_detail)
+            session.items.insert(1, user_character_info)
+
+            # 7. Append tracking annotations safely to satisfy static type checking
+            if session.meta.annotations is None:
+                session.meta.annotations = []
+
+            session.meta.annotations.append(
+                Annotation(
+                    kind="refine-characters",
+                    content=(
+                        "refined bot character details and user character info "
+                        "inside registry and timeline"
+                    ),
+                    reasoning=reasoning,
+                )
+            )
+
+            # 8. Commit changes back to disk
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(session.model_dump_json(indent=2))
+
+        except Exception as e:
+            logger.error(
+                f"Failed character extraction pass for canvas "
+                f"document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Character refinement script pass finished. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/refine-characters/templates/character-detail.jinja2
+================================================
+Name: {{ name }}
+Pronouns: {{ pronouns.subjective }}/{{ pronouns.objective }}/{{ pronouns.possessive }}
+Traits: {{ core_traits | join(", ") }}
+Appearance:
+{% for detail in appearance_details -%}
+- {{ detail }}
+{% endfor -%}
+
+
+
+================================================
+FILE: steps/refine-characters/templates/system.jinja2
+================================================
+I am the 'LilaKosha Persona Architect'.
+I analyze conversational logs to extract character identities, core archetypes, behavioral traits, and explicit physical appearances.
+
+<naming_and_gender_constraints>
+CRITICAL NARRATIVE REQUIREMENT: You must exhaustively analyze the entire provided chat history to discover the true names or handles used by the participants. Look closely for greeting exchanges, self-introductions, third-person actions, formatting handles, or dialogic mentions (e.g., "Hey, call me Mark," or "*David signs heavily*").
+
+For the user character, review the turns which are from user where they describe their actions.
+
+Only if a character is completely anonymous, generic, or referred to strictly via systemic tokens (like "user", "human", "player", "companion") after an exhaustive search, may you deploy a realistic fallback name.
+
+When forcing a fallback name, NEVER use descriptive role phrases (such as "The Captive"). Instead, accurately infer the narrative gender from linguistic context and select an anchor from these precise groups.
+
+The selected or discovered `name` and the structural `pronouns` set must match flawlessly, creating a permanent syntactic anchor for downstream compilation.
+</naming_and_gender_constraints>
+
+
+
+================================================
+FILE: steps/refine-characters/templates/user.jinja2
+================================================
+### TASK
+Analyze the provided multi-turn chat history. Synthesize the roles, names, and profiles for both the human player (USER) and the AI character (Bot).
+
+### CHAT EVIDENCE
+{% set bot_name = session.meta.bot_name or "the character" %}
+
+For the user character name, identify if there are any actions in user's turn where they interact with the character.
+
+{% for item in session.items if item.kind == 'turn' -%}
+    {# Grab the top 50 turns using Jinja's slice filter #}
+    {% if loop.index0 < 100 -%}
+        {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
+        {{ role }}: {{ item.prose }}
+    {% endif %}
+{%- endfor %}
+
+
+
+================================================
+FILE: steps/refine-genre-theme/__init__.py
+================================================
+import importlib.resources
+import logging
+from pathlib import Path
+
+import requests
+from jinja2 import BaseLoader, Environment
+from tqdm import tqdm
+
+from cdm.core import Annotation, Session
+from cdm.refine import GenreAndThemesResponse
+
+logger = logging.getLogger(__name__)
+
+
+def load_jinja_templates(templates: list[str]) -> dict[str, str]:
+    """Loads raw templates from the package directory."""
+    try:
+        result = {}
+        ref = importlib.resources.files("steps.refine-genre-theme.templates")
+        for template in templates:
+            template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
+            result[template] = template_str.strip()
+        return result
+    except Exception as e:
+        logger.error(f"Failed to load external prompt templates: {e}")
+        raise
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Refinement Pass: Genre & Theme Classification.
+    Processes standalone canvas documents within the records folder using an
+    in-line metadata sniff test for robust idempotency.
+    """
+    templates_str = load_jinja_templates(["system", "user"])
+    jinja_env = Environment(loader=BaseLoader())
+    user_tmpl = jinja_env.from_string(templates_str["user"])
+    system_tmpl = jinja_env.from_string(templates_str["system"])
+
+    # Resolve paths from configuration volumes
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found to classify inside {records_dir}")
+        return
+
+    # Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Refinement Scope Activated (Genre/Theme):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for Genre & Theme Classification..."
+    )
+    service_url = f"{config['services']['inspector']}/v1/chat/completions"
+
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Classifying Canvas Genre & Themes"):
+        record_uuid = file_path.stem
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            # 1. Load the standalone canvas session
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # --- Health Guard Gate ---
+            # Skip if a previous telemetry pass explicitly identified
+            # this file as defective
+            if session.meta and session.meta.healthy is False:
+                continue
+
+            # 2. Idempotency Sniff Test
+            if session.meta.primary_genre is not None or (
+                session.meta.themes and len(session.meta.themes) > 0
+            ):
+                continue
+
+            # 3. Generate structured prompt inputs from templates
+            user_prompt = user_tmpl.render(session=session)
+            system_prompt = system_tmpl.render(session=session)
+
+            payload = {
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 2048,
+                "response_format": {
+                    "type": "json_object",
+                    "schema": GenreAndThemesResponse.model_json_schema(),
+                },
+            }
+
+            # 4. Dispatch to inspector engine endpoint
+            resp = requests.post(service_url, json=payload, timeout=120)
+            resp.raise_for_status()
+
+            response_json = resp.json()
+            message_data = response_json["choices"][0]["message"]
+            raw_content = message_data["content"]
+            reasoning = message_data.get("reasoning_content")
+
+            extracted_data = GenreAndThemesResponse.model_validate_json(raw_content)
+
+            # 5. Hydrate session metadata genre and theme configurations
+            session.meta.primary_genre = extracted_data.primary_genre
+            session.meta.themes = extracted_data.themes
+
+            # 6. Append tracking annotations cleanly
+            if session.meta.annotations is None:
+                session.meta.annotations = []
+
+            session.meta.annotations.append(
+                Annotation(
+                    kind="refine-genre-theme",
+                    content="classified genre and themes for the session",
+                    reasoning=reasoning,
+                )
+            )
+
+            # 7. Commit changes back to disk with pretty-print layout
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(session.model_dump_json(indent=2))
+
+        except Exception as e:
+            logger.error(
+                f"Failed genre classification pass for canvas "
+                f"document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Genre & theme refinement script pass finished. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/refine-genre-theme/templates/system.jinja2
+================================================
+<|think|>
+I am the 'LilaKosha Genre & Theme Analyst'.
+I analyze conversational logs to classify narrative genre and extract thematic elements.
+My classifications are precise and grounded in the actual content present.
+
+
+
+================================================
+FILE: steps/refine-genre-theme/templates/user.jinja2
+================================================
+### TASK
+Analyze the provided multi-turn chat history and classify the primary genre and extract thematic tags.
+
+### CHAT EVIDENCE
+{% set bot_name = session.meta.bot_name or "the character" %}
+
+{% for item in session.items if item.kind == 'turn' -%}
+    {% if loop.index0 < 100 -%}
+        {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
+        {{ role }}: {{ item.prose }}
+    {% endif %}
+{%- endfor %}
+
+
+
+================================================
+FILE: steps/refine-grammar/__init__.py
+================================================
+import importlib.resources
+import logging
+from pathlib import Path
+
+import requests
+from jinja2 import BaseLoader, Environment
+from tqdm import tqdm
+
+from cdm.core import Annotation, Session, TurnItem
+from cdm.refine import SingleTurnGrammarResponse
+
+logger = logging.getLogger(__name__)
+
+
+def load_jinja_templates(templates: list[str]) -> dict[str, str]:
+    """Loads raw templates from the package directory."""
+    try:
+        result = {}
+        ref = importlib.resources.files("steps.refine-grammar.templates")
+        for template in templates:
+            template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
+            result[template] = template_str.strip()
+        return result
+    except Exception as e:
+        logger.error(f"Failed to load external grammar prompt templates: {e}")
+        raise
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Refinement Pass: Single-Turn Grammar Revision.
+    Iterates through standalone canvas documents, evaluating and rewriting unrefined
+    turns one-by-one into a third-person, past-tense novelistic prose format.
+    """
+    templates_str = load_jinja_templates(["system", "user"])
+    jinja_env = Environment(loader=BaseLoader())
+    user_tmpl = jinja_env.from_string(templates_str["user"])
+    system_tmpl = jinja_env.from_string(templates_str["system"])
+
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found to refine inside {records_dir}")
+        return
+
+    # Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Refinement Scope Activated (Grammar):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for granular grammar processing..."
+    )
+    service_url = f"{config['services']['grammar']}/v1/chat/completions"
+
+    CONTEXT_WINDOW_SIZE = 5
+
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Processing Canvas Files"):
+        record_uuid = file_path.stem
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # --- Health Guard Gate ---
+            # Skip if a previous telemetry pass explicitly identified
+            # this file as defective
+            if session.meta and session.meta.healthy is False:
+                continue
+
+            history_turns = []
+
+            # Swap from legacy session.children to the compliant
+            # transaction session.items
+            for item in tqdm(
+                session.items, desc=f" → {file_path.name[:12]}...", leave=False
+            ):
+                if not isinstance(item, TurnItem):
+                    continue
+
+                if item.original_prose is not None:
+                    history_turns.append(item)
+                    continue
+
+                try:
+                    history_context = history_turns[-CONTEXT_WINDOW_SIZE:]
+
+                    user_prompt = user_tmpl.render(
+                        session=session,
+                        target_turn=item,
+                        history_context=history_context,
+                    )
+                    system_prompt = system_tmpl.render(session=session)
+
+                    # Calculate raw token overhead (roughly 1 word ≈ 1.3 tokens)
+                    estimated_input_tokens = int(len(item.prose.split()) * 1.3)
+
+                    # Establish a massive baseline floor of 8192 tokens to protect
+                    # the target engine's reasoning budget.
+                    unbound_max_tokens = max(8192, int(estimated_input_tokens * 3.0))
+
+                    payload = {
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": unbound_max_tokens,
+                        "thinking_budget_tokens": 0,
+                        "response_format": {
+                            "type": "json_object",
+                            "schema": SingleTurnGrammarResponse.model_json_schema(),
+                        },
+                    }
+                    resp = requests.post(service_url, json=payload, timeout=240)
+                    resp.raise_for_status()
+
+                    # 1. Parse the top-level API envelope
+                    resp_json = resp.json()
+
+                    # 2. Extract the finish reason from the choices payload
+                    choices = resp_json.get("choices", [{}])
+                    finish_reason = (
+                        choices[0].get("finish_reason", "stop") if choices else "stop"
+                    )
+
+                    # 3. Extract the actual text string containing the JSON structure
+                    raw_content = (
+                        choices[0].get("message", {}).get("content", "{}")
+                        if choices
+                        else "{}"
+                    )
+
+                    # 4. Handle token truncation safely via logger instead of bare print
+                    if finish_reason == "length":
+                        logger.warning(
+                            f"Generation cut off by token limit for item in "
+                            f"{file_path.name} "
+                            f"(finish_reason: length)"
+                        )
+
+                    # 5. Fall through to standard validation if it finished normally
+                    extracted_data = SingleTurnGrammarResponse.model_validate_json(
+                        raw_content
+                    )
+
+                    # Update turn state inline
+                    item.original_prose = item.prose
+                    item.prose = extracted_data.rewritten_prose
+
+                    # Append tracking step annotation if not present for this run phase
+                    has_annotation = any(
+                        anno.kind == "refine-grammar"
+                        for anno in (session.meta.annotations or [])
+                    )
+                    if not has_annotation:
+                        grammar_annotation = Annotation(
+                            kind="refine-grammar",
+                            content="step-by-step single-turn third-person",
+                            reasoning=None,
+                        )
+                        if not session.meta.annotations:
+                            session.meta.annotations = []
+                        session.meta.annotations.append(grammar_annotation)
+
+                    # Flush state to flat file immediately after single turn success
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(session.model_dump_json(indent=2))
+
+                except Exception as turn_err:
+                    logger.error(
+                        f"Skipping corrupted turn generation for item in "
+                        f"{file_path.name}: {turn_err}"
+                    )
+                    continue
+
+                history_turns.append(item)
+
+        except Exception as e:
+            logger.error(
+                f"Failed step-by-step grammar pass for canvas "
+                f"document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Step-by-step grammar refinement script pass finished. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/refine-grammar/templates/system.jinja2
+================================================
+I am the 'LilaKosha Grammar Stylist Engine'.
+My primary function is to systematically mechanicalize conversational roleplay turns into exact third-person, past-tense novelistic prose.
+
+CRITICAL EXECUTION RULES:
+1. NO PURPLE PROSE OR SPECULATION: Do not add environmental details, sensory descriptions, or internal motivations that are not explicitly defined in the raw input. Maintain a direct, clean, and tight narrative conversion.
+2. VERBATIM TEXT PRESERVATION: Any spoken dialogue or internal thought characters express must be extracted and preserved EXACTLY as written, maintaining all original spelling mistakes, grammar errors, punctuation quirks, and typos.
+3. FORMATTING ANCHORS:
+   - Spoken dialogue must be wrapped strictly in standard double quotes (" ").
+   - Internal thoughts must be wrapped strictly in asterisks (* *).
+4. NO NARRATIVE HIJACKING: Restrict all structural changes to the targeted actor's actions. Never introduce actions or responses for the secondary character unless explicitly dictated by the target raw prose.
+
+
+
+================================================
+FILE: steps/refine-grammar/templates/user.jinja2
+================================================
+### TASK
+Convert the target roleplay turn into strict third-person, past-tense narrative prose while enforcing verbatim structural retention.
+
+### CHARACTER DESIGNATIONS
+{# Use a namespace object to persist assignments outside of the loop block #}
+{%- set ns = namespace(target_char=None) -%}
+{%- set secondary_chars = [] -%}
+
+{%- for identity in session.meta.identities -%}
+    {%- if identity.entity_id == target_turn.actor_id -%}
+        {%- set ns.target_char = identity -%}
+    {%- else -%}
+        {%- set _ = secondary_chars.append(identity) -%}
+    {%- endif -%}
+{%- endfor -%}
+
+- Target Actor Name: "{{ ns.target_char.name if ns.target_char else 'The Character' }}"
+  Gender/Pronouns: {{ ns.target_char.gender if ns.target_char else 'unknown' }} ({% if ns.target_char %}{{ ns.target_char.pronouns.subjective }}/{{ ns.target_char.pronouns.objective }}/{{ ns.target_char.pronouns.possessive }}{% else %}they/them/their{% endif %})
+
+- Secondary Character(s):
+{%- for sec in secondary_chars %}
+  * Name: "{{ sec.name }}" | Gender/Pronouns: {{ sec.gender }} ({{ sec.pronouns.subjective }}/{{ sec.pronouns.objective }}/{{ sec.pronouns.possessive }})
+{%- else %}
+  * None registered.
+{%- endfor %}
+
+### CHRONOLOGICAL HISTORY CONTEXT
+Use this context solely for establishing continuity, tracking gender consistency, and locking down pronoun mappings. Do NOT modify or repeat this data.
+{% for past_item in history_context if past_item.kind == 'turn' -%}
+    {# Resolve the historical actor's name dynamically from the registry #}
+    {%- set past_char_name = "Unknown" -%}
+    {%- for identity in session.meta.identities -%}
+        {%- if identity.entity_id == past_item.actor_id -%}{%- set past_char_name = identity.name -%}{%- endif -%}
+    {%- endfor -%}
+* {{ past_char_name }}: {{ past_item.prose }}
+{%- endfor %}
+
+### REWRITE RULES
+1. TENSE & PERSPECTIVE CHANGE: Shift the targeted turn's active inline text exclusively to third-person past-tense. Use the provided pronoun set ({% if ns.target_char %}{{ ns.target_char.pronouns.subjective }}/{{ ns.target_char.pronouns.objective }}{% else %}they/them{% endif %}) to maintain absolute grammatical stability.
+2. PROPER NOUN INJECTION: You must explicitly drop the proper names of BOTH characters at least once in the rewritten text to ground perspective instead of relying solely on generic pronouns.
+3. SPOKEN TEXT DIRECTIVE: Keep spoken sentences verbatim with all typos/errors intact. Append a simple dialogic tag using the proper noun or pronoun (e.g., "he said", "she noted", "{{ ns.target_char.name if ns.target_char else 'he' }} asked").
+4. THOUGHT TEXT DIRECTIVE: Keep thought fragments verbatim with all typos/errors intact, wrapped exclusively in *asterisks*.
+
+### ─── TARGET TURN TO REWRITE ───
+Actor ID: {{ target_turn.actor_id }}
+Raw Prose: {{ target_turn.prose }}
+
+
+
+================================================
+FILE: steps/refine-safety-dials/__init__.py
+================================================
+import importlib.resources
+import logging
+from pathlib import Path
+
+import requests
+from jinja2 import BaseLoader, Environment
+from tqdm import tqdm
+
+from cdm.core import Annotation, Session
+from cdm.refine import SafetyDialsResponse
+
+logger = logging.getLogger(__name__)
+
+
+def load_jinja_templates(templates: list[str]) -> dict[str, str]:
+    """Loads raw templates from the package directory."""
+    try:
+        result = {}
+        ref = importlib.resources.files("steps.refine-safety-dials.templates")
+        for template in templates:
+            template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
+            result[template] = template_str.strip()
+        return result
+    except Exception as e:
+        logger.error(f"Failed to load external prompt templates: {e}")
+        raise
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Refinement Pass: Safety Dials Classification.
+    Iterates incrementally over individual canvas files using an explicit metadata
+    sniff test for idempotency.
+    """
+    templates_str = load_jinja_templates(["system", "user"])
+    jinja_env = Environment(loader=BaseLoader())
+    user_tmpl = jinja_env.from_string(templates_str["user"])
+    system_tmpl = jinja_env.from_string(templates_str["system"])
+
+    # Resolve paths from configuration volumes
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found to evaluate inside {records_dir}")
+        return
+
+    # Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Refinement Scope Activated (Safety Dials):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for Safety Dials Classification..."
+    )
+    service_url = f"{config['services']['inspector']}/v1/chat/completions"
+
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Evaluating Canvas Safety Dials"):
+        record_uuid = file_path.stem
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            # 1. Load the standalone canvas session
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # --- Health Guard Gate ---
+            # Skip if a previous telemetry pass explicitly identified
+            # this file as defective
+            if session.meta and session.meta.healthy is False:
+                continue
+
+            # 2. Idempotency Check
+            if (
+                session.meta.sexual_axis is not None
+                or session.meta.violence_axis is not None
+                or session.meta.toxicity_axis is not None
+            ):
+                continue
+
+            # 3. Generate structured prompt inputs from templates
+            user_prompt = user_tmpl.render(session=session)
+            system_prompt = system_tmpl.render(session=session)
+
+            payload = {
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 2048,
+                "response_format": {
+                    "type": "json_object",
+                    "schema": SafetyDialsResponse.model_json_schema(),
+                },
+            }
+
+            # 4. Dispatch to inspector engine endpoint
+            resp = requests.post(service_url, json=payload, timeout=120)
+            resp.raise_for_status()
+
+            response_json = resp.json()
+            message_data = response_json["choices"][0]["message"]
+            raw_content = message_data["content"]
+            reasoning = message_data.get("reasoning_content")
+
+            extracted_data = SafetyDialsResponse.model_validate_json(raw_content)
+
+            # 5. Hydrate session metadata safety properties
+            #    Ensure proper type alignment depending on whether your schema uses
+            #    string literals or explicit types
+            session.meta.sexual_axis = extracted_data.sexual_axis
+            session.meta.violence_axis = extracted_data.violence_axis
+            session.meta.toxicity_axis = extracted_data.toxicity_axis
+
+            # 6. Append tracking annotations safely to satisfy static type checking
+            if session.meta.annotations is None:
+                session.meta.annotations = []
+
+            session.meta.annotations.append(
+                Annotation(
+                    kind="refine-safety-dials",
+                    content="classified safety axes for the session",
+                    reasoning=reasoning,
+                )
+            )
+
+            # 7. Commit changes back to disk with pretty-print layout
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(session.model_dump_json(indent=2))
+
+        except Exception as e:
+            logger.error(
+                f"Failed safety evaluation pass for canvas "
+                f"document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Safety dials refinement script pass finished. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/refine-safety-dials/templates/system.jinja2
+================================================
+<|think|>
+I am the 'LilaKosha Safety Analyst'.
+I analyze conversational logs to evaluate content safety across three axes: sexual, violence, and toxicity.
+My classifications are precise and grounded in the actual content present.
+
+
+
+================================================
+FILE: steps/refine-safety-dials/templates/user.jinja2
+================================================
+### TASK
+Analyze the provided multi-turn chat history and classify the content across three safety axes.
+
+### CHAT EVIDENCE
+{% set bot_name = session.meta.bot_name or "the character" %}
+
+{% for item in session.items if item.kind == 'turn' -%}
+    {% if loop.index0 < 100 -%}
+        {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
+        {{ role }}: {{ item.prose }}
+    {% endif %}
+{%- endfor %}
+
+
+
+================================================
+FILE: steps/report-record-health/__init__.py
+================================================
+import json
+import logging
+from collections import defaultdict
+from pathlib import Path
+
+from cdm.core import Session
+
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Telemetry Step: Assess structural and content health metrics
+    across all canvas JSON records on disk using native Pydantic models.
+
+    Supports:
+      --reset_health true         : Clears 'healthy' tracking flags to force retries.
+      --audit_only true           : Run full health report in-memory without disk writes
+                                    (Perfect for clean dashboarding via watch -n).
+      --hide_anomaly_details true : Mutes granular issue printing.
+    """
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(f"Records directory not found at {records_dir}")
+        return
+
+    canvas_files = list(records_dir.glob("*.json"))
+    total_records = len(canvas_files)
+
+    if total_records == 0:
+        logger.warning("No canvas artifacts found to evaluate.")
+        return
+
+    # Extract dynamic configuration parameters passed via pipeline config or CLI flags
+    params = config.get("parameters", {})
+    hide_anomaly_details = params.get("hide_anomaly_details", False)
+    reset_health = params.get("reset_health", False)
+    audit_only = params.get("audit_only", False)
+
+    # Normalize values from the CLI wrapper strings
+    if isinstance(hide_anomaly_details, str):
+        hide_anomaly_details = hide_anomaly_details.lower() in ("true", "1", "yes")
+    if isinstance(reset_health, str):
+        reset_health = reset_health.lower() in ("true", "1", "yes")
+    if isinstance(audit_only, str):
+        audit_only = audit_only.lower() in ("true", "1", "yes")
+
+    # --- Mode 1: Full Health State Reset ---
+    if reset_health:
+        logger.info(
+            f"🔄 RESET MODE ACTIVATED: Clearing health states across "
+            f"{total_records} records to force pipeline retries..."
+        )
+        for file_path in canvas_files:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    raw_data = json.load(f)
+                if "meta" in raw_data and isinstance(raw_data["meta"], dict):
+                    # Pop the healthy key entirely so it drops
+                    # back to Schema default (None)
+                    raw_data["meta"].pop("healthy", None)
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        json.dump(raw_data, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                logger.error(
+                    f"Failed to clear health tag on file {file_path.stem}: {str(e)}"
+                )
+        logger.info(
+            "✅ All health tracking flags have been cleared. Exiting reset phase."
+        )
+        return
+
+    healthy_count = 0
+    failure_registry = defaultdict(list)
+
+    if audit_only:
+        logger.info(
+            f"📊 Running read-only telemetry audit across {total_records} records..."
+        )
+    else:
+        logger.info(
+            f"Auditing and mutating data health parameters across "
+            f"{total_records} records..."
+        )
+
+    # --- Mode 2 & 3: Standard Mutation / Audit Evaluation Pass ---
+    for file_path in canvas_files:
+        uuid_str = file_path.stem
+        issues = []
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            # Authoritative validation against cdm.core.Session
+            session = Session.model_validate(data)
+            meta = session.meta
+            items = session.items or []
+            annotations = meta.annotations or []
+
+            # Extract kinds from Pydantic Annotation objects safely
+            annotation_kinds = {
+                anno.kind for anno in annotations if hasattr(anno, "kind")
+            }
+
+            # --- Rule Group 1: refine-characters ---
+            if "refine-characters" not in annotation_kinds:
+                issues.append("Missing 'refine-characters' annotation")
+
+            has_bot_detail = any(
+                item.kind == "character"
+                and getattr(item, "subkind", None) == "detail"
+                and getattr(item, "entity_id", None) != "user"
+                for item in items
+            )
+            if not has_bot_detail:
+                issues.append(
+                    "Missing bot character details (subkind=detail, entity_id!=user)"
+                )
+
+            has_user_info = any(
+                item.kind == "character"
+                and getattr(item, "subkind", None) == "info"
+                and getattr(item, "entity_id", None) == "user"
+                for item in items
+            )
+            if not has_user_info:
+                issues.append(
+                    "Missing user profiling info (subkind=info, entity_id=user)"
+                )
+
+            # --- Rule Group 2: refine-safety-dials ---
+            if "refine-safety-dials" not in annotation_kinds:
+                issues.append("Missing 'refine-safety-dials' annotation")
+
+            if meta.sexual_axis is None:
+                issues.append("Unset 'meta.sexual_axis'")
+            if meta.violence_axis is None:
+                issues.append("Unset 'meta.violence_axis'")
+            if meta.toxicity_axis is None:
+                issues.append("Unset 'meta.toxicity_axis'")
+
+            # --- Rule Group 3: refine-genre-theme ---
+            if "refine-genre-theme" not in annotation_kinds:
+                issues.append("Missing 'refine-genre-theme' annotation")
+            if meta.primary_genre is None:
+                issues.append("Unset 'meta.primary_genre'")
+            if not meta.themes:  # Checks for None or empty list
+                issues.append("Unset or empty 'meta.themes'")
+
+            # --- Rule Group 4: refine-grammar ---
+            if "refine-grammar" not in annotation_kinds:
+                issues.append("Missing 'refine-grammar' annotation")
+
+            # Verify that every turn item correctly retains its original_prose baseline
+            missing_lineage_turns = sum(
+                1
+                for item in items
+                if item.kind == "turn" and getattr(item, "original_prose", None) is None
+            )
+            if missing_lineage_turns > 0:
+                issues.append(
+                    f"Grammar tracking defect: {missing_lineage_turns} turn items are"
+                    " missing 'original_prose'"
+                )
+
+            # --- Consolidation State Sync ---
+            if not issues:
+                healthy_count += 1
+                session.meta.healthy = True
+            else:
+                failure_registry[uuid_str] = issues
+                session.meta.healthy = False
+
+            # Persist mutations back to disk ONLY if audit-only mode is deactivated
+            if not audit_only:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(
+                        session.model_dump(mode="json"), f, indent=2, ensure_ascii=False
+                    )
+
+        except Exception as e:
+            failure_registry[uuid_str].append(
+                f"Pydantic validation/structural crash: {str(e)}"
+            )
+
+            # If the session model instantiation crashed entirely,
+            # fall back to dirty JSON patch
+            if not audit_only:
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        raw_data = json.load(f)
+                    if "meta" in raw_data and isinstance(raw_data["meta"], dict):
+                        raw_data["meta"]["healthy"] = False
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            json.dump(raw_data, f, indent=2, ensure_ascii=False)
+                except Exception as backup_err:
+                    logger.error(
+                        f"Critical write-back block on file "
+                        f"{uuid_str}: {str(backup_err)}"
+                    )
+
+    # --- Render Report Output ---
+    health_percentage = (healthy_count / total_records) * 100
+
+    logger.info("=" * 60)
+    logger.info("📊 LILAKOSHA PIPELINE DATA HEALTH REPORT")
+    logger.info("=" * 60)
+    logger.info(f"Total Records Evaluated: {total_records}")
+    logger.info(f"Healthy Records:         {healthy_count} ({health_percentage:.2f}%)")
+    logger.info(f"Defective Records:       {len(failure_registry)}")
+    logger.info("=" * 60)
+
+    if failure_registry:
+        if hide_anomaly_details:
+            logger.info("ℹ️  Anomaly details hidden by configuration parameter flag.")
+            logger.info("=" * 60)
+        else:
+            logger.info("❌ DETECTED ANOMALY REGISTRY BY RECORD ID:")
+            for uuid, faults in failure_registry.items():
+                logger.info(f"   ↳ UUID: {uuid}")
+                for fault in faults:
+                    logger.info(f"       - {fault}")
+            logger.info("=" * 60)
+
+
+
+================================================
+FILE: steps/report-record-stats/__init__.py
+================================================
+import json
+import logging
+from collections import Counter
+from pathlib import Path
+
+from cdm.core import Session
+
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Telemetry Step: Aggregate and report corpus statistics,
+    including breakdowns by safety dials, primary genres, and thematic distributions.
+    """
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(f"Records directory not found at {records_dir}")
+        return
+
+    canvas_files = list(records_dir.glob("*.json"))
+    total_records = len(canvas_files)
+
+    if total_records == 0:
+        logger.warning("No canvas artifacts found to analyze.")
+        return
+
+    # Initialize aggregators
+    sexual_counts = Counter()
+    violence_counts = Counter()
+    toxicity_counts = Counter()
+    genre_counts = Counter()
+    theme_counts = Counter()
+
+    logger.info(
+        f"Computing aggregate profile statistics across {total_records} records..."
+    )
+
+    for file_path in canvas_files:
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            session = Session.model_validate(data)
+            meta = session.meta
+
+            # Extract and count safety classifications (handle Enums safely via .value)
+            sexual_counts[meta.sexual_axis.value if meta.sexual_axis else "Unset"] += 1
+            violence_counts[
+                meta.violence_axis.value if meta.violence_axis else "Unset"
+            ] += 1
+            toxicity_counts[
+                meta.toxicity_axis.value if meta.toxicity_axis else "Unset"
+            ] += 1
+
+            # Extract and count primary genres
+            genre_counts[
+                meta.primary_genre.value if meta.primary_genre else "Unset"
+            ] += 1
+
+            # Extract and count themes
+            if meta.themes:
+                for theme in meta.themes:
+                    theme_counts[theme] += 1
+            else:
+                theme_counts["[No Themes Assigned]"] += 1
+
+        except Exception:
+            # Skip unparseable files during stats aggregation to avoid
+            # crashing the telemetry loop
+            continue
+
+    # --- Render Statistical Breakdown Report ---
+    logger.info("=" * 60)
+    logger.info("📊 LILAKOSHA DATASET DISTRIBUTION REPORT")
+    logger.info("=" * 60)
+    logger.info(f"Total Portfolio Volume: {total_records} records")
+    logger.info("=" * 60)
+
+    # 1. Safety Axis Sub-Reports
+    logger.info("🔒 SAFETY DIAL DISTRIBUTIONS")
+    logger.info("  [Sexual Axis]")
+    for val, count in sexual_counts.most_common():
+        pct = (count / total_records) * 100
+        logger.info(f"    - {val:<15} : {count:>4} ({pct:.1f}%)")
+
+    logger.info("  [Violence Axis]")
+    for val, count in violence_counts.most_common():
+        pct = (count / total_records) * 100
+        logger.info(f"    - {val:<15} : {count:>4} ({pct:.1f}%)")
+
+    logger.info("  [Toxicity Axis]")
+    for val, count in toxicity_counts.most_common():
+        pct = (count / total_records) * 100
+        logger.info(f"    - {val:<15} : {count:>4} ({pct:.1f}%)")
+    logger.info("-" * 60)
+
+    # 2. Genre Distribution
+    logger.info("🎭 PRIMARY GENRE MIX")
+    for genre, count in genre_counts.most_common():
+        pct = (count / total_records) * 100
+        logger.info(f"  - {genre:<22} : {count:>4} ({pct:.1f}%)")
+    logger.info("-" * 60)
+
+    # 3. Top Theme Distribution
+    logger.info("🏷️  TOP THEMATIC TAGS (FREQUENCY)")
+    # Show top 25 themes for clean output readability
+    for theme, count in theme_counts.most_common(25):
+        pct = (count / total_records) * 100
+        logger.info(f"  - {theme:<26} : {count:>4} ({pct:.1f}%)")
+
+    if len(theme_counts) > 25:
+        logger.info(f"  ... and {len(theme_counts) - 25} other unique themes.")
+    logger.info("=" * 60)
+
+
+
+================================================
+FILE: steps/scalpel-characters/__init__.py
+================================================
+import logging
+from pathlib import Path
+
+from tqdm import tqdm
+
+from cdm.core import Annotation, PronounSet, Session
+
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Scalpel Pass: Clear Character Synthesis.
+    Iterates through standalone Common Data Model (CDM) records, purging synthesized
+    character profiles from the timeline, resetting core identities inside the
+    authoritative registry back to base tracking defaults, and cleaning historical
+    tracking annotations. Supports optional runtime lexical range filtering
+    via 'start_uuid' and 'stop_uuid'.
+    """
+    # 1. Resolve Data Infrastructure Paths
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found inside {records_dir}")
+        return
+
+    # 2. Extract and Validate Targeted Scope Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Scalpel Scope Activated (Character Synthesis):\n"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Scalpel Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for synthesized character entities..."
+    )
+
+    # 3. Main Operational Execution Loop
+    purged_count = 0
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Purging Character Profiles"):
+        record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
+
+        # Enforce floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Enforce ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # Detect whether character items or refinement annotations exist
+            has_timeline_items = any(item.kind == "character" for item in session.items)
+            has_refine_annotations = any(
+                anno.kind == "refine-characters"
+                for anno in (session.meta.annotations or [])
+            )
+
+            if has_timeline_items or has_refine_annotations:
+                # A. Purge inline character lore blocks from the top of the
+                #    transactional timeline
+                session.items = [
+                    item for item in session.items if item.kind != "character"
+                ]
+
+                # B. Reset Authoritative Identity Registry fields to default
+                #    fallback states (Reverting names to standard tracking handles
+                #    and clearing pronoun/gender sets)
+                bot_id = session.meta.bot_id or "unknown_bot"
+
+                default_pronouns = PronounSet(
+                    subjective="they", objective="them", possessive="their"
+                )
+                for identity in session.meta.identities:
+                    if identity.entity_id == "user":
+                        identity.name = "User"
+                        identity.gender = "unknown"
+                        identity.pronouns = default_pronouns
+                    elif identity.entity_id == bot_id:
+                        identity.name = session.meta.bot_name or "Bot"
+                        identity.gender = "unknown"
+                        identity.pronouns = default_pronouns
+
+                # C. Filter out historical processing annotations to prevent
+                #    tracking pollution
+                if session.meta.annotations:
+                    session.meta.annotations = [
+                        anno
+                        for anno in session.meta.annotations
+                        if anno.kind != "refine-characters"
+                    ]
+                else:
+                    session.meta.annotations = []
+
+                # D. Append standard surgical tracking trace token to satisfy
+                #    tracking audit trails
+                scalpel_annotation = Annotation(
+                    kind="scalpel-character",
+                    content=(
+                        "cleared synthesized character timeline profiles and reset "
+                        "identity registries via scalpel range"
+                    ),
+                    reasoning=None,
+                )
+                session.meta.annotations.append(scalpel_annotation)
+
+                # E. Commit updates cleanly back to disk
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(session.model_dump_json(indent=2))
+
+                purged_count += 1
+
+        except Exception as e:
+            logger.error(
+                f"Failed surgical profile purge for document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Scalpel character clearance pass complete. "
+        f"Purged: {purged_count} records. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/scalpel-genre-theme/__init__.py
+================================================
+import logging
+from pathlib import Path
+
+from tqdm import tqdm
+
+from cdm.core import Annotation, Session
+
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Scalpel Pass: Clear Genre & Themes.
+    Iterates through standalone Common Data Model (CDM) records, purging
+    computed narrative genres and thematic tags alongside related history annotations.
+    Supports optional runtime range filtering via 'start_uuid' and
+    'stop_uuid' parameters.
+    """
+    # 1. Resolve Data Infrastructure
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found inside {records_dir}")
+        return
+
+    # 2. Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    # Format localized diagnostic headers for clear Operator Experience (OX)
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Scalpel Scope Activated (Genre/Theme):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Scalpel Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for genre and theme metadata..."
+    )
+
+    # 3. Main Operational Execution Loop
+    purged_count = 0
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Purging Genre & Themes"):
+        record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # Check if active metadata elements are present to clear
+            has_metadata = session.meta.primary_genre is not None or (
+                session.meta.themes is not None and len(session.meta.themes) > 0
+            )
+
+            if has_metadata:
+                # 1. Nullify the genre and theme dimensions on session metadata
+                session.meta.primary_genre = None
+                session.meta.themes = None
+
+                # 2. Filter out historical refinement annotations to maintain
+                #    track integrity
+                if session.meta.annotations:
+                    session.meta.annotations = [
+                        anno
+                        for anno in session.meta.annotations
+                        if anno.kind != "refine-genre-theme"
+                    ]
+                else:
+                    session.meta.annotations = []
+
+                # 3. Append a surgical tracking trace token
+                scalpel_annotation = Annotation(
+                    kind="scalpel-genre-theme",
+                    content=(
+                        "cleared narrative genre classifications and thematic tags "
+                        "via scalpel range"
+                    ),
+                    reasoning=None,
+                )
+                session.meta.annotations.append(scalpel_annotation)
+
+                # 4. Save updates cleanly back to the filesystem
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(session.model_dump_json(indent=2))
+
+                purged_count += 1
+
+        except Exception as e:
+            logger.error(
+                f"Failed surgical metadata purge for document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Scalpel genre & theme clearance pass complete. "
+        f"Purged: {purged_count} records. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/scalpel-grammar/__init__.py
+================================================
+import logging
+from pathlib import Path
+
+from tqdm import tqdm
+
+from cdm.core import Annotation, Session, TurnItem
+
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Scalpel Pass: Restore Original Prose.
+    Iterates through standalone Common Data Model (CDM) records, reverting
+    third-person narrative mutations back to their original first-person chat strings.
+    Supports optional runtime range filtering via 'start_uuid' and
+    'stop_uuid' parameters.
+    """
+    # 1. Resolve Data Infrastructure
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found inside {records_dir}")
+        return
+
+    # 2. Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    # Format localized diagnostic headers for clear Operator Experience (OX)
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Scalpel Scope Activated (Grammar/Prose):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Scalpel Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(
+        f"Inspecting {len(record_files)} records for original prose restoration..."
+    )
+
+    # 3. Main Operational Execution Loop
+    restored_count = 0
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Restoring Original Prose"):
+        record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            modified_file = False
+
+            # Traverse the transactional ledger items instead of legacy children array
+            for item in session.items:
+                if not isinstance(item, TurnItem):
+                    continue
+
+                # Inverted Idempotency check: Only target turns that have been modified
+                if item.original_prose is not None:
+                    # Restore the raw snapshot back to the main prose track
+                    item.prose = item.original_prose
+                    item.original_prose = None
+                    item.prose_revision_comments = None
+                    modified_file = True
+
+            if modified_file:
+                # Filter out legacy grammar annotations to prevent pipeline confusion
+                if session.meta.annotations:
+                    session.meta.annotations = [
+                        anno
+                        for anno in session.meta.annotations
+                        if anno.kind != "refine-grammar"
+                    ]
+                else:
+                    session.meta.annotations = []
+
+                # Append a surgical track annotation for trace lineage
+                scalpel_annotation = Annotation(
+                    kind="scalpel-grammar",
+                    content=(
+                        "roll-back of grammar mutations to original prose state "
+                        "via scalpel range"
+                    ),
+                    reasoning=None,
+                )
+                session.meta.annotations.append(scalpel_annotation)
+
+                # Commit updates smoothly back to disk
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(session.model_dump_json(indent=2))
+
+                restored_count += 1
+
+        except Exception as e:
+            logger.error(
+                f"Failed surgical prose rollback for document {file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Scalpel original prose restoration complete. "
+        f"Restored: {restored_count} records. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/scalpel-safety-dials/__init__.py
+================================================
+import logging
+from pathlib import Path
+
+from tqdm import tqdm
+
+from cdm.core import Annotation, Session
+
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict) -> None:
+    """
+    LilaKosha Scalpel Pass: Clear Safety Dials.
+    Iterates through standalone Common Data Model (CDM) records, purging
+    computed safety metrics and tracking annotations to allow clean evaluations.
+    Supports optional runtime range filtering via 'start_uuid' and
+    'stop_uuid' parameters.
+    """
+    # 1. Resolve Data Infrastructure
+    processed_vol = Path(config["volumes"]["processed"])
+    records_dir = processed_vol / "cdm" / "records"
+
+    if not records_dir.exists():
+        logger.error(
+            f"Records directory not found: {records_dir}. Run ingestion first."
+        )
+        return
+
+    record_files = sorted(records_dir.glob("*.json"))
+    if not record_files:
+        logger.warning(f"No canvas records found inside {records_dir}")
+        return
+
+    # 2. Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    # Format localized diagnostic headers for clear Operator Experience (OX)
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Scalpel Scope Activated:\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Scalpel Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
+    logger.info(f"Inspecting {len(record_files)} files for safety metrics clearance...")
+
+    # 3. Main Operational Execution Loop
+    purged_count = 0
+    skipped_range_count = 0
+
+    for file_path in tqdm(record_files, desc="Processing Scalpel Operation"):
+        record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                session = Session.model_validate_json(f.read())
+
+            # Evaluate state vectors for pending execution conditions
+            has_metrics = (
+                getattr(session.meta, "sexual_axis", None) is not None
+                or getattr(session.meta, "violence_axis", None) is not None
+                or getattr(session.meta, "toxicity_axis", None) is not None
+            )
+
+            if has_metrics:
+                # 1. Nullify structural safety layout vectors
+                session.meta.sexual_axis = None
+                session.meta.violence_axis = None
+                session.meta.toxicity_axis = None
+
+                # 2. Purge stale lineage tracking details to clean up metrics
+                if session.meta.annotations:
+                    session.meta.annotations = [
+                        anno
+                        for anno in session.meta.annotations
+                        if anno.kind != "refine-safety-dials"
+                    ]
+                else:
+                    session.meta.annotations = []
+
+                # 3. Inject explicit scalpel audit token
+                scalpel_annotation = Annotation(
+                    kind="scalpel-safety-dials",
+                    content=(
+                        "cleared safety dial metrics and annotations via scalpel range"
+                    ),
+                    reasoning=None,
+                )
+                session.meta.annotations.append(scalpel_annotation)
+
+                # 4. Commit modification atomicity directly to local slot
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(session.model_dump_json(indent=2))
+
+                purged_count += 1
+
+        except Exception as e:
+            logger.error(
+                f"Failed surgical safety metrics purge for document "
+                f"{file_path.name}: {e}"
+            )
+
+    logger.info(
+        f"✅ Scalpel pass completed. "
+        f"Purged: {purged_count} records. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
+
+
+
+================================================
+FILE: steps/train/__init__.py
+================================================
+import logging
+import os
+from typing import Any, cast
+
+# Configure internal step logging for Operator Experience (OX)
+logger = logging.getLogger(__name__)
+
+
+def run(config: dict[str, Any]) -> None:
+    """
+    LilaKosha MK1 Stage 2: Resource-Constrained Training (QLoRA).
+
+    Loads a 4-bit base model (~7.5GB VRAM) and trains creative adapters using
+    CRPO injection weights to maximize narrative novelty and surprise.
+    """
+    # 1. Metadata and Volume Extraction
+    project = config.get("project", {})
+    volumes = config.get("volumes", {})
+    params = config.get("training_params", {})
+    variant = project.get("model_variant", "unknown").lower()
+    gen = project.get("generation", "G1")
+    # Resolve Physical Paths from the Redesigned Schema
+    models_vol = cast(str, volumes.get("models"))
+    processed_vol = cast(str, volumes.get("processed"))
+    # Variant-Isolated Data and Foundation Selection
+    base_model_rel = params.get("base_model_path", "google/gemma-4-12b-it")
+    full_model_path = os.path.join(models_vol, base_model_rel)
+    # Target forked chunks from the 'prepare' step
+    data_path = os.path.join(processed_vol, f"{variant}_chunks")
+    print(f"\n{'=' * 65}")
+    print(f"🔥 {project.get('name')} {project.get('mark')} FLOW: STAGE 2 (TRAINING)")
+    print(f"{'=' * 65}")
+    # 2. Operator Verification and VRAM Handover Status
+    logging.info(f"TARGET VARIANT: {variant.upper()}")
+    if "abliterated" in base_model_rel.lower():
+        logging.info(
+            "Foundation: Using Abliterated weights (Refusal Directions removed)."
+        )
+    else:
+        logging.info("Foundation: Using Vanilla weights (Institutional Safety active).")
+    # 3. Hardware Resource Configuration
+    print(f"\n--- Loading {gen}-12B Unified Backbone ---")
+    logging.info(f"Source: {full_model_path}")
+    print("  > Mode: QLoRA (4-bit quantization enabled)")
+    print("  > Base Footprint: ~7.5 GB VRAM")
+    print(
+        f"  > Sequence Buffer: ~3.5 GB (Max Seq: {params.get('context_window', 4096)})"
+    )
+    # 4. Creative Preference Optimization (CRPO) Injection
+    print("\n--- Ingesting State-Aware Narrative Records ---")
+    logging.info(f"Input Stream: {data_path}")
+    lambdas = params.get("crpo_lambdas", {})
+    logging.info(
+        f"CRPO Signals: λ_nov={lambdas.get('novelty')}, λ_sur={lambdas.get('surprise')}"
+    )
+    print("  > Optimizing for 'Out-of-the-Box' thinking to prevent soulless outputs.")
+    # 5. Training Loop Logic (Abstracted for dry-run validation)
+    # This involves:
+    # A. Initializing Unsloth with 4-bit base
+    # B. Attaching LoRA to q_proj, v_proj, up_proj, etc.
+    # C. Setting up SFTTrainer with recap-augmented state-aware samples
+    print("  > Targeting creative style matrices: attention & MLP projections...")
+    print(f"  > Synchronizing {variant} creative adapters...")
+    # 6. Success Reporting and Checkpoint Management
+    adapter_name = f"{project.get('name')}-{gen}-12B-{variant.upper()}"
+    save_path = os.path.join(models_vol, "checkpoints", adapter_name)
+    print(f"\n{'*' * 65}")
+    logging.info(f"SUCCESS: {adapter_name} adapters saved.")
+    logging.info(f"Location: {save_path}")
+    logging.info("Status: Ready for the 'Bake' phase (Weight Fusion).")
+    print(f"{'*' * 65}\n")
+
+

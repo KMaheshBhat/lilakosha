@@ -2,12 +2,12 @@ import importlib.resources
 import logging
 from pathlib import Path
 
-import requests
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
 from cdm.core import Annotation, CharacterItem, Session
 from cdm.refine import CharacterSynthesisResponse
+from inference import Message, OpenAIInference
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,6 @@ def run(config: dict) -> None:
         )
 
     logger.info(f"Inspecting {len(record_files)} records for Character Synthesis...")
-    service_url = f"{config['services']['summarizer']}/v1/chat/completions"
 
     skipped_range_count = 0
 
@@ -108,33 +107,52 @@ def run(config: dict) -> None:
             if already_refined:
                 continue
 
+            # # 3. Generate structured prompt inputs from templates
+            # user_prompt = user_tmpl.render(session=session)
+            # system_prompt = system_tmpl.render(session=session)
+
+            # payload = {
+            #     "messages": [
+            #         {"role": "system", "content": system_prompt},
+            #         {"role": "user", "content": user_prompt},
+            #     ],
+            #     "temperature": 0.1,
+            #     "max_tokens": 4096,
+            #     "response_format": {
+            #         "type": "json_object",
+            #         "schema": CharacterSynthesisResponse.model_json_schema(),
+            #     },
+            # }
+
+            # # 4. Dispatch to local abliterated inference engine
+            # resp = requests.post(service_url, json=payload, timeout=120)
+            # resp.raise_for_status()
+
+            # response_json = resp.json()
+            # message_data = response_json["choices"][0]["message"]
+            # raw_content = message_data["content"]
+            # reasoning = message_data.get("reasoning_content")
+
+            # extracted_data = CharacterSynthesisResponse.model_validate_json(raw_content)
+            # logger.debug(f"extracted_data: {extracted_data}")
+
             # 3. Generate structured prompt inputs from templates
             user_prompt = user_tmpl.render(session=session)
             system_prompt = system_tmpl.render(session=session)
-
-            payload = {
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
+            binding = config["bindings"]["refine-characters"]
+            service = config["services"][binding["service"]]
+            inference = OpenAIInference.from_service(service)
+            result = inference.generate(
+                messages=[
+                    Message.system(system_prompt),
+                    Message.user(user_prompt),
                 ],
-                "temperature": 0.1,
-                "max_tokens": 4096,
-                "response_format": {
-                    "type": "json_object",
-                    "schema": CharacterSynthesisResponse.model_json_schema(),
-                },
-            }
-
-            # 4. Dispatch to local abliterated inference engine
-            resp = requests.post(service_url, json=payload, timeout=120)
-            resp.raise_for_status()
-
-            response_json = resp.json()
-            message_data = response_json["choices"][0]["message"]
-            raw_content = message_data["content"]
-            reasoning = message_data.get("reasoning_content")
-
-            extracted_data = CharacterSynthesisResponse.model_validate_json(raw_content)
+                response_model=CharacterSynthesisResponse,
+                temperature=0.1,
+                max_tokens=4096,
+            )
+            extracted_data = result.value
+            reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
             # 5. Update the Authoritative Identity Registry in SessionMeta

@@ -11,6 +11,10 @@ import yaml
 # Configure professional DX logging for Operator oXperience (OX)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
+# Silence noisy HTTP libraries
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("openai").setLevel(logging.WARNING)
 
 
 def interpolate_env_vars(node: Any) -> Any:
@@ -79,17 +83,29 @@ def load_config(config_path: Path) -> dict[str, Any]:
     resolved_config = cast(dict[str, Any], interpolate_env_vars(config))
 
     # Pre-flight check for unresolved environment variables
-    for section in ["volumes", "services"]:
-        data = resolved_config.get(section, {})
-        for key, value in data.items():
+    # Validate volumes
+    for volume_name, volume_path in resolved_config.get("volumes", {}).items():
+        if isinstance(volume_path, str) and ("$" in volume_path or volume_path == ""):
+            logger.error(
+                f"UNRESOLVED VOLUME: '{volume_name}' is missing or invalid. "
+                "Ensure the corresponding LILAKOSHA_VOLUME_* environment "
+                "variable is exported."
+            )
+            sys.exit(1)
+    # Validate services
+    for service_name, service_cfg in resolved_config.get("services", {}).items():
+        if not isinstance(service_cfg, dict):
+            logger.error(f"SERVICE '{service_name}' must be a mapping.")
+            sys.exit(1)
+        for field in ("base_url", "api_key"):
+            value = service_cfg.get(field)
             if isinstance(value, str) and ("$" in value or value == ""):
                 logger.error(
-                    f"UNRESOLVED {section.upper()}: '{key}' is missing or invalid. "
-                    f"Ensure you have exported the "
-                    f"LILAKOSHA_{section[:-1].upper()}_* variable."
+                    f"UNRESOLVED SERVICE: '{service_name}.{field}' is missing "
+                    "or invalid. Ensure the corresponding environment "
+                    "variable is exported."
                 )
                 sys.exit(1)
-
     return resolved_config
 
 

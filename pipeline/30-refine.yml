@@ -1,9 +1,9 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
 pipeline:
     - "refine-characters"
-    - "refine-safety-dials"
-    - "refine-genre-theme"
-    - "refine-grammar"
+    # - "refine-safety-dials"
+    # - "refine-genre-theme"
+    # - "refine-grammar"
 
 project:
     name: "LilaKosha"
@@ -15,9 +15,27 @@ volumes:
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
 
 services:
-    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}" # Tags samples (SFW vs Mature)
-    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}" # Converts person and tense
-    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Summarizes
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+
+bindings:
+    refine-characters:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 4096
+
+    refine-grammar:
+        service: local
+        temperature: 0.0
+        max_tokens: 2048
 
 # The start and stop is set to minimum UUID to avoid erraneous overwites.
 # Inpsect the ${LILAKOSHA_VOLUME_PROCESSED}/cdm/records to pick the
