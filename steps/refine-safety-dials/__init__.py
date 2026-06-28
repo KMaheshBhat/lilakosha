@@ -52,12 +52,42 @@ def run(config: dict) -> None:
         logger.warning(f"No canvas records found to evaluate inside {records_dir}")
         return
 
+    # Extract and Validate Target Range Markers
+    params = config.get("parameters", {})
+    start_uuid = params.get("start_uuid")
+    stop_uuid = params.get("stop_uuid")
+
+    if start_uuid or stop_uuid:
+        logger.info(
+            f"🎯 Targeted Refinement Scope Activated (Safety Dials):\n"
+            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+        )
+    else:
+        logger.info(
+            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
     logger.info(
         f"Inspecting {len(record_files)} records for Safety Dials Classification..."
     )
     service_url = f"{config['services']['inspector']}/v1/chat/completions"
 
+    skipped_range_count = 0
+
     for file_path in tqdm(record_files, desc="Evaluating Canvas Safety Dials"):
+        record_uuid = file_path.stem
+
+        # Check floor constraint boundary
+        if start_uuid and record_uuid < str(start_uuid):
+            skipped_range_count += 1
+            continue
+
+        # Check ceiling constraint boundary
+        if stop_uuid and record_uuid > str(stop_uuid):
+            skipped_range_count += 1
+            continue
+
         try:
             # 1. Load the standalone canvas session
             with open(file_path, "r", encoding="utf-8") as f:
@@ -134,4 +164,7 @@ def run(config: dict) -> None:
                 f"document {file_path.name}: {e}"
             )
 
-    logger.info("✅ Safety dials refinement script pass finished.")
+    logger.info(
+        f"✅ Safety dials refinement script pass finished. "
+        f"Skipped out-of-range: {skipped_range_count} records."
+    )
