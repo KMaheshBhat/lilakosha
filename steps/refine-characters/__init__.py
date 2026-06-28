@@ -1,5 +1,6 @@
 import importlib.resources
 import logging
+import time
 from pathlib import Path
 
 from jinja2 import BaseLoader, Environment
@@ -72,6 +73,14 @@ def run(config: dict) -> None:
     logger.info(f"Inspecting {len(record_files)} records for Character Synthesis...")
 
     skipped_range_count = 0
+    binding = config["bindings"]["refine-characters"]
+    service = config["services"][binding["service"]]
+    temperature = binding.get("temperature", 0.1)
+    max_tokens = binding.get("max_tokens", 4096)
+    inference = OpenAIInference.from_service(service)
+    execution = binding.get("execution", {})
+    requests_per_minute = execution.get("requests_per_minute")
+    next_request_time: float | None = None
 
     for file_path in tqdm(record_files, desc="Refining Canvas Character Profiles"):
         record_uuid = file_path.stem
@@ -97,9 +106,9 @@ def run(config: dict) -> None:
             if session.meta and session.meta.healthy is False:
                 continue
 
-            # 2. Idempotency Check
-            #    Check for an existing character detail item for the bot or
-            #    a refined user registry name
+            # Idempotency Check
+            # Check for an existing character detail item for the bot or
+            # a refined user registry name
             already_refined = any(
                 item.kind == "character" and item.subkind == "detail"
                 for item in session.items
@@ -107,55 +116,30 @@ def run(config: dict) -> None:
             if already_refined:
                 continue
 
-            # # 3. Generate structured prompt inputs from templates
-            # user_prompt = user_tmpl.render(session=session)
-            # system_prompt = system_tmpl.render(session=session)
-
-            # payload = {
-            #     "messages": [
-            #         {"role": "system", "content": system_prompt},
-            #         {"role": "user", "content": user_prompt},
-            #     ],
-            #     "temperature": 0.1,
-            #     "max_tokens": 4096,
-            #     "response_format": {
-            #         "type": "json_object",
-            #         "schema": CharacterSynthesisResponse.model_json_schema(),
-            #     },
-            # }
-
-            # # 4. Dispatch to local abliterated inference engine
-            # resp = requests.post(service_url, json=payload, timeout=120)
-            # resp.raise_for_status()
-
-            # response_json = resp.json()
-            # message_data = response_json["choices"][0]["message"]
-            # raw_content = message_data["content"]
-            # reasoning = message_data.get("reasoning_content")
-
-            # extracted_data = CharacterSynthesisResponse.model_validate_json(raw_content)
-            # logger.debug(f"extracted_data: {extracted_data}")
-
-            # 3. Generate structured prompt inputs from templates
+            # Generate structured prompt inputs from templates
             user_prompt = user_tmpl.render(session=session)
             system_prompt = system_tmpl.render(session=session)
-            binding = config["bindings"]["refine-characters"]
-            service = config["services"][binding["service"]]
-            inference = OpenAIInference.from_service(service)
+            if requests_per_minute and next_request_time is not None:
+                now = time.monotonic()
+                if now < next_request_time:
+                    print("waiting a bit")
+                    time.sleep(next_request_time - now)
             result = inference.generate(
                 messages=[
                     Message.system(system_prompt),
                     Message.user(user_prompt),
                 ],
                 response_model=CharacterSynthesisResponse,
-                temperature=0.1,
-                max_tokens=4096,
+                temperature=temperature,
+                max_tokens=max_tokens,
             )
+            if requests_per_minute:
+                next_request_time = time.monotonic() + (60.0 / requests_per_minute)
             extracted_data = result.value
             reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
-            # 5. Update the Authoritative Identity Registry in SessionMeta
+            # Update the Authoritative Identity Registry in SessionMeta
             bot_id = session.meta.bot_id or "unknown_bot"
 
             # Dynamically import cdm.core's PronounSet to avoid namespace collisions

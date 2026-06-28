@@ -1,13 +1,14 @@
 import importlib.resources
 import logging
+import time
 from pathlib import Path
 
-import requests
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
 from cdm.core import Annotation, Session
 from cdm.refine import GenreAndThemesResponse
+from inference import Message, OpenAIInference
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +72,16 @@ def run(config: dict) -> None:
     logger.info(
         f"Inspecting {len(record_files)} records for Genre & Theme Classification..."
     )
-    service_url = f"{config['services']['inspector']}/v1/chat/completions"
 
     skipped_range_count = 0
+    binding = config["bindings"]["refine-genre-theme"]
+    service = config["services"][binding["service"]]
+    temperature = binding.get("temperature", 0.1)
+    max_tokens = binding.get("max_tokens", 2048)
+    inference = OpenAIInference.from_service(service)
+    execution = binding.get("execution", {})
+    requests_per_minute = execution.get("requests_per_minute")
+    next_request_time: float | None = None
 
     for file_path in tqdm(record_files, desc="Classifying Canvas Genre & Themes"):
         record_uuid = file_path.stem
@@ -108,30 +116,25 @@ def run(config: dict) -> None:
             # 3. Generate structured prompt inputs from templates
             user_prompt = user_tmpl.render(session=session)
             system_prompt = system_tmpl.render(session=session)
-
-            payload = {
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
+            if requests_per_minute and next_request_time is not None:
+                now = time.monotonic()
+                if now < next_request_time:
+                    logger.debug("Rate limiting: sleeping before request")
+                    time.sleep(next_request_time - now)
+            result = inference.generate(
+                messages=[
+                    Message.system(system_prompt),
+                    Message.user(user_prompt),
                 ],
-                "temperature": 0.1,
-                "max_tokens": 2048,
-                "response_format": {
-                    "type": "json_object",
-                    "schema": GenreAndThemesResponse.model_json_schema(),
-                },
-            }
-
-            # 4. Dispatch to inspector engine endpoint
-            resp = requests.post(service_url, json=payload, timeout=120)
-            resp.raise_for_status()
-
-            response_json = resp.json()
-            message_data = response_json["choices"][0]["message"]
-            raw_content = message_data["content"]
-            reasoning = message_data.get("reasoning_content")
-
-            extracted_data = GenreAndThemesResponse.model_validate_json(raw_content)
+                response_model=GenreAndThemesResponse,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            if requests_per_minute:
+                next_request_time = time.monotonic() + (60.0 / requests_per_minute)
+            extracted_data = result.value
+            reasoning = result.reasoning
+            logger.debug(f"extracted_data: {extracted_data}")
 
             # 5. Hydrate session metadata genre and theme configurations
             session.meta.primary_genre = extracted_data.primary_genre

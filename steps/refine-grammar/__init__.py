@@ -1,13 +1,14 @@
 import importlib.resources
 import logging
+import time
 from pathlib import Path
 
-import requests
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
 from cdm.core import Annotation, Session, TurnItem
 from cdm.refine import SingleTurnGrammarResponse
+from inference import Message, OpenAIInference
 
 logger = logging.getLogger(__name__)
 
@@ -70,11 +71,17 @@ def run(config: dict) -> None:
     logger.info(
         f"Inspecting {len(record_files)} records for granular grammar processing..."
     )
-    service_url = f"{config['services']['grammar']}/v1/chat/completions"
 
     CONTEXT_WINDOW_SIZE = 5
 
     skipped_range_count = 0
+    binding = config["bindings"]["refine-grammar"]
+    service = config["services"][binding["service"]]
+    temperature = binding.get("temperature", 0.3)
+    inference = OpenAIInference.from_service(service)
+    execution = binding.get("execution", {})
+    requests_per_minute = execution.get("requests_per_minute")
+    next_request_time: float | None = None
 
     for file_path in tqdm(record_files, desc="Processing Canvas Files"):
         record_uuid = file_path.stem
@@ -130,50 +137,31 @@ def run(config: dict) -> None:
                     # the target engine's reasoning budget.
                     unbound_max_tokens = max(8192, int(estimated_input_tokens * 3.0))
 
-                    payload = {
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt},
+                    if requests_per_minute and next_request_time is not None:
+                        now = time.monotonic()
+                        if now < next_request_time:
+                            logger.debug("Rate limiting: sleeping before request")
+                            time.sleep(next_request_time - now)
+                    result = inference.generate(
+                        messages=[
+                            Message.system(system_prompt),
+                            Message.user(user_prompt),
                         ],
-                        "temperature": 0.3,
-                        "max_tokens": unbound_max_tokens,
-                        "thinking_budget_tokens": 0,
-                        "response_format": {
-                            "type": "json_object",
-                            "schema": SingleTurnGrammarResponse.model_json_schema(),
+                        response_model=SingleTurnGrammarResponse,
+                        temperature=temperature,
+                        max_tokens=unbound_max_tokens,
+                        reasoning_effort="none",
+                        extra_body={
+                            "thinking_budget_tokens": 0,
                         },
-                    }
-                    resp = requests.post(service_url, json=payload, timeout=240)
-                    resp.raise_for_status()
-
-                    # 1. Parse the top-level API envelope
-                    resp_json = resp.json()
-
-                    # 2. Extract the finish reason from the choices payload
-                    choices = resp_json.get("choices", [{}])
-                    finish_reason = (
-                        choices[0].get("finish_reason", "stop") if choices else "stop"
                     )
-
-                    # 3. Extract the actual text string containing the JSON structure
-                    raw_content = (
-                        choices[0].get("message", {}).get("content", "{}")
-                        if choices
-                        else "{}"
-                    )
-
-                    # 4. Handle token truncation safely via logger instead of bare print
-                    if finish_reason == "length":
-                        logger.warning(
-                            f"Generation cut off by token limit for item in "
-                            f"{file_path.name} "
-                            f"(finish_reason: length)"
+                    if requests_per_minute:
+                        next_request_time = time.monotonic() + (
+                            60.0 / requests_per_minute
                         )
-
-                    # 5. Fall through to standard validation if it finished normally
-                    extracted_data = SingleTurnGrammarResponse.model_validate_json(
-                        raw_content
-                    )
+                    extracted_data = result.value
+                    reasoning = result.reasoning
+                    logger.debug(f"extracted_data: {extracted_data}")
 
                     # Update turn state inline
                     item.original_prose = item.prose
@@ -188,7 +176,7 @@ def run(config: dict) -> None:
                         grammar_annotation = Annotation(
                             kind="refine-grammar",
                             content="step-by-step single-turn third-person",
-                            reasoning=None,
+                            reasoning=reasoning,
                         )
                         if not session.meta.annotations:
                             session.meta.annotations = []
