@@ -23,6 +23,6 @@ services:
 # Inpsect the ${LILAKOSHA_VOLUME_PROCESSED}/cdm/records to pick the
 # range that should be processed and pass it as command line parameters
 # to get the refine processes run on the range.
-parameter:
+parameters:
     start_uuid: 00000000-0000-7000-8000-000000000000
     stop_uuid: 00000000-0000-7000-8000-000000000000
