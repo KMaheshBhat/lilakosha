@@ -1,16 +1,17 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Running 59/101 records with nvidia/nemotron-3-ultra-550b-a55b:free
-# through Openrouter (effectively rerun for character names and
-# grammar and any other stragglers).
+# Pulled in more records upto total of 500 records using intest.
+# Running 400/500 records with nvidia/nemotron-3-ultra-550b-a55b:free
+# but only for refine-characters, refine-safety-dials, and
+# refine-genre-theme. For refine-grammar using local.
 # Status before start:
 # INFO: ============================================================
 # INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
 # INFO: ============================================================
-# INFO: Total Records Evaluated: 101
-# INFO: Healthy Records:         42 (41.58%)
-# INFO: Defective Records:       59
+# INFO: Total Records Evaluated: 500
+# INFO: Healthy Records:         100 (20.00%)
+# INFO: Defective Records:       400
 # INFO: ============================================================
-# Started around 2026-06-29 11:00:00 IST
+# Started around 2026-06-29 17:35:00 IST
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -62,12 +63,12 @@ bindings:
             requests_per_minute: 20
 
     refine-grammar:
-        service: openrouter
+        service: local
         temperature: 0.0
         max_tokens: 2048
-        execution:
-            requests_per_minute: 20
+        # execution:
+        #     requests_per_minute: 20
 
 parameters:
-    start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
-    stop_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27
+    start_uuid: 019f133e-40f4-7c81-aa76-5a74d4acacc2
+    stop_uuid: 019f133e-7132-71c1-a3b3-6afda1fefe45

@@ -1,0 +1,201 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# Running 59/101 records with nvidia/nemotron-3-ultra-550b-a55b:free
+# through Openrouter (effectively rerun for character names and
+# grammar and any other stragglers).
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 101
+# INFO: Healthy Records:         42 (41.58%)
+# INFO: Defective Records:       59
+# INFO: ============================================================
+# Started around 2026-06-29 11:00:00 IST
+# Inspecting around 2026-06-298 11:58:00 IST - the pipeline had moved
+# on to grammer - but inspecting the names, this is much better than
+# the Owl Alpha run
+# refine-characters :   40:01
+#      refine-safety:   01:19
+# refine-genre-theme:   13:54
+# As of 2026-06-09 16:45:00 IST
+#     refine-grammar: 4:59:16 (WIP)
+# It looks like Nemotron has a lot of errors and takes quite a bit of
+# time.  I suspect it is because the 'reasoning=off' paramter is not
+# 'taking' and it is trying to reason through simple transformation.
+# The issue had happened in Gemma4 12B as well, and it particularly
+# did have its reasoning turned off to get it working.
+# 2026-06-29 16:50:00 IST - Experiment terminated during grammar refinement.
+# Character, Safety, and Genre/Theme refinement completed successfully and
+# produced noticeably better identity extraction than the earlier Owl Alpha run.
+# Grammar refinement was aborted due to repeated provider-side inference failures
+# (`'NoneType' object is not subscriptable`) from Nemotron via OpenRouter,
+# resulting in poor throughput and unreliable completion.
+# Decision: archive this run as a successful character-evaluation experiment and
+# rerun grammar refinement using the local Gemma 4 model, which has previously
+# demonstrated stable behavior with reasoning disabled.
+# See below for character inspection results.
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+
+bindings:
+    refine-characters:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 4096
+        execution:
+            requests_per_minute: 20
+
+    refine-genre-theme:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+    refine-safety-dials:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+    refine-grammar:
+        service: openrouter
+        temperature: 0.0
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
+    stop_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27
+
+# running a review of names
+# > printf "UUID\tPLAYER_NAME\tPLAYER_GENDER\tBOT_NAME\tBOT_GENDER\n"; for f in /mnt/e/local/data/public/lilakosha/cdm/records/*.json; do uuid=$(basename "$f" .json); jq -r --arg id "$uuid" '[ $id, first(.meta.identities[] | select(.is_player_controlled == true) | .name), first(.meta.identities[] | select(.is_player_controlled == true) | .gender), first(.meta.identities[] | select(.is_player_controlled == false) | .name), first(.meta.identities[] | select(.is_player_controlled == false) | .gender) ] | @tsv' "$f"; done | column -t -s $'\t'
+# UUID    PLAYER_NAME     PLAYER_GENDER   BOT_NAME        BOT_GENDER
+# 019f0dd7-0b00-7ac0-98d4-3bbfd613d197  Dimo              male     Ayaka                        female
+# 019f0dd7-0b0d-7682-bfc8-3163210a0972  Mara              female   Tirsiak                      female
+# 019f0dd7-0b20-72c2-8788-88de90d07130  Lunata Orion      female   Anonymous Traveler           unknown
+# 019f0dd7-0b32-7290-ad30-58998176a256  Chitter           male     Unnamed Flareon              female
+# 019f0dd7-0b42-77e3-806a-3a99af3edce9  Kenji             male     Ashley                       female
+# 019f0dd7-0b5e-76d0-8678-84583d17cfb2  Agent             neutral  Toriel Dreemurr              female
+# 019f0dd7-0b6e-7631-88e6-3e07a4565bb9  User              unknown  Alice                        unknown
+# 019f0dd7-0b7c-7c00-b125-921ed70e8a25  Hana              female   Madara Uchiha                male
+# 019f0dd7-0b8b-7da3-aabc-2b72ea50fcb1  Alex              unknown  Sucy Manbavaran              female
+# 019f0dd7-0b9d-73b1-91f3-282583694a5e  Ren               male     Chloe von Einzbern           female
+# 019f0f82-c092-7080-9a13-7fceb27ea996  Nazera            female   Madara Uchiha                male
+# 019f0f82-c09f-7732-aaef-6f1543a6cab8  Elliot            male     Weald                        female
+# 019f0f82-c0b0-7722-9204-71e92735c611  Yuta              male     Claire Frances               female
+# 019f0f82-c0c3-7e80-9e5d-3ddc730e09cd  Alex              neutral  WhoWouldWin                  neutral
+# 019f0f82-c0d3-7331-a9df-292d719ee1e7  Alex Mercer       male     Tanya Blake                  female
+# 019f0f82-c0e3-7d31-823c-ce2046344d51  Marcus            male     K-1121                       female
+# 019f0f82-c0f7-7be0-a1b5-7bc51a5d7895  Alex              unknown  Gawr Gura                    female
+# 019f0f82-c109-7262-95c4-efcb0bf2579a  Commander         male     Welrod MkII                  female
+# 019f0f82-c11d-78f0-a657-47ed7dae3c60  Nazera            female   Madara Uchiha                male
+# 019f0f82-c148-75d1-a029-f9ec7c1e1544  Mayor             male     Isabelle                     female
+# 019f0f82-c163-7081-a211-459a0cf640bc  Ren               male     Kasumigaoka Utaha            female
+# 019f0f82-c175-7792-8aa1-de2ed96d84be  Alex              unknown  Misaki                       female
+# 019f0f82-c189-7760-ade2-923ab27bd8bc  Amarisu           male     Vappy                        female
+# 019f0f82-c1a2-7143-b16c-18f7ca2aba9d  Observer          male     Rei Ayanami                  female
+# 019f0f82-c1b3-72f0-88c5-8b21e7e9f95b  Mairu             neutral  Shirakami Fubuki             female
+# 019f0f82-c1c4-7582-b5e7-a2953acda8e8  Alex              neutral  Chai                         neutral
+# 019f0f82-c1d3-70e2-8ae2-437e806e8c3e  Masochist Pig     male     Nao                          female
+# 019f0f82-c1e3-71b1-b136-70b292d33cba  Elias             male     Vappy                        male
+# 019f0f82-c1f4-7af2-ab1f-4b14dbf217ca  Beastman          male     Elly                         female
+# 019f0f82-c204-7d50-b29d-10bb58663152  Kenji             male     Nao                          female
+# 019f0f82-c213-7500-9449-d256a4590065  Sen-pai           male     Nagatoro Hayase              female
+# 019f0f82-c222-74a1-81b0-7399780d8386  Kenji             male     Kashima                      female
+# 019f0f82-c230-7522-b219-2a919df393a0  Kenji             male     Katou Megumi                 female
+# 019f0f82-c23c-7c11-b476-57f9b5f2e3e0  David             male     Amber                        female
+# 019f0f82-c251-7072-8bfa-9fd252c81e94  Chaos Knight      male     Celestia                     female
+# 019f0f82-c260-7f42-b74e-d47dc5d04195  Yu                neutral  Azul Ashengrotto             male
+# 019f0f82-c270-7cd1-a5bc-35d94c9f9a26  Caleb             male     Ganyu                        female
+# 019f0f82-c27f-7e20-9040-a3ca51bba6ab  Zahra             female   Tobirama Senju               male
+# 019f0f82-c28f-77a2-b2b2-82c8c1ac42ed  Kenji             male     Izumi                        female
+# 019f0f82-c2a0-7303-a681-2c5dd29f77d2  Tute              male     Senna                        female
+# 019f0f82-c2b0-7ff0-b607-883726244e09  Caleb             male     Blake                        female
+# 019f0f82-c2bf-7fd0-9997-8ec593c7e0c9  Sam               unknown  Idia Shroud                  male
+# 019f0f82-c2cf-7622-9e07-79330c7aa69d  Trainer           neutral  Mimi                         female
+# 019f0f82-c2de-7782-a29e-58c311b3f59e  Liam              male     Alice                        female
+# 019f0f82-c2ed-7751-b4f0-9e624cbc8211  David             male     Mia                          female
+# 019f0f82-c2ff-7952-b635-9d9aedf96764  Void              male     UMP45                        female
+# 019f0f82-c30d-7912-a0fb-8408c3a45e5f  Yuki              female   Madara                       male
+# 019f0f82-c31d-77e2-91f6-a84194354046  Cucky             male     Prinz Eugen                  female
+# 019f0f82-c32f-79a3-8a92-ea3d1d5038a2  Elena             female   Eiki Shiki                   female
+# 019f0f82-c340-7d51-bb81-b65254376448  The Assailant     male     Ganyu                        female
+# 019f0f82-c350-7110-a7b0-1de0c493fe26  Alex              neutral  Hood                         unknown
+# 019f0f82-c35f-7a80-b71c-c863b070e797  David             male     Tsubasa                      female
+# 019f0f82-c36e-7b90-a044-a4f851e7d30f  Commander Riker   male     Seven of Nine                female
+# 019f0f82-c37c-79a3-b58c-8decfce28ea6  Red               neutral  cmd                          neutral
+# 019f0f82-c389-7052-acf2-ed56326f35bf  Lobster           male     Kasey                        female
+# 019f0f82-c39a-7f70-8c2e-5efdbab2e0d9  David             male     Mia                          female
+# 019f0f82-c3a8-7663-9375-6b8cd99e8337  Elara             female   Alternate Timeline Narrator  neutral
+# 019f0f82-c3b8-7052-87c3-a159cdfc277c  Brother           male     Gretchen                     female
+# 019f0f82-c3c7-7352-a1f2-ddcaf9fb7c76  Alex              neutral  weald                        female
+# 019f0f82-c3d5-7591-94e3-c565459f4e6a  Yuki              female   Madara                       male
+# 019f0f82-c3e4-70c2-ae18-d9d3c1d4fdfb  Alex              neutral  Cinder                       female
+# 019f0f82-c3f4-7860-b689-7f5b3bb90dff  Alex              unknown  Shantae                      female
+# 019f0f82-c404-79c3-8d6b-0e5aa750cb19  Kaelen            unknown  Rio                          female
+# 019f0f82-c413-75a0-b673-91f522e276e8  Shaymin           neutral  Unnamed Girlfriend           female
+# 019f0f82-c422-74a3-ade9-007b22d9d834  Pen               male     Pencil                       female
+# 019f0f82-c433-7832-afe2-10f68d44ffd6  Red Orb           neutral  UMP45                        female
+# 019f0f82-c440-7070-8d2e-2bda97f2be34  Dodik             male     Ganyu                        female
+# 019f0f82-c44f-71b3-a792-ec9db91047bd  Sentry            male     Yonomi                       female
+# 019f0f82-c45f-79f0-a860-59dc9d5dca74  Elara             female   Vesper                       female
+# 019f0f82-c46f-7b60-93d2-60b5c1e581d2  BF                male     Boyfriend                    male
+# 019f0f82-c47f-74d0-bae4-5e1ec26d5a19  Nazera            female   Madara Uchiha                male
+# 019f0f82-c492-7aa0-93a7-90ded4a85923  Elliot            male     Vappy                        female
+# 019f0f82-c4a2-7b60-b7be-bfe981990f90  Marcus            male     Yang                         female
+# 019f0f82-c4b2-7502-99c6-09d072df3b72  Anon              male     Average Vt Schizo            male
+# 019f0f82-c4c2-7c20-8525-481c3a878c19  Marcus            male     K-1121                       female
+# 019f0f82-c4d1-7c52-8ddd-3c6fb0bee4b2  Alex              unknown  Pyg-Chan                     female
+# 019f0f82-c4e3-7d72-98cc-005a7b384908  Alex              unknown  Kurisu Makise                female
+# 019f0f82-c4f3-74a3-bed8-ee98755ebf60  Nazera            female   Tobirama Senju               male
+# 019f0f82-c503-7070-bb17-09c182679149  Mana Battery      male     Chloe von Einzbern           female
+# 019f0f82-c516-7a23-bdf9-cb604980029e  weald             male     Lila                         female
+# 019f0f82-c542-77d0-ac2a-dd305fd6490a  Lila              female   Tanya Blake                  female
+# 019f0f82-c559-79a1-92d1-ef4b6af58755  User              unknown  Esoteric Ogeyism             unknown
+# 019f0f82-c578-7a23-b34c-bf31d04d8281  Daydric           male     Leda                         female
+# 019f0f82-c596-7461-b646-f9e550c85d33  Tobleroneew       male     Kawai Souko                  female
+# 019f0f82-c5a7-7381-a163-f49892f35770  Officer           male     Amelia Watson                female
+# 019f0f82-c5b8-7b30-85ac-bb1dc39e5833  Lira              female   Tobirama                     male
+# 019f0f82-c5c7-7952-893c-224ddcab9829  Madara Uchiha     male     Anonymous                    unknown
+# 019f0f82-c5d5-7bc3-90ea-8e74ad329058  Alex              neutral  SMG4                         male
+# 019f0f82-c5e4-7952-a652-ad04a881916a  User              unknown  Nara                         unknown
+# 019f0f82-c5f5-7d52-bb94-c204594b09be  Jacque L'Egg      male     Venefica                     female
+# 019f0f82-c603-7d60-9637-66b82e73104f  Madara's Beloved  female   Madara Uchiha                male
+# 019f0f82-c612-7ff1-b21d-7cf88c77e703  Anon              male     Princess Luna                female
+# 019f0f82-c621-7400-bf6b-83b9bfbad42b  Elena             female   Madara Uchiha                male
+# 019f0f82-c633-7001-ad38-9b46b5a57ccb  Commander         male     AEK-999                      female
+# 019f0f82-c641-7ee3-9ff2-4c6805f63f3d  Boyfriend         male     Umi                          female
+# 019f0f82-c651-71e3-adbb-2fe5513d3b1f  Alex              neutral  Professor Rachael            female
+# 019f0f82-c661-7070-b84d-fbbccd3453be  David             male     Karen                        female
+# 019f0f82-c671-7670-8be3-a58af46121cc  James             male     Richelieu                    female
+# 019f0f82-c681-7492-af1c-72298e38155d  Lemons            female   Chitter                      female
+# 019f0f82-c690-7a61-a0ec-e5781934e57e  Facu              male     Karen Hojo                   female
+# 019f116a-d0ef-77c3-9a04-d3a1a8da1e27  David             male     Monika                       female
