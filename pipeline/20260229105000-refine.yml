@@ -1,0 +1,73 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# Running 59/101 records with nvidia/nemotron-3-ultra-550b-a55b:free
+# through Openrouter (effectively rerun for character names and
+# grammar and any other stragglers).
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 101
+# INFO: Healthy Records:         42 (41.58%)
+# INFO: Defective Records:       59
+# INFO: ============================================================
+# Started around 2026-06-29 11:00:00 IST
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+
+bindings:
+    refine-characters:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 4096
+        execution:
+            requests_per_minute: 20
+
+    refine-genre-theme:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+    refine-safety-dials:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+    refine-grammar:
+        service: openrouter
+        temperature: 0.0
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
+    stop_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27

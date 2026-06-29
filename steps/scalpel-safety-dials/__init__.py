@@ -116,8 +116,6 @@ def run(config: dict) -> None:
                 f"{file_path.name}: {e}"
             )
 
-    logger.info(
-        f"✅ Scalpel pass completed. "
-        f"Purged: {purged_count} records. "
-        f"Skipped out-of-range: {skipped_range_count} records."
-    )
+    logger.info("✅ Scalpel pass completed.")
+    logger.info(f"  Purged: {purged_count} records.")
+    logger.info(f"  Skipped out-of-range: {skipped_range_count} records.")

@@ -36,6 +36,13 @@ def run(config: dict) -> None:
     params = config.get("parameters", {})
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
+    pc_names = params.get("pc_names")
+    if isinstance(pc_names, str):
+        pc_names = {name.strip().lower for name in pc_names.split(",") if name.strip()}
+    elif pc_names:
+        pc_names = {name.lower() for name in pc_names}
+    else:
+        pc_names = None
 
     if start_uuid or stop_uuid:
         logger.info(
@@ -55,6 +62,7 @@ def run(config: dict) -> None:
     # 3. Main Operational Execution Loop
     purged_count = 0
     skipped_range_count = 0
+    skipped_name_count = 0
 
     for file_path in tqdm(record_files, desc="Purging Character Profiles"):
         record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
@@ -72,6 +80,21 @@ def run(config: dict) -> None:
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
+
+            if pc_names is not None:
+                player = next(
+                    (
+                        identity
+                        for identity in session.meta.identities
+                        if identity.is_player_controlled
+                    ),
+                    None,
+                )
+                if player is None:
+                    continue
+                if (player.name or "").strip().lower() not in pc_names:
+                    skipped_name_count += 1
+                    continue
 
             # Detect whether character items or refinement annotations exist
             has_timeline_items = any(item.kind == "character" for item in session.items)
@@ -139,8 +162,7 @@ def run(config: dict) -> None:
                 f"Failed surgical profile purge for document {file_path.name}: {e}"
             )
 
-    logger.info(
-        f"✅ Scalpel character clearance pass complete. "
-        f"Purged: {purged_count} records. "
-        f"Skipped out-of-range: {skipped_range_count} records."
-    )
+    logger.info("✅ Scalpel character clearance pass complete.")
+    logger.info(f"  Purged: {purged_count} records.")
+    logger.info(f"  Skipped by UUID range: {skipped_range_count} records.")
+    logger.info(f"  Skipped by player-name filter: {skipped_name_count} records.")

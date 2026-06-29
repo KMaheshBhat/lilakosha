@@ -35,6 +35,9 @@ def run(config: dict) -> None:
     params = config.get("parameters", {})
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
+    # When enabled, only restore prose for sessions whose player identity
+    # has been reset by the character scalpel.
+    character_reset_sentinel = params.get("character_reset_sentinel", False)
 
     # Format localized diagnostic headers for clear Operator Experience (OX)
     if start_uuid or stop_uuid:
@@ -72,6 +75,24 @@ def run(config: dict) -> None:
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 session = Session.model_validate_json(f.read())
+
+            # Optional safety guard: only restore prose if the player identity
+            # has been reset to the default tracking placeholder.
+            if character_reset_sentinel:
+                player_identity = next(
+                    (
+                        identity
+                        for identity in session.meta.identities
+                        if identity.is_player_controlled
+                    ),
+                    None,
+                )
+                if (
+                    player_identity is None
+                    or player_identity.name != "User"
+                    or player_identity.gender != "unknown"
+                ):
+                    continue
 
             modified_file = False
 
@@ -121,8 +142,6 @@ def run(config: dict) -> None:
                 f"Failed surgical prose rollback for document {file_path.name}: {e}"
             )
 
-    logger.info(
-        f"✅ Scalpel original prose restoration complete. "
-        f"Restored: {restored_count} records. "
-        f"Skipped out-of-range: {skipped_range_count} records."
-    )
+    logger.info("✅ Scalpel original prose restoration complete.")
+    logger.info(f"  Restored: {restored_count} records.")
+    logger.info(f"  Skipped out-of-range: {skipped_range_count} records.")

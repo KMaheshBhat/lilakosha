@@ -116,8 +116,6 @@ def run(config: dict) -> None:
                 f"Failed surgical metadata purge for document {file_path.name}: {e}"
             )
 
-    logger.info(
-        f"✅ Scalpel genre & theme clearance pass complete. "
-        f"Purged: {purged_count} records. "
-        f"Skipped out-of-range: {skipped_range_count} records."
-    )
+    logger.info("✅ Scalpel genre & theme clearance pass complete.")
+    logger.info(f"  Purged: {purged_count} records.")
+    logger.info(f"  Skipped out-of-range: {skipped_range_count} records.")
