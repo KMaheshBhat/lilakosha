@@ -122,7 +122,6 @@ def run(config: dict) -> None:
             if requests_per_minute and next_request_time is not None:
                 now = time.monotonic()
                 if now < next_request_time:
-                    print("waiting a bit")
                     time.sleep(next_request_time - now)
             result = inference.generate(
                 messages=[
