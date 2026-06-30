@@ -40,6 +40,40 @@
 # INFO: ------------------------------------------------------------
 # INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
 # INFO: ============================================================
+# Checked at 2026-06-30 20:20:00 IST and it is completed
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 1000
+# INFO: Healthy Records:         498 (49.80%)
+# INFO: Defective Records:       502
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 974/1000 (97.40%)
+# INFO:    annotation          : 974/1000 (97.40%)
+# INFO:    bot detail          : 974/1000 (97.40%)
+# INFO:    user info           : 974/1000 (97.40%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 957/1000 (95.70%)
+# INFO:    annotation          : 957/1000 (95.70%)
+# INFO:    sexual axis         : 957/1000 (95.70%)
+# INFO:    toxicity axis       : 957/1000 (95.70%)
+# INFO:    violence axis       : 957/1000 (95.70%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 500/1000 (50.00%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    primary genre       : 500/1000 (50.00%)
+# INFO:    themes              : 500/1000 (50.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 499/1000 (49.90%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    prose               : 499/1000 (49.90%)
+# INFO: ------------------------------------------------------------
 pipeline:
     # - "refine-characters"
     - "refine-safety-dials"

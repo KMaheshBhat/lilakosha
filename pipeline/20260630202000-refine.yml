@@ -1,0 +1,103 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# Specifying only 501-1000 records using start and stop UUID range.
+# Running with local.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 1000
+# INFO: Healthy Records:         498 (49.80%)
+# INFO: Defective Records:       502
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 974/1000 (97.40%)
+# INFO:    annotation          : 974/1000 (97.40%)
+# INFO:    bot detail          : 974/1000 (97.40%)
+# INFO:    user info           : 974/1000 (97.40%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 957/1000 (95.70%)
+# INFO:    annotation          : 957/1000 (95.70%)
+# INFO:    sexual axis         : 957/1000 (95.70%)
+# INFO:    toxicity axis       : 957/1000 (95.70%)
+# INFO:    violence axis       : 957/1000 (95.70%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 500/1000 (50.00%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    primary genre       : 500/1000 (50.00%)
+# INFO:    themes              : 500/1000 (50.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 499/1000 (49.90%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    prose               : 499/1000 (49.90%)
+# INFO: ------------------------------------------------------------
+# Started around 2026-06-30 20:20:00 IST
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+
+bindings:
+    refine-characters:
+        service: local
+        temperature: 0.1
+        max_tokens: 4096
+        # execution:
+        #     requests_per_minute: 20
+
+    refine-safety-dials:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
+        # execution:
+        #     requests_per_minute: 20
+
+    refine-genre-theme:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
+        # execution:
+        #     requests_per_minute: 20
+
+    refine-grammar:
+        service: local
+        temperature: 0.0
+        max_tokens: 2048
+        # execution:
+        #     requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f166a-c052-70c1-a807-29c5e9f1d299
+    stop_uuid: 019f1687-6559-7851-97ea-6073303a38cf
