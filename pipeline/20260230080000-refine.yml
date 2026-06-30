@@ -1,17 +1,15 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Pulled in more records upto total of 500 records using intest.
-# Running 400/500 records with nvidia/nemotron-3-ultra-550b-a55b:free
-# but only for refine-characters, refine-safety-dials, and
-# refine-genre-theme. For refine-grammar using local.
+# Rerunning over incomplete records from 20260229173000-refine.yml
+# Running 399/500 records with local (Gemma4 12B).
 # Status before start:
 # INFO: ============================================================
 # INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
 # INFO: ============================================================
 # INFO: Total Records Evaluated: 500
-# INFO: Healthy Records:         100 (20.00%)
-# INFO: Defective Records:       400
+# INFO: Healthy Records:         101 (20.20%)
+# INFO: Defective Records:       399
 # INFO: ============================================================
-# Started around 2026-06-29 17:35:00 IST
+# Started around 2026-06-30 08:00:00 IST
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -42,25 +40,25 @@ services:
 
 bindings:
     refine-characters:
-        service: openrouter
+        service: local
         temperature: 0.1
         max_tokens: 4096
-        execution:
-            requests_per_minute: 20
+        # execution:
+        #     requests_per_minute: 20
 
     refine-genre-theme:
-        service: openrouter
+        service: local
         temperature: 0.1
         max_tokens: 2048
-        execution:
-            requests_per_minute: 20
+        # execution:
+        #     requests_per_minute: 20
 
     refine-safety-dials:
-        service: openrouter
+        service: local
         temperature: 0.1
         max_tokens: 2048
-        execution:
-            requests_per_minute: 20
+        # execution:
+        #     requests_per_minute: 20
 
     refine-grammar:
         service: local

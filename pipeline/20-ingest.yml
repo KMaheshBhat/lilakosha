@@ -12,4 +12,4 @@ volumes:
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
 
 parameters:
-    limit: 500 # limit the number of samples to process, if empty, all would be processed
+    limit: 1000 # limit the number of samples to process, if empty, all would be processed

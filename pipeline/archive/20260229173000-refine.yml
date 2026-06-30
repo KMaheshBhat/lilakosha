@@ -1,0 +1,160 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# Pulled in more records upto total of 500 records using intest.
+# Running 400/500 records with nvidia/nemotron-3-ultra-550b-a55b:free
+# but only for refine-characters, refine-safety-dials, and
+# refine-genre-theme. For refine-grammar using local.
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 500
+# INFO: Healthy Records:         100 (20.00%)
+# INFO: Defective Records:       400
+# INFO: ============================================================
+# Started around 2026-06-29 17:35:00 IST
+# Checking in around 2026-06-30 07:53:00 IST
+# - the pipeline had skipped after the 314/500 mark during refine-safety-dials
+#   with reason `Rate limit exceeded: free-models-per-day-high-balance.` from
+#   Open router and failed `refine-genre-theme` completely.
+# - stopping the pipeline and would need to start a new one with full local
+# Report run details below.
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+
+bindings:
+    refine-characters:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 4096
+        execution:
+            requests_per_minute: 20
+
+    refine-genre-theme:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+    refine-safety-dials:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+    refine-grammar:
+        service: local
+        temperature: 0.0
+        max_tokens: 2048
+        # execution:
+        #     requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f133e-40f4-7c81-aa76-5a74d4acacc2
+    stop_uuid: 019f133e-7132-71c1-a3b3-6afda1fefe45
+
+# ❯ ./run.sh pipeline/35-report-records.yml --hide_anomaly_details true --audit_only true
+# INFO: Applying runtime overrides: {'hide_anomaly_details': True, 'audit_only': True}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['report-record-health', 'report-record-stats']
+# INFO: Active Parameters: {'hide_anomaly_details': True, 'audit_only': True}
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 500 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 500
+# INFO: Healthy Records:         101 (20.20%)
+# INFO: Defective Records:       399
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-RECORD-STATS ---
+# INFO: Computing aggregate profile statistics across 500 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 500 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Unset           :  203 (40.6%)
+# INFO:     - Explicit        :  119 (23.8%)
+# INFO:     - Clean           :  101 (20.2%)
+# INFO:     - Suggestive      :   77 (15.4%)
+# INFO:   [Violence Axis]
+# INFO:     - Unset           :  203 (40.6%)
+# INFO:     - None            :  152 (30.4%)
+# INFO:     - Graphic         :  109 (21.8%)
+# INFO:     - Combat          :   36 (7.2%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Unset           :  203 (40.6%)
+# INFO:     - Harassment      :  171 (34.2%)
+# INFO:     - Safe            :  122 (24.4%)
+# INFO:     - Dangerous       :    4 (0.8%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Unset                  :  399 (79.8%)
+# INFO:   - Fantasy                :   36 (7.2%)
+# INFO:   - Romance                :   17 (3.4%)
+# INFO:   - Slice of Life          :   16 (3.2%)
+# INFO:   - Comedy                 :   11 (2.2%)
+# INFO:   - Action & Adventure     :    8 (1.6%)
+# INFO:   - Sci-Fi                 :    7 (1.4%)
+# INFO:   - Drama                  :    5 (1.0%)
+# INFO:   - Mystery & Thriller     :    1 (0.2%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - [No Themes Assigned]       :  399 (79.8%)
+# INFO:   - power-dynamics             :   21 (4.2%)
+# INFO:   - dark-fantasy               :    9 (1.8%)
+# INFO:   - emotional-vulnerability    :    7 (1.4%)
+# INFO:   - teasing                    :    6 (1.2%)
+# INFO:   - supernatural               :    5 (1.0%)
+# INFO:   - intimacy                   :    5 (1.0%)
+# INFO:   - revenge                    :    5 (1.0%)
+# INFO:   - romance                    :    5 (1.0%)
+# INFO:   - humiliation                :    5 (1.0%)
+# INFO:   - vore                       :    4 (0.8%)
+# INFO:   - mystery                    :    4 (0.8%)
+# INFO:   - transformation             :    4 (0.8%)
+# INFO:   - size-difference            :    4 (0.8%)
+# INFO:   - absurdist-humor            :    4 (0.8%)
+# INFO:   - bullying                   :    4 (0.8%)
+# INFO:   - tragedy                    :    4 (0.8%)
+# INFO:   - friendship                 :    4 (0.8%)
+# INFO:   - redemption                 :    4 (0.8%)
+# INFO:   - dark-humor                 :    4 (0.8%)
+# INFO:   - absurdism                  :    4 (0.8%)
+# INFO:   - romantic-tension           :    3 (0.6%)
+# INFO:   - cosmic-horror              :    3 (0.6%)
+# INFO:   - enemies-to-lovers          :    3 (0.6%)
+# INFO:   - coming-of-age              :    3 (0.6%)
+# INFO:   ... and 385 other unique themes.
+# INFO: ============================================================
