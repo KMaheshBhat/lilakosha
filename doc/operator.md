@@ -164,7 +164,7 @@ Initialize the workspace and ingest the source corpus only once for a new datase
 ./run.sh pipeline/20-ingest.yml
 ```
 
-This establishes the Common Data Model (CDM) records that become the authoritative working set for all subsequent operations. Update the `limit` in the `20-ingest.yml` to include more records as it gets progressively built.
+This establishes the Common Data Model (CDM) records that become the authoritative working set for all subsequent operations. Adjust the `limit` parameter in `20-ingest.yml` as the corpus grows. Incremental ingestion keeps refinement campaigns bounded and allows new records to enter the workflow without reprocessing the existing corpus.
 
 ### Phase 2 — Execute a Refinement Campaign
 
