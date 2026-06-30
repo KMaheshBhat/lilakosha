@@ -141,7 +141,7 @@ def run(config: dict) -> None:
             annotations=[],
         )
 
-        session_trace = Session(kind="session", meta=meta_obj, items=[])
+        session_trace = Session(id=target_uuid, kind="session", meta=meta_obj, items=[])
 
         # 9. Map Primary Character Initial Persona (character:info Line Item)
         raw_desc = raw_record.get("bot_description") or ""

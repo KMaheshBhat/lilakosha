@@ -137,6 +137,7 @@ class SessionMeta(BaseModel):
 
 
 class Session(BaseModel):
+    id: str
     kind: Literal["session"] = "session"
     meta: SessionMeta
     items: List[DiscriminatedItem]
