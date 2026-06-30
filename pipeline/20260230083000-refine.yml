@@ -1,5 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Pulled in one more record using ingest to bring total to 1000.
+# Pulled in more record using ingest to bring total to 1000.
 # Specifying only 500 records using start and stop UUID range.
 # Running in parallel with 20260230080000-refine.yml
 # Using Kilo Inference Gateway.
