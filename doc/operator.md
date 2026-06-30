@@ -150,3 +150,104 @@ If anomalous or corrupted records are isolated, the pipeline provides `25-scalpe
 * `pipeline/35-report-records.yml` – Operational telemetry suite verifying data schemas and statistical weights.
 * `pipeline/60-train-general.yml` – Supervised Fine-Tuning execution, 16-bit parameter fusion, and distribution quantification for the General flavor.
 * `pipeline/61-train-unbound.yml` – SFT optimization, weight fusion, and quantization for the abliterated Unbound flavor.
+
+## Operation Methodology
+
+LilaKosha is designed around an iterative, operator-driven refinement workflow rather than a single linear execution. The dataset evolves through repeated inspection, targeted intervention, and re-processing until the corpus reaches the desired quality threshold for training.
+
+### Phase 1 — Initialize
+
+Initialize the workspace and ingest the source corpus only once for a new dataset.
+
+```bash
+./run.sh pipeline/10-init.yml
+./run.sh pipeline/20-ingest.yml
+```
+
+This establishes the Common Data Model (CDM) records that become the authoritative working set for all subsequent operations. Update the `limit` in the `20-ingest.yml` to include more records as it gets progressively built.
+
+### Phase 2 — Execute a Refinement Campaign
+
+Refinement campaigns are executed using a dedicated pipeline manifest.
+
+For routine work, use the current refinement pipeline:
+
+```bash
+./run.sh pipeline/30-refine.yml
+```
+
+IMPORTANT: create a timestamped copy of the pipeline (for example `20260701103000-refine.yml`), document the intent within the manifest, and execute that specific pipeline instead.
+
+Timestamped pipeline manifests provide a reproducible operational history of dataset evolution and should generally be treated as immutable after execution.
+
+### Phase 2.5 — Document the Campaign
+
+Each refinement campaign should capture its intent within the pipeline manifest through comments describing:
+
+* The objective of the campaign.
+* Any prompt or model changes being evaluated.
+* Expected outcomes.
+* Operator notes or observations.
+
+The manifest becomes both the executable configuration and the permanent record of that refinement effort.
+
+### Phase 3 — Monitor Progress
+
+While refinement is running, continuously monitor dataset health using the live dashboard.
+
+```bash
+./watch-cdm.sh
+```
+
+This performs a read-only audit of the dataset without modifying any records, allowing the operator to observe progress in real time.
+
+### Phase 4 — Investigate Anomalies
+
+When telemetry reports defective or suspicious records, inspect the affected data before making changes.
+
+For example, character identity mappings can be reviewed using:
+
+```bash
+./inspect-char-names.sh
+```
+
+Additional inspection utilities may be introduced over time following the same pattern.
+
+### Phase 5 — Perform Surgical Repairs
+
+When defects are isolated to a specific refinement stage, execute the appropriate Scalpel pipeline to clear only the affected metadata.
+
+Examples include:
+
+* Character extraction
+* Grammar normalization
+* Genre and theme classification
+* Safety dial annotation
+
+Scalpel operations intentionally preserve all unrelated refinements, minimizing unnecessary recomputation.
+
+### Phase 6 — Re-run the Refinement Campaign
+
+After a Scalpel intervention, Re-execute the same pipeline manifest that originally performed the refinement. This preserves the exact prompts, models, parameters, and operator notes associated with that refinement campaign.
+
+The refinement engine automatically skips completed work and regenerates only the cleared sections, allowing iterative correction with minimal processing overhead.
+
+### Phase 7 — Validate the Dataset
+
+Once refinement is complete, execute the reporting pipeline without audit mode to persist authoritative health classifications.
+
+Only datasets that satisfy the desired quality criteria should proceed to preparation and training.
+
+### Phase 8 — Prepare and Train
+
+After the dataset has been validated, execute the preparation and training pipelines.
+
+```bash
+./run.sh pipeline/40-prepare.yml
+
+./run.sh pipeline/60-train-general.yml
+# or
+./run.sh pipeline/61-train-unbound.yml
+```
+
+Training should always be performed against a validated dataset whose refinement history is documented by the corresponding pipeline manifest.
