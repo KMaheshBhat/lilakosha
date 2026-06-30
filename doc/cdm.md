@@ -72,6 +72,7 @@ Below is an example of an instantiated and fully-enriched `session` record. This
 
 ```json
 {
+  "id": "00000000-0000-7000-8000-000000000000",
   "kind": "session",
   "meta": {
     "source_identity": "PIPPA-INGEST",

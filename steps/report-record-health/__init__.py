@@ -259,7 +259,7 @@ def run(config: dict) -> None:
             logger.info(f"{stage}")
             passed = stats.get("passed", 0)
             logger.info(
-                f"   ✅ PASSED              : {passed}/{total_records} "
+                f"   ✅ PASSED           : {passed}/{total_records} "
                 f"({passed / total_records * 100:.2f}%)"
             )
             for check, failures in sorted(stats.items()):

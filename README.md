@@ -20,18 +20,54 @@ The name combines **Lila** (Play/Imaginative Sport) and **Kosha** (Treasury/Repo
 
 ## The LilaKosha Pipeline Architecture
 
-```
-[Raw Datasets] ──> 10-init ──> 20-ingest ──> 30-refine ──> 35-report-records ──> 6X-train
-                                              ▲              │
-                                              │   [Scalpel]  │ (If anomalies found,
-                                              └─ 25-scalpel ─┘  executed manually by the operator)
+```text
+                            [Published Dataset]
+                                    │
+                                15-restore
+                                    │
+                                    ▼
+[Start Workspace] ──> 10-init ──> 20-ingest-* ────────────┐
+                                    ▲                     │
+[Raw Datasets] ─────────────────────┘                     ▼
+                                                     Canonical CDM
+                                                       Records
+                                                          │
+                         ┌────────────────────────────────┼─────────────────────────────────┐
+                         │                                │                                 │
+                         ▼                                ▼                                 ▼
+                    25-scalpel-*                      30-refine                       35-report-*
+                  (manual operator)                     ▲ │                           (telemetry)
+                         │                              │ │
+                         └──────────────────────────────┘ │
+                                                          │
+                                                          ▼
+                                                    40-package
+                                                          │
+                                                          ▼
+                                                    Dataset JSONL
+                                                          │
+                                                    45-publish
+                                                          │
+                                                          ▼
+                                                  [Published Dataset]
+                                                          │
+                                                          ▼
+                                                   5x-prepare-*
+                                               (training projections)
+                                                          │
+                                                          ▼
+                                                     6x-train-*
 ```
 
-1. **Base Selection:** Start with either the vanilla `gemma-4-12B-it` or the `gemma-4-12B-it-abliterated-uncensored` base foundation.
-2. **Processing (Recap-Augmentation):** Leverage localized inference services to extract structural **Session Recaps and Key Highlights** from long-form datasets, training the model to treat summaries as stateful "truth anchors" for long-term consistency.
-3. **Training (The QLoRA Phase):** Attach target LoRA adapters to the model's attention and MLP projections to lock in specific conversational styles and roleplay mechanics.
-4. **The "Bake" (Weight Fusion):** Mathematically inject the trained adapter weights directly back into the native 16-bit structure to generate a **monolithic distribution file**.
-5. **Export (GGUF):** Convert the merged weights into specialized GGUF block quants (e.g., **Q4_K_M**) optimized for low-latency local deployment.
+The pipeline is organized around a **Canonical Data Model (CDM)** that serves as the authoritative representation of every conversational session. All ingestion, refinement, inspection, packaging, and training preparation operate on this common representation rather than directly on raw datasets.
+
+1. **Initialize (10-init):** Create the working directory structure, initialize the CDM workspace, and prepare the environment for subsequent processing.
+2. **Acquire the Dataset:** Populate the CDM workspace by either ingesting supported raw datasets (`20-ingest-*`) or restoring a previously published dataset (`15-restore`). Both paths produce the identical structured canonical CDM representation. (The content of course depends on what was ingested or restored - restored records could have refinements already run on them).
+3. **Curate the Corpus:** Apply automated refinement passes (`30-refine`) to enrich each session with structural metadata such as recaps, narrative signals, and quality annotations. Operator-driven scalpel workflows (`25-scalpel-*`) may be executed selectively to correct or improve specific records, while reporting pipelines (`35-report-*`) provide health and quality telemetry throughout the process.
+4. **Package & Publish:** Export the curated CDM corpus into a portable JSONL dataset (`40-package`) suitable for archival, sharing, and reproducible distribution. The packaged dataset can then be published (`45-publish`) and later restored into a fresh CDM workspace without requiring access to the original raw source material.
+5. **Prepare Training Projections:** Generate one or more task-specific training datasets (`5x-prepare-*`) from the canonical CDM. These projections transform the rich structured records into instruction-tuning examples, recap-augmented conversations, or other specialized training formats while leaving the underlying CDM unchanged.
+6. **Train the Model:** Fine-tune the target foundation model (`6x-train-*`) using the prepared training projections. Multiple training variants can be produced from the same curated CDM corpus, including both the General and Unbound model families.
+7. **Bake & Export:** Merge the resulting LoRA adapters into the base model weights and export optimized deployment artifacts (such as GGUF block quantizations) for efficient local inference.
 
 ## Project Deliverables Matrix
 

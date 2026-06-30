@@ -2,36 +2,46 @@
 
 ## Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         main.py (Orchestrator)                   │
-│  - Discovers configs (*.yml) in pipeline/ directory              │
-│  - Loads YAML configuration with env var interpolation           │
-│  - Validates LILAKOSHA_VOLUME_* environment configurations       │
-│  - Executes steps dynamically via importlib                      │
-└──────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                         pipeline/*.yml                           │
-│  - 10-init.yml (Infrastructure staging)                          │
-│  - 20-ingest.yml (Dataset ingestion & normalization)             │
-│  - 25-scalpel-*.yml (Targeted atomic rollbacks)                  │
-│  - 30-refine.yml (Multi-model enrichment pipeline)               │
-│  - 35-report-records.yml (Data validation & stats reporting)     │
-│  - 60-train-general.yml (General variant SFT & baking)           │
-│  - 61-train-unbound.yml (Unbound variant SFT & baking)           │
-└──────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                         steps/*.py                               │
-│  - Each step is a self-contained module with run(config)         │
-│  - Execution pipeline: init → ingest → scalpel → refine          │
-│                         → report-records → train → bake          │
-│  - scalpel-* clears state; refine-* is strictly idempotent       │
-│  - report-records runs structural validation and taxonomy audits │
-└──────────────────────────────────────────────────────────────────┘
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                    main.py (Pipeline Orchestrator)                  │
+│  - Discovers pipeline/*.yml configurations                          │
+│  - Loads YAML with environment interpolation                        │
+│  - Validates LILAKOSHA_VOLUME_* configuration                       │
+│  - Applies runtime parameter overrides                              │
+│  - Dynamically executes steps via importlib                         │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         pipeline/*.yml                              │
+│                                                                     │
+│ 10-init.yml              Workspace initialization                   │
+│ 15-restore.yml           Restore published CDM dataset              │
+│ 20-ingest-*.yml          Raw dataset ingestion                      │
+│ 25-scalpel-*.yml         Operator correction workflows              │
+│ 30-refine.yml            Automated enrichment pipeline              │
+│ 35-report-*.yml          Dataset telemetry & validation             │
+│ 40-package.yml           Package CDM as JSONL                       │
+│ 45-publish.yml           Publish packaged dataset                   │
+│ 5x-prepare-*.yml         Training dataset projections               │
+│ 6x-train-*.yml           Model training workflows                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                           steps/*.py                                │
+│                                                                     │
+│  - Each pipeline stage is an independent run(config) module         │
+│  - All processing revolves around the Canonical Data Model (CDM)    │
+│  - Ingest and Restore populate the same CDM workspace               │
+│  - Scalpel performs targeted operator corrections                   │
+│  - Refine stages are designed to be idempotent                      │
+│  - Reports provide read-only telemetry and structural validation    │
+│  - Package and Publish create distributable datasets                │
+│  - Prepare generates task-specific training projections             │
+│  - Train consumes projections without modifying the CDM             │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Configuration Schema
@@ -46,40 +56,96 @@ project:
     model_variant: "general" | "unbound"
 ```
 
-### Infrastructure Paths
+### Pipeline Infrastructure Configuration
+
+Every pipeline is entirely configuration-driven. A pipeline declares four independent concerns:
+
+* **Volumes** — Physical storage locations for datasets, CDM records, models, and exports.
+* **Services** — Available inference backends (local or remote) that may be used during execution.
+* **Bindings** — Maps individual pipeline stages to a specific inference service and execution policy.
+* **Parameters** — Runtime values that customize a particular execution without changing pipeline code.
 
 ```yaml
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
 volumes:
-    raw: "${LILAKOSHA_VOLUME_RAW}"              # Unified landing zone for raw datasets
-    processed: "${LILAKOSHA_VOLUME_PROCESSED}"  # CDM records and canvas outputs
-    models: "${LILAKOSHA_VOLUME_MODELS}"        # Model storage (base + checkpoints)
-    exports: "${LILAKOSHA_VOLUME_EXPORTS}"      # GGUF builds output
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
 
 services:
-    inspector: "${LILAKOSHA_SERVICE_INSPECTOR}"   # Evaluates safety dials and classifications
-    grammar: "${LILAKOSHA_SERVICE_GRAMMAR}"       # Standardizes person, tense, and prose
-    summarizer: "${LILAKOSHA_SERVICE_SUMMARIZER}" # Generates entity details and recaps
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+
+bindings:
+    refine-characters:
+        service: kilo
+        temperature: 0.1
+        max_tokens: 4096
+        execution:
+            requests_per_minute: 20
+
+    refine-grammar:
+        service: local
+        temperature: 0.0
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 20
+
+parameters:
+    start_uuid: null
+    stop_uuid: null
 ```
+
+This separation allows a single pipeline definition to run unchanged across different environments. Operators can switch between local inference, cloud providers, or self-hosted gateways simply by changing service bindings rather than modifying pipeline logic. Likewise, execution policies such as rate limiting, model selection, and generation parameters remain configuration rather than code, making pipelines portable, reproducible, and easy to adapt to new infrastructure.
 
 ### Storage Schema
 
 ```
-# Directory structure instantiated by init step:
-# {LILAKOSHA_VOLUME_RAW}/
-#    └── (raw datasets placed here - unified landing zone)
-# {LILAKOSHA_VOLUME_PROCESSED}/
-#    └── cdm/
-#        ├── mapping.jsonl (Global Content-Addressed Identity Ledger)
-#        └── records/
-#            └── [UUIDv7].json (Standardized Canvas CDM Files)
-# {LILAKOSHA_VOLUME_MODELS}/
-#    ├── google/gemma-4-12b-it/
-#    ├── OpenYourMind/gemma-4-12b-it-abliterated-uncensored/
-#    └── checkpoints/
-# {LILAKOSHA_VOLUME_EXPORTS}/
-#    └── gguf_builds/
-#        ├── general/
-#        └── unbound/
+{LILAKOSHA_VOLUME_RAW}/
+└──
+    └── (raw source datasets placed here)
+
+{LILAKOSHA_VOLUME_PROCESSED}/
+├── cdm/
+│   ├── mapping.jsonl              (Global Content-Addressed Identity Ledger)
+│   └── records/
+│       └── [UUIDv7].json          (Canonical CDM Session Records)
+└── dataset/
+    └── LilaKosha-dataset-*.jsonl  (Packaged portable CDM datasets)
+
+{LILAKOSHA_VOLUME_MODELS}/
+├── google/
+│   └── gemma-4-12b-it/
+├── OpenYourMind/
+│   └── gemma-4-12b-it-abliterated-uncensored/
+└── checkpoints/
+    ├── general/
+    └── unbound/
+
+{LILAKOSHA_VOLUME_EXPORTS}/
+└── gguf_builds/
+    ├── general/
+    └── unbound/
 ```
 
 ### Training Parameters
@@ -137,14 +203,17 @@ def run(config: dict[str, Any]) -> None:
 
 ### Standard Execution Pipeline
 
-1. **`init`** – Infrastructure staging: handles directories allocation, mounts target spaces, and verifies configuration channels.
-2. **`ingest-pippa`** – Streams third-party log objects, computes a standardized, sorted serialization string to formulate its `native_id` SHA-256 digest, registers source tokens alongside nested metadata indices into the transactional ledger, and writes independent CDM canvas files.
-3. **`scalpel-*`** – Implements targeted atomic resets. Evaluates explicit runtime boundary parameters (`--start_uuid` / `--stop_uuid`) to isolate and rollback specific data mutations without invalidating adjacent ledger blocks.
-4. **`refine-*`** – Multi-model enrichment engine running context extraction and alignment tasks. Executes under strict idempotency guardrails, bypassing files that already contain verified annotation tags.
-5. **`report-record-health`** – Telemetry pass verifying canvas consistency, checking schemas against Pydantic models, and printing a surgical failure registry of corrupted files.
-6. **`report-record-stats`** – Statistical analysis step building distribution profiles across your primary genres, safety classifications, and narrative thematic tags.
-7. **`train`** – Shuts down localized inference servers, initializes the memory-efficient **Unsloth** environment, loads QLoRA parameters, and targets model weights.
-8. **`bake`** – Merges low-rank adapters back into raw FP16 weights, extracts quantized blocks, and compiles local GGUF distribution packages.
+1. **`init`** – Infrastructure staging. Creates the workspace layout, verifies configured storage volumes, and validates the execution environment before any pipeline work begins.
+2. **`restore`** – Reconstructs the canonical CDM workspace from a previously packaged or published dataset. Recreates the identity ledger and individual UUIDv7 record files, allowing downstream refinement, reporting, and training to resume without access to the original raw source dataset.
+3. **`ingest-*`** – Imports supported third-party datasets into the Canonical Data Model (CDM). Each source record is normalized, assigned a deterministic content identity, registered within the global identity ledger, and written as an independent UUIDv7 session record.
+4. **`scalpel-*`** – Implements targeted operator correction workflows. Evaluates explicit runtime boundary parameters (for example `start_uuid` and `stop_uuid`) to selectively clear or repair specific refinements without affecting adjacent records or unrelated annotations.
+5. **`refine-*`** – Multi-stage enrichment engine performing structural analysis, metadata extraction, narrative annotation, grammar normalization, safety classification, recap generation, and other automated augmentation tasks. Refinement stages are designed to be idempotent, skipping records whose corresponding annotations have already been verified.
+6. **`report-*`** – Read-only telemetry and validation passes that inspect dataset health, verify schema integrity, measure refinement coverage, compute statistical distributions, and identify anomalous or incomplete records requiring operator attention.
+7. **`package`** – Traverses the canonical CDM workspace, validates every session record against the CDM schema, and exports the corpus as a portable JSONL dataset suitable for archival, publication, interchange, and future restoration.
+8. **`publish-*`** – Publishes packaged datasets to external repositories (such as Hugging Face), creating reproducible, versioned dataset releases that can later be restored into a fresh CDM workspace.
+9. **`prepare-*`** – Projects the canonical CDM into one or more task-specific training datasets. Different preparation pipelines may generate instruction-tuning examples, recap-augmented conversations, or other specialized training formats without modifying the underlying CDM records.
+10. **`train-*`** – Initializes the model training environment, loads the selected foundation model and training projection, configures QLoRA or related fine-tuning strategies, and produces task-specific adapter checkpoints.
+11. **`bake`** – Merges trained adapter weights back into the foundation model, performs optional quantization, and exports deployable artifacts such as GGUF distributions optimized for local inference.
 
 ## Variant Isolation
 
