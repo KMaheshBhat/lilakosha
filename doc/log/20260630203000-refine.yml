@@ -36,6 +36,40 @@
 # INFO:    prose               : 499/2000 (24.95%)
 # INFO: ------------------------------------------------------------
 # Started around 2026-06-30 20:30:00 IST
+# Checked around 2026-07-01 15:00:00 IST - and job was completed
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 2000
+# INFO: Healthy Records:         914 (45.70%)
+# INFO: Defective Records:       1086
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 1951/2000 (97.55%)
+# INFO:    annotation          : 1951/2000 (97.55%)
+# INFO:    bot detail          : 1951/2000 (97.55%)
+# INFO:    user info           : 1951/2000 (97.55%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 1000/2000 (50.00%)
+# INFO:    annotation          : 1000/2000 (50.00%)
+# INFO:    sexual axis         : 1000/2000 (50.00%)
+# INFO:    toxicity axis       : 1000/2000 (50.00%)
+# INFO:    violence axis       : 1000/2000 (50.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 1000/2000 (50.00%)
+# INFO:    annotation          : 1000/2000 (50.00%)
+# INFO:    primary genre       : 1000/2000 (50.00%)
+# INFO:    themes              : 1000/2000 (50.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 918/2000 (45.90%)
+# INFO:    annotation          : 921/2000 (46.05%)
+# INFO:    prose               : 918/2000 (45.90%)
+# INFO: ------------------------------------------------------------
 pipeline:
     - "refine-characters"
     # - "refine-safety-dials"
