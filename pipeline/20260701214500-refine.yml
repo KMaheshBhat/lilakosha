@@ -37,6 +37,10 @@
 # INFO:    prose               : 998/2000 (49.90%)
 # INFO: ------------------------------------------------------------
 # Started around 2026-07-01 22:00:00 IST
+# Checked around 2026-07-02 07:55:00 IST - currently working on
+# refine-grammar.  Need to run refine-safte-dials to pick up
+# stragglers from the 20260701150000-refine.yml run once this
+# pipeline completes (on the same range).
 pipeline:
     - "refine-characters"
     # - "refine-safety-dials"
