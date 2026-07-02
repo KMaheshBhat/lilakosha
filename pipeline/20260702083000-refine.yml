@@ -37,6 +37,46 @@
 # INFO:    prose               : 1150/3000 (38.33%)
 # INFO: ------------------------------------------------------------
 # Started around 2026-07-02 08:45:00 IST
+# Checked around 2026-07-02 17:45:00 IST - the Kilo router started
+# to respond with 'Bad Request' around 2384/3000 though the detail
+# read: 'DEGRADED function cannot be invoked'
+# Restarting again, to see if Kilo is restored. Notable but not too
+# odd observation is that what seemed have failed earlier for other
+# reasons, (like the NoneType error), seems to be processing now.
+# Current status:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 3000
+# INFO: Healthy Records:         1317 (43.90%)
+# INFO: Defective Records:       1683
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 2168/3000 (72.27%)
+# INFO:    annotation          : 2168/3000 (72.27%)
+# INFO:    bot detail          : 2168/3000 (72.27%)
+# INFO:    user info           : 2168/3000 (72.27%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 1873/3000 (62.43%)
+# INFO:    annotation          : 1873/3000 (62.43%)
+# INFO:    sexual axis         : 1873/3000 (62.43%)
+# INFO:    toxicity axis       : 1873/3000 (62.43%)
+# INFO:    violence axis       : 1873/3000 (62.43%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 2000/3000 (66.67%)
+# INFO:    annotation          : 2000/3000 (66.67%)
+# INFO:    primary genre       : 2000/3000 (66.67%)
+# INFO:    themes              : 2000/3000 (66.67%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 1368/3000 (45.60%)
+# INFO:    annotation          : 1372/3000 (45.73%)
+# INFO:    prose               : 1368/3000 (45.60%)
+# INFO: ------------------------------------------------------------
 pipeline:
     - "refine-characters"
     # - "refine-safety-dials"
