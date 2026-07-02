@@ -33,6 +33,7 @@ def run(config: dict) -> None:
     toxicity_counts = Counter()
     genre_counts = Counter()
     theme_counts = Counter()
+    turn_counts = []  # Track turn counts per record for distribution stats
 
     logger.info(
         f"Computing aggregate profile statistics across {total_records} records..."
@@ -66,6 +67,10 @@ def run(config: dict) -> None:
                     theme_counts[theme] += 1
             else:
                 theme_counts["[No Themes Assigned]"] += 1
+
+            # Count conversation turns in this record
+            turn_count = sum(1 for item in session.items if item.kind == "turn")
+            turn_counts.append(turn_count)
 
         except Exception:
             # Skip unparseable files during stats aggregation to avoid
@@ -113,4 +118,38 @@ def run(config: dict) -> None:
 
     if len(theme_counts) > 25:
         logger.info(f"  ... and {len(theme_counts) - 25} other unique themes.")
-    logger.info("=" * 60)
+
+    # 4. Conversation Turn Distribution
+    if turn_counts:
+        sorted_turns = sorted(turn_counts)
+        min_turns = sorted_turns[0]
+        max_turns = sorted_turns[-1]
+        avg_turns = sum(turn_counts) / len(turn_counts)
+        median_turns = sorted_turns[len(sorted_turns) // 2]
+
+        logger.info("-" * 60)
+        logger.info("💬 CONVERSATION TURN DISTRIBUTION")
+        logger.info(f"  Records Analyzed      : {total_records}")
+        logger.info(f"  Minimum Turns         : {min_turns}")
+        logger.info(f"  Maximum Turns         : {max_turns}")
+        logger.info(f"  Average Turns         : {avg_turns:.1f}")
+        logger.info(f"  Median Turns          : {median_turns}")
+
+        # Define turn count buckets
+        buckets = [
+            (1, 10, "1–10"),
+            (11, 25, "11–25"),
+            (26, 50, "26–50"),
+            (51, 100, "51–100"),
+            (101, 250, "101–250"),
+            (251, 500, "251–500"),
+            (501, float("inf"), "501+"),
+        ]
+
+        logger.info("  Turn Count Buckets")
+        for low, high, label in buckets:
+            bucket_count = sum(1 for t in turn_counts if low <= t <= high)
+            pct = (bucket_count / total_records) * 100
+            logger.info(f"    {label:<18} : {bucket_count:>4} ({pct:.1f}%)")
+
+        logger.info("=" * 60)
