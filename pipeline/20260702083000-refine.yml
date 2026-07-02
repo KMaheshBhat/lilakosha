@@ -1,0 +1,104 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# Pulled in another 1000 PIPPA records bringing total to 3000.
+# Specifying only 2001-3000 records using start and stop UUID range.
+# Running with Kilo nemotron for only refine-characters.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 3000
+# INFO: Healthy Records:         1130 (37.67%)
+# INFO: Defective Records:       1870
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 1988/3000 (66.27%)
+# INFO:    annotation          : 1988/3000 (66.27%)
+# INFO:    bot detail          : 1988/3000 (66.27%)
+# INFO:    user info           : 1988/3000 (66.27%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 1873/3000 (62.43%)
+# INFO:    annotation          : 1873/3000 (62.43%)
+# INFO:    sexual axis         : 1873/3000 (62.43%)
+# INFO:    toxicity axis       : 1873/3000 (62.43%)
+# INFO:    violence axis       : 1873/3000 (62.43%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 2000/3000 (66.67%)
+# INFO:    annotation          : 2000/3000 (66.67%)
+# INFO:    primary genre       : 2000/3000 (66.67%)
+# INFO:    themes              : 2000/3000 (66.67%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 1150/3000 (38.33%)
+# INFO:    annotation          : 1153/3000 (38.43%)
+# INFO:    prose               : 1150/3000 (38.33%)
+# INFO: ------------------------------------------------------------
+# Started around 2026-07-02 08:45:00 IST
+pipeline:
+    - "refine-characters"
+    # - "refine-safety-dials"
+    # - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+
+bindings:
+    refine-characters:
+        service: kilo
+        temperature: 0.1
+        max_tokens: 4096
+        execution:
+            requests_per_minute: 20
+
+    # refine-safety-dials:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f20bc-8f89-7622-a8f1-b8b74ad66a3a
+    stop_uuid: 019f20bc-fd7a-7df0-ae78-89ac3f518304
