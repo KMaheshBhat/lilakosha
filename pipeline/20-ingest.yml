@@ -1,6 +1,7 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
 pipeline:
     - "ingest-pippa"
+    - "report-cdm-records"
 
 project:
     name: "LilaKosha"
@@ -12,4 +13,4 @@ volumes:
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
 
 parameters:
-    limit: 2000 # limit the number of samples to process, if empty, all would be processed
+    limit: 3000 # limit the number of samples to process, if empty, all would be processed

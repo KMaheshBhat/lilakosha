@@ -1,6 +1,6 @@
 # LilaKosha-MK1: Report on Record Health and Statistics
 pipeline:
-    - "report-char-names"
+    - "report-cdm-records"
 
 project:
     name: "LilaKosha"
