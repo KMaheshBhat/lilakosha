@@ -122,6 +122,7 @@ def run(config: dict) -> None:
     # 4. Conversation Turn Distribution
     if turn_counts:
         sorted_turns = sorted(turn_counts)
+        total_turns = sum(turn_counts)
         min_turns = sorted_turns[0]
         max_turns = sorted_turns[-1]
         avg_turns = sum(turn_counts) / len(turn_counts)
@@ -130,6 +131,7 @@ def run(config: dict) -> None:
         logger.info("-" * 60)
         logger.info("💬 CONVERSATION TURN DISTRIBUTION")
         logger.info(f"  Records Analyzed      : {total_records}")
+        logger.info(f"  Total Turns           : {total_turns}")
         logger.info(f"  Minimum Turns         : {min_turns}")
         logger.info(f"  Maximum Turns         : {max_turns}")
         logger.info(f"  Average Turns         : {avg_turns:.1f}")
