@@ -77,6 +77,40 @@
 # INFO:    annotation          : 1372/3000 (45.73%)
 # INFO:    prose               : 1368/3000 (45.60%)
 # INFO: ------------------------------------------------------------
+# Checking around 2020-07-03 08:30:00 IST - completed
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 3000
+# INFO: Healthy Records:         1634 (54.47%)
+# INFO: Defective Records:       1366
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 2909/3000 (96.97%)
+# INFO:    annotation          : 2909/3000 (96.97%)
+# INFO:    bot detail          : 2909/3000 (96.97%)
+# INFO:    user info           : 2909/3000 (96.97%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 2727/3000 (90.90%)
+# INFO:    annotation          : 2727/3000 (90.90%)
+# INFO:    sexual axis         : 2727/3000 (90.90%)
+# INFO:    toxicity axis       : 2727/3000 (90.90%)
+# INFO:    violence axis       : 2727/3000 (90.90%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 2000/3000 (66.67%)
+# INFO:    annotation          : 2000/3000 (66.67%)
+# INFO:    primary genre       : 2000/3000 (66.67%)
+# INFO:    themes              : 2000/3000 (66.67%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 1747/3000 (58.23%)
+# INFO:    annotation          : 1751/3000 (58.37%)
+# INFO:    prose               : 1747/3000 (58.23%)
+# INFO: ------------------------------------------------------------
 pipeline:
     - "refine-characters"
     # - "refine-safety-dials"
