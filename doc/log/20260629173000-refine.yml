@@ -1,23 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Pulled in more records upto total of 500 records using intest.
-# Running 400/500 records with nvidia/nemotron-3-ultra-550b-a55b:free
-# but only for refine-characters, refine-safety-dials, and
-# refine-genre-theme. For refine-grammar using local.
-# Status before start:
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 500
-# INFO: Healthy Records:         100 (20.00%)
-# INFO: Defective Records:       400
-# INFO: ============================================================
-# Started around 2026-06-29 17:35:00 IST
-# Checking in around 2026-06-30 07:53:00 IST
-# - the pipeline had skipped after the 314/500 mark during refine-safety-dials
-#   with reason `Rate limit exceeded: free-models-per-day-high-balance.` from
-#   Open router and failed `refine-genre-theme` completely.
-# - stopping the pipeline and would need to start a new one with full local
-# Report run details below.
+
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -79,6 +61,28 @@ parameters:
     start_uuid: 019f133e-40f4-7c81-aa76-5a74d4acacc2
     stop_uuid: 019f133e-7132-71c1-a3b3-6afda1fefe45
 
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Pulled in more records upto total of 500 records using intest.
+# Running 400/500 records with nvidia/nemotron-3-ultra-550b-a55b:free
+# but only for refine-characters, refine-safety-dials, and
+# refine-genre-theme. For refine-grammar using local.
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 500
+# INFO: Healthy Records:         100 (20.00%)
+# INFO: Defective Records:       400
+# INFO: ============================================================
+# Started around 2026-06-29 17:35:00 IST
+# Checking in around 2026-06-30 07:53:00 IST
+# - the pipeline had skipped after the 314/500 mark during refine-safety-dials
+#   with reason `Rate limit exceeded: free-models-per-day-high-balance.` from
+#   Open router and failed `refine-genre-theme` completely.
+# - stopping the pipeline and would need to start a new one with full local
+# Report run details below.
 # ❯ ./run.sh pipeline/35-report-records.yml --hide_anomaly_details true --audit_only true
 # INFO: Applying runtime overrides: {'hide_anomaly_details': True, 'audit_only': True}
 # INFO: Target Project: LilaKosha

@@ -1,54 +1,4 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# INFO: 📊 Running read-only telemetry audit across 100 records...
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 100
-# INFO: Healthy Records:         79 (79.00%)
-# INFO: Defective Records:       21
-# INFO: ============================================================
-# Set the ingest limit to 101 to pull in another record.
-# The AI Horde has an OpenAI compatible end point and a set of workers
-# currently in sufficient numbers.  Need to see if the current steps
-# can leverage it.
-# -------------------------------------------------------------------
-# Experiment Notes - 2026-06-29 09:25:00 IST
-#
-# Objective:
-#   Evaluate the AI Horde OpenAI-compatible bridge as a drop-in
-#   inference backend for the MK1 refinement pipeline.
-#
-# Configuration:
-#   Endpoint : https://oai.aihorde.net/v1
-#   Model    : aphrodite/TheDrummer/Cydonia-24B-v4.3
-#
-# Outcome:
-#   ❌ Not adopted for MK1.
-#
-# Findings:
-#   - The bridge exposes an OpenAI-compatible API but currently targets
-#     the common feature subset between OpenAI Chat and the Horde API.
-#   - Structured response workflows required by the refinement stages
-#     are presently unsupported.
-#   - Requests reached the bridge successfully, but generation failed
-#     with 406 responses ("Request is not possible", "Model None not known"),
-#     indicating protocol / capability mismatches rather than transport issues.
-#
-# Conclusion:
-#   The service is promising for general chat completion workloads, but
-#   the current bridge is not yet suitable for deterministic metadata
-#   extraction pipelines such as LilaKosha MK1.
-#
-# Decision:
-#   Continue using:
-#     - OpenRouter for semantic extraction (characters, safety, genre/theme)
-#     - Local Gemma 4 12B for grammar refinement
-#
-# Archive Reason:
-#   Preserving this experiment to avoid repeating the evaluation until
-#   the AI Horde OpenAI bridge gains structured-output capabilities or
-#   the MK pipeline grows a native Horde backend.
-# -------------------------------------------------------------------
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -114,3 +64,57 @@ bindings:
 parameters:
     start_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27
     stop_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# INFO: 📊 Running read-only telemetry audit across 100 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 100
+# INFO: Healthy Records:         79 (79.00%)
+# INFO: Defective Records:       21
+# INFO: ============================================================
+# Set the ingest limit to 101 to pull in another record.
+# The AI Horde has an OpenAI compatible end point and a set of workers
+# currently in sufficient numbers.  Need to see if the current steps
+# can leverage it.
+# -------------------------------------------------------------------
+# Experiment Notes - 2026-06-29 09:25:00 IST
+#
+# Objective:
+#   Evaluate the AI Horde OpenAI-compatible bridge as a drop-in
+#   inference backend for the MK1 refinement pipeline.
+#
+# Configuration:
+#   Endpoint : https://oai.aihorde.net/v1
+#   Model    : aphrodite/TheDrummer/Cydonia-24B-v4.3
+#
+# Outcome:
+#   ❌ Not adopted for MK1.
+#
+# Findings:
+#   - The bridge exposes an OpenAI-compatible API but currently targets
+#     the common feature subset between OpenAI Chat and the Horde API.
+#   - Structured response workflows required by the refinement stages
+#     are presently unsupported.
+#   - Requests reached the bridge successfully, but generation failed
+#     with 406 responses ("Request is not possible", "Model None not known"),
+#     indicating protocol / capability mismatches rather than transport issues.
+#
+# Conclusion:
+#   The service is promising for general chat completion workloads, but
+#   the current bridge is not yet suitable for deterministic metadata
+#   extraction pipelines such as LilaKosha MK1.
+#
+# Decision:
+#   Continue using:
+#     - OpenRouter for semantic extraction (characters, safety, genre/theme)
+#     - Local Gemma 4 12B for grammar refinement
+#
+# Archive Reason:
+#   Preserving this experiment to avoid repeating the evaluation until
+#   the AI Horde OpenAI bridge gains structured-output capabilities or
+#   the MK pipeline grows a native Horde backend.
+# -------------------------------------------------------------------

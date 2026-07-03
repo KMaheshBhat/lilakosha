@@ -1,49 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Rerunning over incomplete records from 20260629173000-refine.yml
-# Running 399/500 records with local (Gemma4 12B).
-# Status before start:
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 500
-# INFO: Healthy Records:         101 (20.20%)
-# INFO: Defective Records:       399
-# INFO: ============================================================
-# Started around 2026-06-30 08:00:00 IST
-# Checked around 2026-06-30 20:13:00 IST and it was done.
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 1000
-# INFO: Healthy Records:         498 (49.80%)
-# INFO: Defective Records:       502
-# INFO: ============================================================
-# INFO: 📈 PIPELINE STAGE BREAKDOWN
-# INFO: ============================================================
-# INFO: refine-characters
-# INFO:    ✅ PASSED           : 974/1000 (97.40%)
-# INFO:    annotation          : 974/1000 (97.40%)
-# INFO:    bot detail          : 974/1000 (97.40%)
-# INFO:    user info           : 974/1000 (97.40%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-safety-dials
-# INFO:    ✅ PASSED           : 946/1000 (94.60%)
-# INFO:    annotation          : 946/1000 (94.60%)
-# INFO:    sexual axis         : 946/1000 (94.60%)
-# INFO:    toxicity axis       : 946/1000 (94.60%)
-# INFO:    violence axis       : 946/1000 (94.60%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-genre-theme
-# INFO:    ✅ PASSED           : 500/1000 (50.00%)
-# INFO:    annotation          : 500/1000 (50.00%)
-# INFO:    primary genre       : 500/1000 (50.00%)
-# INFO:    themes              : 500/1000 (50.00%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-grammar
-# INFO:    ✅ PASSED           : 499/1000 (49.90%)
-# INFO:    annotation          : 500/1000 (50.00%)
-# INFO:    prose               : 499/1000 (49.90%)
-# INFO: ------------------------------------------------------------
+
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -104,3 +60,52 @@ bindings:
 parameters:
     start_uuid: 019f133e-40f4-7c81-aa76-5a74d4acacc2
     stop_uuid: 019f133e-7132-71c1-a3b3-6afda1fefe45
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Rerunning over incomplete records from 20260629173000-refine.yml
+# Running 399/500 records with local (Gemma4 12B).
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 500
+# INFO: Healthy Records:         101 (20.20%)
+# INFO: Defective Records:       399
+# INFO: ============================================================
+# Started around 2026-06-30 08:00:00 IST
+# Checked around 2026-06-30 20:13:00 IST and it was done.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 1000
+# INFO: Healthy Records:         498 (49.80%)
+# INFO: Defective Records:       502
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 974/1000 (97.40%)
+# INFO:    annotation          : 974/1000 (97.40%)
+# INFO:    bot detail          : 974/1000 (97.40%)
+# INFO:    user info           : 974/1000 (97.40%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 946/1000 (94.60%)
+# INFO:    annotation          : 946/1000 (94.60%)
+# INFO:    sexual axis         : 946/1000 (94.60%)
+# INFO:    toxicity axis       : 946/1000 (94.60%)
+# INFO:    violence axis       : 946/1000 (94.60%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 500/1000 (50.00%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    primary genre       : 500/1000 (50.00%)
+# INFO:    themes              : 500/1000 (50.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 499/1000 (49.90%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    prose               : 499/1000 (49.90%)
+# INFO: ------------------------------------------------------------

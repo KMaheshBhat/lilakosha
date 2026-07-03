@@ -1,15 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Running 64/101 records with local (Gemma4 12B)
-# Status before start:
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 101
-# INFO: Healthy Records:         64 (63.37%)
-# INFO: Defective Records:       37
-# INFO: ============================================================
-# Started around 2026-06-29 17:00:00 IST
-# Completed with all success around 17:30:00 IST
+
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -70,3 +60,18 @@ bindings:
 parameters:
     start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
     stop_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Running 64/101 records with local (Gemma4 12B)
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 101
+# INFO: Healthy Records:         64 (63.37%)
+# INFO: Defective Records:       37
+# INFO: ============================================================
+# Started around 2026-06-29 17:00:00 IST
+# Completed with all success around 17:30:00 IST

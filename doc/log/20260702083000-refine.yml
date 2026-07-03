@@ -1,4 +1,74 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    - "refine-characters"
+    # - "refine-safety-dials"
+    # - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+
+bindings:
+    refine-characters:
+        service: kilo
+        temperature: 0.1
+        max_tokens: 4096
+        execution:
+            requests_per_minute: 20
+
+    # refine-safety-dials:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f20bc-8f89-7622-a8f1-b8b74ad66a3a
+    stop_uuid: 019f20bc-fd7a-7df0-ae78-89ac3f518304
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
 # Pulled in another 1000 PIPPA records bringing total to 3000.
 # Specifying only 2001-3000 records using start and stop UUID range.
 # Running with Kilo nemotron for only refine-characters.
@@ -111,68 +181,3 @@
 # INFO:    annotation          : 1751/3000 (58.37%)
 # INFO:    prose               : 1747/3000 (58.23%)
 # INFO: ------------------------------------------------------------
-pipeline:
-    - "refine-characters"
-    # - "refine-safety-dials"
-    # - "refine-genre-theme"
-    # - "refine-grammar"
-
-project:
-    name: "LilaKosha"
-    mark: "MK1"
-    generation: "G1"
-
-volumes:
-    raw: "${LILAKOSHA_VOLUME_RAW}"
-    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
-
-services:
-    local:
-        provider: openai-compatible
-        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
-        api_key: dummy
-        model: local
-    openrouter:
-        provider: openai-compatible
-        base_url: https://openrouter.ai/api/v1
-        api_key: "${OPENROUTER_API_KEY}"
-        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
-        # model: "openrouter/owl-alpha"
-    kilo:
-        provider: openai-compatible
-        base_url: https://api.kilo.ai/api/gateway
-        api_key: "${KILO_API_KEY}"
-        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
-
-bindings:
-    refine-characters:
-        service: kilo
-        temperature: 0.1
-        max_tokens: 4096
-        execution:
-            requests_per_minute: 20
-
-    # refine-safety-dials:
-    #     service: local
-    #     temperature: 0.1
-    #     max_tokens: 2048
-    #     execution:
-    #         requests_per_minute: 20
-
-    # refine-genre-theme:
-    #     service: local
-    #     temperature: 0.1
-    #     max_tokens: 2048
-    #     execution:
-    #         requests_per_minute: 20
-
-    # refine-grammar:
-    #     service: local
-    #     temperature: 0.0
-    #     max_tokens: 2048
-    #     execution:
-    #         requests_per_minute: 20
-
-parameters:
-    start_uuid: 019f20bc-8f89-7622-a8f1-b8b74ad66a3a
-    stop_uuid: 019f20bc-fd7a-7df0-ae78-89ac3f518304

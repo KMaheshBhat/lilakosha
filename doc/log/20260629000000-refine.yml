@@ -1,27 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Running 100 records with openrouter/owl-alpha through Openrouter
-# Started mid-night 2026-06-29 00:00:00
-# Checking in at 2026-06-29 07:49:00, the process is in progress
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 100
-# INFO: Healthy Records:         63 (63.00%)
-# INFO: Defective Records:       37
-# INFO: ============================================================
-# Completed when I checked at 2026-06-29 08:40:00
-# refine-characters :   19:44
-#      refine-safety:   11:49
-# refine-genre-theme:   13:54
-#     refine-grammar: 7:45:03
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 100
-# INFO: Healthy Records:         79 (79.00%)
-# INFO: Defective Records:       21
-# INFO: ============================================================
-# See below for detailed review notes.
+
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -83,6 +61,31 @@ parameters:
     start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
     stop_uuid: 019f0f82-c690-7a61-a0ec-e5781934e57e
 
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Running 100 records with openrouter/owl-alpha through Openrouter
+# Started mid-night 2026-06-29 00:00:00
+# Checking in at 2026-06-29 07:49:00, the process is in progress
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 100
+# INFO: Healthy Records:         63 (63.00%)
+# INFO: Defective Records:       37
+# INFO: ============================================================
+# Completed when I checked at 2026-06-29 08:40:00
+# refine-characters :   19:44
+#      refine-safety:   11:49
+# refine-genre-theme:   13:54
+#     refine-grammar: 7:45:03
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 100
+# INFO: Healthy Records:         79 (79.00%)
+# INFO: Defective Records:       21
+# INFO: ============================================================
 # running a review of names
 # > printf "UUID\tPLAYER_NAME\tPLAYER_GENDER\tBOT_NAME\tBOT_GENDER\n"; for f in /mnt/e/local/data/public/lilakosha/cdm/records/*.json; do uuid=$(basename "$f" .json); jq -r --arg id "$uuid" '[ $id, first(.meta.identities[] | select(.is_player_controlled == true) | .name), first(.meta.identities[] | select(.is_player_controlled == true) | .gender), first(.meta.identities[] | select(.is_player_controlled == false) | .name), first(.meta.identities[] | select(.is_player_controlled == false) | .gender) ] | @tsv' "$f"; done | column -t -s $'\t'
 # UUID	PLAYER_NAME	PLAYER_GENDER	BOT_NAME	BOT_GENDER

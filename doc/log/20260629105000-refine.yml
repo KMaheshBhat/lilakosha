@@ -1,39 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Running 59/101 records with nvidia/nemotron-3-ultra-550b-a55b:free
-# through Openrouter (effectively rerun for character names and
-# grammar and any other stragglers).
-# Status before start:
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 101
-# INFO: Healthy Records:         42 (41.58%)
-# INFO: Defective Records:       59
-# INFO: ============================================================
-# Started around 2026-06-29 11:00:00 IST
-# Inspecting around 2026-06-298 11:58:00 IST - the pipeline had moved
-# on to grammer - but inspecting the names, this is much better than
-# the Owl Alpha run
-# refine-characters :   40:01
-#      refine-safety:   01:19
-# refine-genre-theme:   13:54
-# As of 2026-06-09 16:45:00 IST
-#     refine-grammar: 4:59:16 (WIP)
-# It looks like Nemotron has a lot of errors and takes quite a bit of
-# time.  I suspect it is because the 'reasoning=off' paramter is not
-# 'taking' and it is trying to reason through simple transformation.
-# The issue had happened in Gemma4 12B as well, and it particularly
-# did have its reasoning turned off to get it working.
-# 2026-06-29 16:50:00 IST - Experiment terminated during grammar refinement.
-# Character, Safety, and Genre/Theme refinement completed successfully and
-# produced noticeably better identity extraction than the earlier Owl Alpha run.
-# Grammar refinement was aborted due to repeated provider-side inference failures
-# (`'NoneType' object is not subscriptable`) from Nemotron via OpenRouter,
-# resulting in poor throughput and unreliable completion.
-# Decision: archive this run as a successful character-evaluation experiment and
-# rerun grammar refinement using the local Gemma 4 model, which has previously
-# demonstrated stable behavior with reasoning disabled.
-# See below for character inspection results.
+
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -95,6 +61,43 @@ parameters:
     start_uuid: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
     stop_uuid: 019f116a-d0ef-77c3-9a04-d3a1a8da1e27
 
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Running 59/101 records with nvidia/nemotron-3-ultra-550b-a55b:free
+# through Openrouter (effectively rerun for character names and
+# grammar and any other stragglers).
+# Status before start:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 101
+# INFO: Healthy Records:         42 (41.58%)
+# INFO: Defective Records:       59
+# INFO: ============================================================
+# Started around 2026-06-29 11:00:00 IST
+# Inspecting around 2026-06-298 11:58:00 IST - the pipeline had moved
+# on to grammer - but inspecting the names, this is much better than
+# the Owl Alpha run
+# refine-characters :   40:01
+#      refine-safety:   01:19
+# refine-genre-theme:   13:54
+# As of 2026-06-09 16:45:00 IST
+#     refine-grammar: 4:59:16 (WIP)
+# It looks like Nemotron has a lot of errors and takes quite a bit of
+# time.  I suspect it is because the 'reasoning=off' paramter is not
+# 'taking' and it is trying to reason through simple transformation.
+# The issue had happened in Gemma4 12B as well, and it particularly
+# did have its reasoning turned off to get it working.
+# 2026-06-29 16:50:00 IST - Experiment terminated during grammar refinement.
+# Character, Safety, and Genre/Theme refinement completed successfully and
+# produced noticeably better identity extraction than the earlier Owl Alpha run.
+# Grammar refinement was aborted due to repeated provider-side inference failures
+# (`'NoneType' object is not subscriptable`) from Nemotron via OpenRouter,
+# resulting in poor throughput and unreliable completion.
+# Decision: archive this run as a successful character-evaluation experiment and
+# rerun grammar refinement using the local Gemma 4 model, which has previously
+# demonstrated stable behavior with reasoning disabled.
 # running a review of names
 # > printf "UUID\tPLAYER_NAME\tPLAYER_GENDER\tBOT_NAME\tBOT_GENDER\n"; for f in /mnt/e/local/data/public/lilakosha/cdm/records/*.json; do uuid=$(basename "$f" .json); jq -r --arg id "$uuid" '[ $id, first(.meta.identities[] | select(.is_player_controlled == true) | .name), first(.meta.identities[] | select(.is_player_controlled == true) | .gender), first(.meta.identities[] | select(.is_player_controlled == false) | .name), first(.meta.identities[] | select(.is_player_controlled == false) | .gender) ] | @tsv' "$f"; done | column -t -s $'\t'
 # UUID    PLAYER_NAME     PLAYER_GENDER   BOT_NAME        BOT_GENDER

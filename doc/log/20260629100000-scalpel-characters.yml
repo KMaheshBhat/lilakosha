@@ -1,33 +1,5 @@
 # LilaKosha-MK1: Scalpel Blueprints
-# 2026-06-29 10:10:00 IST - the last run with 20260629000000-refine.yml using
-# Openrouter Owl Alpha model that wile did do a decent job, did not use the
-# fallback names properly per the prompt. Thus need to scalpel specific ones
-# since with specific names - no need to supply start and stop UUID since there
-# are only 101 records
-# Rationale:
-# Owl Alpha correctly synthesized most character profiles but occasionally
-# ignored the prescribed fallback names for generic player identities
-# (User, Anonymous, Unnamed, etc.). This surgical pass resets only those
-# records, after which grammar is rolled back so they can be re-refined.
-# 2026-06-29 10:20:00 IST - report before running pipeline
-# INFO: 📊 Running read-only telemetry audit across 101 records...
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 101
-# INFO: Healthy Records:         79 (78.22%)
-# INFO: Defective Records:       22
-# INFO: ============================================================
-# 2026-06-29 10:35:00 IST - pipeline was run
-# ✅ Scalpel character clearance pass complete. Purged: 52 records. Skipped by UUID range: 0 records. Skipped by player-name filter
-# ✅ Scalpel original prose restoration complete. Restored: 52 records. Skipped out-of-range: 0 records.
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 101
-# INFO: Healthy Records:         42 (41.58%)
-# INFO: Defective Records:       59
-# INFO: ============================================================
+
 pipeline:
     - "scalpel-characters"
     - "scalpel-grammar"
@@ -58,3 +30,36 @@ parameters:
         - Anon
         - Unnamed Student
     character_reset_sentinel: true
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# 2026-06-29 10:10:00 IST - the last run with 20260629000000-refine.yml using
+# Openrouter Owl Alpha model that wile did do a decent job, did not use the
+# fallback names properly per the prompt. Thus need to scalpel specific ones
+# since with specific names - no need to supply start and stop UUID since there
+# are only 101 records
+# Rationale:
+# Owl Alpha correctly synthesized most character profiles but occasionally
+# ignored the prescribed fallback names for generic player identities
+# (User, Anonymous, Unnamed, etc.). This surgical pass resets only those
+# records, after which grammar is rolled back so they can be re-refined.
+# 2026-06-29 10:20:00 IST - report before running pipeline
+# INFO: 📊 Running read-only telemetry audit across 101 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 101
+# INFO: Healthy Records:         79 (78.22%)
+# INFO: Defective Records:       22
+# INFO: ============================================================
+# 2026-06-29 10:35:00 IST - pipeline was run
+# ✅ Scalpel character clearance pass complete. Purged: 52 records. Skipped by UUID range: 0 records. Skipped by player-name filter
+# ✅ Scalpel original prose restoration complete. Restored: 52 records. Skipped out-of-range: 0 records.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 101
+# INFO: Healthy Records:         42 (41.58%)
+# INFO: Defective Records:       59
+# INFO: ============================================================

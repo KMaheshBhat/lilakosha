@@ -1,57 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
-# Pulled in more record using ingest to bring total to 1000.
-# Specifying only 500 records using start and stop UUID range.
-# Running in parallel with 20260630080000-refine.yml
-# Using Kilo Inference Gateway.
-# Running only 'refine-characters'.
-# Overall status before starting.
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 1000
-# INFO: Healthy Records:         101 (10.10%)
-# INFO: Defective Records:       899
-# INFO: ============================================================
-# Started around 2026-06-30 08:50:00 IST
-# Checking around 2026-06-30 15:00:00 IST
-# 1000/1000 [6:07:39<00:00, 22.06s/it]
-# INFO: ✅ Character refinement script pass finished. Skipped out-of-range: 500 records.
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 1000
-# INFO: Healthy Records:         352 (35.20%)
-# INFO: Defective Records:       648
-# INFO: ============================================================
-# INFO: 📈 PIPELINE STAGE BREAKDOWN
-# INFO: ============================================================
-# INFO: refine-characters
-# INFO:    ✅ PASSED              : 967/1000 (96.70%)
-# INFO:    annotation          : 967/1000 (96.70%)
-# INFO:    bot detail          : 967/1000 (96.70%)
-# INFO:    user info           : 967/1000 (96.70%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-safety-dials
-# INFO:    ✅ PASSED              : 501/1000 (50.10%)
-# INFO:    annotation          : 501/1000 (50.10%)
-# INFO:    sexual axis         : 501/1000 (50.10%)
-# INFO:    toxicity axis       : 501/1000 (50.10%)
-# INFO:    violence axis       : 501/1000 (50.10%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-genre-theme
-# INFO:    ✅ PASSED              : 500/1000 (50.00%)
-# INFO:    annotation          : 500/1000 (50.00%)
-# INFO:    primary genre       : 500/1000 (50.00%)
-# INFO:    themes              : 500/1000 (50.00%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-grammar
-# INFO:    ✅ PASSED              : 357/1000 (35.70%)
-# INFO:    annotation          : 359/1000 (35.90%)
-# INFO:    prose               : 357/1000 (35.70%)
-# INFO: ------------------------------------------------------------
-# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
-# INFO: ============================================================
-# Around 33 records needs refine-characters attempted again.
+
 pipeline:
     - "refine-characters"
     # - "refine-safety-dials"
@@ -117,3 +65,60 @@ bindings:
 parameters:
     start_uuid: 019f166a-c052-70c1-a807-29c5e9f1d299
     stop_uuid: 019f1687-6559-7851-97ea-6073303a38cf
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Pulled in more record using ingest to bring total to 1000.
+# Specifying only 500 records using start and stop UUID range.
+# Running in parallel with 20260630080000-refine.yml
+# Using Kilo Inference Gateway.
+# Running only 'refine-characters'.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 1000
+# INFO: Healthy Records:         101 (10.10%)
+# INFO: Defective Records:       899
+# INFO: ============================================================
+# Started around 2026-06-30 08:50:00 IST
+# Checking around 2026-06-30 15:00:00 IST
+# 1000/1000 [6:07:39<00:00, 22.06s/it]
+# INFO: ✅ Character refinement script pass finished. Skipped out-of-range: 500 records.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 1000
+# INFO: Healthy Records:         352 (35.20%)
+# INFO: Defective Records:       648
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED              : 967/1000 (96.70%)
+# INFO:    annotation          : 967/1000 (96.70%)
+# INFO:    bot detail          : 967/1000 (96.70%)
+# INFO:    user info           : 967/1000 (96.70%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED              : 501/1000 (50.10%)
+# INFO:    annotation          : 501/1000 (50.10%)
+# INFO:    sexual axis         : 501/1000 (50.10%)
+# INFO:    toxicity axis       : 501/1000 (50.10%)
+# INFO:    violence axis       : 501/1000 (50.10%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED              : 500/1000 (50.00%)
+# INFO:    annotation          : 500/1000 (50.00%)
+# INFO:    primary genre       : 500/1000 (50.00%)
+# INFO:    themes              : 500/1000 (50.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED              : 357/1000 (35.70%)
+# INFO:    annotation          : 359/1000 (35.90%)
+# INFO:    prose               : 357/1000 (35.70%)
+# INFO: ------------------------------------------------------------
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# Around 33 records needs refine-characters attempted again.
