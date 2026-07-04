@@ -27,11 +27,19 @@ services:
         api_key: "${OPENROUTER_API_KEY}"
         model: "nvidia/nemotron-3-ultra-550b-a55b:free"
         # model: "openrouter/owl-alpha"
+        requests_per_minute: 20
     kilo:
         provider: openai-compatible
         base_url: https://api.kilo.ai/api/gateway
         api_key: "${KILO_API_KEY}"
         model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
 
 bindings:
     refine-characters:

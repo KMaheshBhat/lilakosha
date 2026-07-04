@@ -78,8 +78,7 @@ def run(config: dict) -> None:
     temperature = binding.get("temperature", 0.1)
     max_tokens = binding.get("max_tokens", 4096)
     inference = OpenAIInference.from_service(service)
-    execution = binding.get("execution", {})
-    requests_per_minute = execution.get("requests_per_minute")
+    requests_per_minute = service["requests_per_minute"]
     next_request_time: float | None = None
 
     for file_path in tqdm(record_files, desc="Refining Canvas Character Profiles"):
