@@ -117,3 +117,37 @@ parameters:
 # INFO:    prose               : 2364/4000 (59.10%)
 # INFO: ------------------------------------------------------------
 # Started around 2026-07-04 12:45:00 IST
+# Checked around 2026-07-04 18:30:00 IST - completed
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 5000
+# INFO: Healthy Records:         2490 (49.80%)
+# INFO: Defective Records:       2510
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 4036/5000 (80.72%)
+# INFO:    annotation          : 4036/5000 (80.72%)
+# INFO:    bot detail          : 4036/5000 (80.72%)
+# INFO:    user info           : 4036/5000 (80.72%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 3980/5000 (79.60%)
+# INFO:    annotation          : 3980/5000 (79.60%)
+# INFO:    sexual axis         : 3980/5000 (79.60%)
+# INFO:    toxicity axis       : 3980/5000 (79.60%)
+# INFO:    violence axis       : 3980/5000 (79.60%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 3904/5000 (78.08%)
+# INFO:    annotation          : 3904/5000 (78.08%)
+# INFO:    primary genre       : 3904/5000 (78.08%)
+# INFO:    themes              : 3904/5000 (78.08%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 2504/5000 (50.08%)
+# INFO:    annotation          : 2508/5000 (50.16%)
+# INFO:    prose               : 2504/5000 (50.08%)
+# INFO: ------------------------------------------------------------
