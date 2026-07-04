@@ -79,7 +79,7 @@ def run(config: dict) -> None:
     service = config["services"][binding["service"]]
     temperature = binding.get("temperature", 0.3)
     inference = OpenAIInference.from_service(service)
-    requests_per_minute = service["requests_per_minute"]
+    requests_per_minute = service.get("requests_per_minute")
     next_request_time: float | None = None
 
     for file_path in tqdm(record_files, desc="Processing Canvas Files"):
