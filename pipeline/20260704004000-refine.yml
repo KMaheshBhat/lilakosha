@@ -1,0 +1,256 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    # - "refine-characters"
+    # - "refine-safety-dials"
+    - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        # model: "openrouter/owl-alpha"
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+
+bindings:
+    # refine-characters:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 4096
+    #     execution:
+    #         requests_per_minute: 20
+
+    # refine-safety-dials:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+    refine-genre-theme:
+        service: groq
+        temperature: 0.1
+        max_tokens: 2048
+        execution:
+            requests_per_minute: 3
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+    #     execution:
+    #         requests_per_minute: 20
+
+parameters:
+    start_uuid: 019f285a-0f4a-76e1-bb9e-f552f2df230f
+    stop_uuid: 019f285a-7474-7280-8fb8-5a01df0ed18c
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# The 3001-4000 records have been freshly ingested. (see
+# 20260703154500-refine).
+# Specifying only 3001-4000 records using start and stop UUID range.
+# Running only refine-genre-theme on Groq
+# meta-llama/llama-4-scout-17b-16e-instruct.
+# Careful and conservative requests per minute of 3 arrived from the
+# 30k Tokens-Per-Minute on the particular model and most inputs in the
+# range of 8k to 9k.
+# currently running on same range:
+# - OpenRouter Nemotron: refine-characters (3398/4000)
+# - Kilo Nemotron: refine-safety-dials (3093/4000)
+# currently running on previous range:
+# - local Gemma4: refine-grammar (2124/4000) (will run up to 3000)
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 4000
+# INFO: Healthy Records:         2106 (52.65%)
+# INFO: Defective Records:       1894
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 3319/4000 (82.97%)
+# INFO:    annotation          : 3319/4000 (82.97%)
+# INFO:    bot detail          : 3319/4000 (82.97%)
+# INFO:    user info           : 3319/4000 (82.97%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 3083/4000 (77.08%)
+# INFO:    annotation          : 3083/4000 (77.08%)
+# INFO:    sexual axis         : 3083/4000 (77.08%)
+# INFO:    toxicity axis       : 3083/4000 (77.08%)
+# INFO:    violence axis       : 3083/4000 (77.08%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 3010/4000 (75.25%)
+# INFO:    annotation          : 3010/4000 (75.25%)
+# INFO:    primary genre       : 3010/4000 (75.25%)
+# INFO:    themes              : 3010/4000 (75.25%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 2120/4000 (53.00%)
+# INFO:    annotation          : 2125/4000 (53.12%)
+# INFO:    prose               : 2120/4000 (53.00%)
+# INFO: ------------------------------------------------------------
+# Starting around 2026-07-04 01:20:00 IST
+# Checking around 2026-07-04 09:30:00 IST - completed but
+# groq did have following quota limit error
+#   ERROR: Failed genre classification pass for canvas document 019f285a-7474-7280-8fb8-5a01df0ed18c.json:
+#     Error code: 429 -
+#       {
+#         'error': {
+#           'message': 'Rate limit reached for model `meta-llama/llama-4-scout-17b-16e-instruct` in organization `org_01kd02mzf2f1zthkqqh8psgtzk` service tier `on_demand` on tokens per day (TPD): Limit 500000, Used 499852, Requested 2676. Please try again in 7m16.8384s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing',
+#           'type': 'tokens',
+#           'code': 'rate_limit_exceeded'
+#         }
+#       }
+# Sat Jul  4 09:26:30 IST 2026
+# INFO: Applying runtime overrides: {'hide_anomaly_details': True, 'audit_only': True, 'report_breakdown': True}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['report-record-health', 'report-record-stats']
+# INFO: Active Parameters: {'hide_anomaly_details': True, 'audit_only': True, 'report_breakdown': True}
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 4000 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 4000
+# INFO: Healthy Records:         2280 (57.00%)
+# INFO: Defective Records:       1720
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 3822/4000 (95.55%)
+# INFO:    annotation          : 3822/4000 (95.55%)
+# INFO:    bot detail          : 3822/4000 (95.55%)
+# INFO:    user info           : 3822/4000 (95.55%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 3865/4000 (96.62%)
+# INFO:    annotation          : 3865/4000 (96.62%)
+# INFO:    sexual axis         : 3865/4000 (96.62%)
+# INFO:    toxicity axis       : 3865/4000 (96.62%)
+# INFO:    violence axis       : 3865/4000 (96.62%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 3321/4000 (83.03%)
+# INFO:    annotation          : 3321/4000 (83.03%)
+# INFO:    primary genre       : 3321/4000 (83.03%)
+# INFO:    themes              : 3321/4000 (83.03%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 2294/4000 (57.35%)
+# INFO:    annotation          : 2299/4000 (57.48%)
+# INFO:    prose               : 2294/4000 (57.35%)
+# INFO: ------------------------------------------------------------
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-RECORD-STATS ---
+# INFO: Computing aggregate profile statistics across 4000 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 4000 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Explicit        : 1494 (37.4%)
+# INFO:     - Suggestive      : 1319 (33.0%)
+# INFO:     - Clean           : 1052 (26.3%)
+# INFO:     - Unset           :  135 (3.4%)
+# INFO:   [Violence Axis]
+# INFO:     - None            : 2357 (58.9%)
+# INFO:     - Graphic         : 1406 (35.1%)
+# INFO:     - Unset           :  135 (3.4%)
+# INFO:     - Combat          :  102 (2.5%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Safe            : 2016 (50.4%)
+# INFO:     - Harassment      : 1828 (45.7%)
+# INFO:     - Unset           :  135 (3.4%)
+# INFO:     - Dangerous       :   21 (0.5%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Fantasy                : 1284 (32.1%)
+# INFO:   - Unset                  :  679 (17.0%)
+# INFO:   - Romance                :  592 (14.8%)
+# INFO:   - Drama                  :  334 (8.3%)
+# INFO:   - Slice of Life          :  321 (8.0%)
+# INFO:   - Sci-Fi                 :  311 (7.8%)
+# INFO:   - Action & Adventure     :  214 (5.3%)
+# INFO:   - Comedy                 :  198 (5.0%)
+# INFO:   - Mystery & Thriller     :   67 (1.7%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - [No Themes Assigned]       :  679 (17.0%)
+# INFO:   - power-dynamics             :  591 (14.8%)
+# INFO:   - power-imbalance            :  264 (6.6%)
+# INFO:   - vore                       :  202 (5.1%)
+# INFO:   - predation                  :  190 (4.8%)
+# INFO:   - body-horror                :  182 (4.5%)
+# INFO:   - size-difference            :  163 (4.1%)
+# INFO:   - erotica                    :  161 (4.0%)
+# INFO:   - submission                 :  156 (3.9%)
+# INFO:   - vulnerability              :  150 (3.8%)
+# INFO:   - dark-fantasy               :  133 (3.3%)
+# INFO:   - roleplay                   :  120 (3.0%)
+# INFO:   - emotional-vulnerability    :  119 (3.0%)
+# INFO:   - humiliation                :  118 (2.9%)
+# INFO:   - power-exchange             :  109 (2.7%)
+# INFO:   - intimacy                   :  108 (2.7%)
+# INFO:   - devotion                   :  106 (2.6%)
+# INFO:   - domesticity                :  104 (2.6%)
+# INFO:   - supernatural               :  103 (2.6%)
+# INFO:   - teasing                    :  102 (2.5%)
+# INFO:   - survival                   :  101 (2.5%)
+# INFO:   - bdsm                       :  100 (2.5%)
+# INFO:   - dominance-submission       :   96 (2.4%)
+# INFO:   - identity                   :   90 (2.2%)
+# INFO:   - moral-ambiguity            :   84 (2.1%)
+# INFO:   ... and 9611 other unique themes.
+# INFO: ------------------------------------------------------------
+# INFO: 💬 CONVERSATION TURN DISTRIBUTION
+# INFO:   Records Analyzed      : 4000
+# INFO:   Total Turns           : 179627
+# INFO:   Minimum Turns         : 2
+# INFO:   Maximum Turns         : 5238
+# INFO:   Average Turns         : 44.9
+# INFO:   Median Turns          : 11
+# INFO:   Turn Count Buckets
+# INFO:     1–10               : 1933 (48.3%)
+# INFO:     11–25              :  740 (18.5%)
+# INFO:     26–50              :  505 (12.6%)
+# INFO:     51–100             :  390 (9.8%)
+# INFO:     101–250            :  304 (7.6%)
+# INFO:     251–500            :   90 (2.2%)
+# INFO:     501+               :   38 (0.9%)
+# INFO: ============================================================

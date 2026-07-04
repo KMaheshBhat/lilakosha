@@ -58,6 +58,18 @@ class OpenAIInference(Inference):
             for message in messages
         ]
 
+        def close_objects(schema: dict) -> dict:
+            if isinstance(schema, dict):
+                if schema.get("type") == "object":
+                    schema.setdefault("additionalProperties", False)
+                for value in schema.values():
+                    close_objects(value)
+            elif isinstance(schema, list):
+                for item in schema:
+                    close_objects(item)
+            return schema
+
+        schema = close_objects(response_model.model_json_schema())
         request: dict[str, Any] = {
             "model": self._config.model,
             "messages": sdk_messages,
@@ -67,7 +79,7 @@ class OpenAIInference(Inference):
                 "json_schema": {
                     "name": response_model.__name__,
                     "strict": True,
-                    "schema": response_model.model_json_schema(),
+                    "schema": schema,
                 },
             },
             **options,
