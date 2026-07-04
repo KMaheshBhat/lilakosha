@@ -1,0 +1,116 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    # - "refine-characters"
+    - "refine-safety-dials"
+    # - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
+    gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+
+bindings:
+    # refine-characters:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 4096
+
+    refine-safety-dials:
+        service: kilo
+        temperature: 0.1
+        max_tokens: 2048
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+
+parameters:
+    start_uuid: 019f2ced-1ed1-7222-8392-55944719287f
+    stop_uuid: 019f2ced-a387-7703-b337-6c858cbf68ba
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Campaign:
+# Use Kilo quota on records 4001–5000 by for refine-safety-dials.
+# The 4001-5000 records have been ingested (20260704171000-ingest).
+# Specifying only 4001-5000 records using start and stop UUID range.
+# currently running pipelines are on previous range.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 5000
+# INFO: Healthy Records:         2587 (51.74%)
+# INFO: Defective Records:       2413
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 4318/5000 (86.36%)
+# INFO:    annotation          : 4318/5000 (86.36%)
+# INFO:    bot detail          : 4318/5000 (86.36%)
+# INFO:    user info           : 4318/5000 (86.36%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 3980/5000 (79.60%)
+# INFO:    annotation          : 3980/5000 (79.60%)
+# INFO:    sexual axis         : 3980/5000 (79.60%)
+# INFO:    toxicity axis       : 3980/5000 (79.60%)
+# INFO:    violence axis       : 3980/5000 (79.60%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 3987/5000 (79.74%)
+# INFO:    annotation          : 3987/5000 (79.74%)
+# INFO:    primary genre       : 3987/5000 (79.74%)
+# INFO:    themes              : 3987/5000 (79.74%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 2601/5000 (52.02%)
+# INFO:    annotation          : 2607/5000 (52.14%)
+# INFO:    prose               : 2601/5000 (52.02%)
+# INFO: ------------------------------------------------------------
+# Started around 2026-07-04 23:45:00 IST
