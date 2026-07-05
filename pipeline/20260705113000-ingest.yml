@@ -1,0 +1,50 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+pipeline:
+    - "ingest-pippa"
+    - "report-cdm-records"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    limit: 6000 # limit the number of samples to process, if empty, all would be processed
+
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260705113000-ingest.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['ingest-pippa', 'report-cdm-records']
+# INFO: Active Parameters: {'limit': 6000}
+# INFO: --- Executing Step: INGEST-PIPPA ---
+# INFO: Connecting to Hugging Face Dataset: PygmalionAI/PIPPA
+# INFO: Processing up to 6000 records against data layer target: /mnt/e/local/data/public/lilakosha/cdm/records
+# I00%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 6000/6000 [01:14<00:00, 80.49it/s]
+# INFO: ✅ Ingestion cycle tracking updated. Canvas objects written out to /mnt/e/local/data/public/lilakosha/cdm/records
+# INFO: --- Executing Step: REPORT-CDM-RECORDS ---
+# INFO: ============================================================
+# INFO: 📊 CDM RECORDS REPORT
+# INFO: ============================================================
+# INFO: Total number of records: 6000
+# INFO: Start UUID: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
+# INFO: ------------------------------------------------------------
+# INFO: UUID at position 1000: 019f1687-6559-7851-97ea-6073303a38cf
+# INFO: UUID at position 1001: 019f1907-d349-72b2-b8e7-46518f167960
+# INFO: UUID at position 2000: 019f1908-5062-79a2-9c46-5b5a77310bd4
+# INFO: UUID at position 2001: 019f20bc-8f89-7622-a8f1-b8b74ad66a3a
+# INFO: UUID at position 3000: 019f20bc-fd7a-7df0-ae78-89ac3f518304
+# INFO: UUID at position 3001: 019f285a-0f4a-76e1-bb9e-f552f2df230f
+# INFO: UUID at position 4000: 019f285a-7474-7280-8fb8-5a01df0ed18c
+# INFO: UUID at position 4001: 019f2ced-1ed1-7222-8392-55944719287f
+# INFO: UUID at position 5000: 019f2ced-a387-7703-b337-6c858cbf68ba
+# INFO: UUID at position 5001: 019f30d5-198c-7d10-9be2-3e2298b4b922
+# INFO: ------------------------------------------------------------
+# INFO: Stop UUID: 019f30d5-89fe-7021-b9bd-6eccdb8db1d4
+# INFO: ============================================================
