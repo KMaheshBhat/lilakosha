@@ -1,0 +1,138 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    # - "refine-characters"
+    # - "refine-safety-dials"
+    # - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
+    google-gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
+        requests_per_minute: 12
+        allows_think_control: false
+        allows_extra_body: false
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+
+bindings:
+    # refine-characters:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 4096
+
+    # refine-safety-dials:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    refine-grammar:
+        service: google-gemma
+        temperature: 0.0
+        max_tokens: 2048
+        max_inference_budget: 1200
+
+parameters:
+    start_uuid: 019f2ced-1ed1-7222-8392-55944719287f
+    stop_uuid: 019f2ced-a387-7703-b337-6c858cbf68ba
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Campaign:
+# Use Google Gemma4 31B on records 4001-5000 for refine-grammar
+# with today's budget cap (from Google AI Studio dashboard).
+# This will be the first run of Cloud inference providers with the
+# inference budget capping.  Tests with caps of "10" were successful
+# and the refine-grammar is turn idempotent.  So, this should give
+# some slack to local Gemma4 12B when it comes around.  This will
+# be the only cloud inference provider based run until we get the
+# full PIPPA records ingested with refine-character, refine-safety-dials,
+# refine-genre-theme done with other providers.  Then, the flows such
+# as this one can be queued up (using good ol' bash '&&' with the
+# quotas for the day).
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 6000
+# INFO: Healthy Records:         3159 (52.65%)
+# INFO: Defective Records:       2841
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 5972/6000 (99.53%)
+# INFO:    annotation          : 5972/6000 (99.53%)
+# INFO:    bot detail          : 5972/6000 (99.53%)
+# INFO:    user info           : 5972/6000 (99.53%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 5493/6000 (91.55%)
+# INFO:    annotation          : 5493/6000 (91.55%)
+# INFO:    sexual axis         : 5493/6000 (91.55%)
+# INFO:    toxicity axis       : 5493/6000 (91.55%)
+# INFO:    violence axis       : 5493/6000 (91.55%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 4994/6000 (83.23%)
+# INFO:    annotation          : 4994/6000 (83.23%)
+# INFO:    primary genre       : 4994/6000 (83.23%)
+# INFO:    themes              : 4994/6000 (83.23%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 3173/6000 (52.88%)
+# INFO:    annotation          : 3186/6000 (53.10%)
+# INFO:    prose               : 3173/6000 (52.88%)
+# INFO: ------------------------------------------------------------
+# Starting around 2026-07-05 23:40:00 IST.
