@@ -4,7 +4,7 @@ pipeline:
     - "refine-characters"
     - "refine-safety-dials"
     - "refine-genre-theme"
-    - "refine-grammar"
+    # - "refine-grammar"
 
 project:
     name: "LilaKosha"
@@ -39,11 +39,17 @@ services:
         api_key: "${GROQ_API_KEY}"
         model: "meta-llama/llama-4-scout-17b-16e-instruct"
         requests_per_minute: 3
-    gemini:
+    google-gemini:
         provider: openai-compatible
         base_url: https://generativelanguage.googleapis.com/v1beta/openai/
         api_key: "${GEMINI_API_KEY}"
         model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
         requests_per_minute: 12
     cerebras:
         provider: openai-compatible
@@ -54,67 +60,69 @@ services:
 
 bindings:
     refine-characters:
-        service: local
+        service: google-gemma
         temperature: 0.1
         max_tokens: 4096
 
     refine-safety-dials:
-        service: local
+        service: google-gemma
         temperature: 0.1
         max_tokens: 2048
 
     refine-genre-theme:
-        service: local
+        service: google-gemma
         temperature: 0.1
         max_tokens: 2048
 
-    refine-grammar:
-        service: local
-        temperature: 0.0
-        max_tokens: 2048
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
 
 parameters:
-    start_uuid: 019f285a-0f4a-76e1-bb9e-f552f2df230f
-    stop_uuid: 019f285a-7474-7280-8fb8-5a01df0ed18c
+    start_uuid: 019f2ced-1ed1-7222-8392-55944719287f
+    stop_uuid: 019f2ced-a387-7703-b337-6c858cbf68ba
 
 # ============================================================================
 # EXECUTION NOTES
 # ============================================================================
 # Campaign:
-# Use local Gemma4 on records 3001-4000 for a full sweep.
-# Previous local run on 2001-3000 - 20260703190000-refine
+# Use Google Gemma4 31B on records 4001-5000 for a full sweep.
+# Sweeping the range for refine-character, refine-safety-dials, and
+# refine-genre-theme from previous runs by other provider before
+# handing off to local Gemma4 (12B).
 # Overall status before starting.
 # INFO: ============================================================
 # INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
 # INFO: ============================================================
 # INFO: Total Records Evaluated: 6000
-# INFO: Healthy Records:         2977 (49.62%)
-# INFO: Defective Records:       3023
+# INFO: Healthy Records:         3087 (51.45%)
+# INFO: Defective Records:       2913
 # INFO: ============================================================
 # INFO: 📈 PIPELINE STAGE BREAKDOWN
 # INFO: ============================================================
 # INFO: refine-characters
-# INFO:    ✅ PASSED           : 5948/6000 (99.13%)
-# INFO:    annotation          : 5948/6000 (99.13%)
-# INFO:    bot detail          : 5948/6000 (99.13%)
-# INFO:    user info           : 5948/6000 (99.13%)
+# INFO:    ✅ PASSED           : 5963/6000 (99.38%)
+# INFO:    annotation          : 5963/6000 (99.38%)
+# INFO:    bot detail          : 5963/6000 (99.38%)
+# INFO:    user info           : 5963/6000 (99.38%)
 # INFO: ------------------------------------------------------------
 # INFO: refine-safety-dials
-# INFO:    ✅ PASSED           : 4968/6000 (82.80%)
-# INFO:    annotation          : 4968/6000 (82.80%)
-# INFO:    sexual axis         : 4968/6000 (82.80%)
-# INFO:    toxicity axis       : 4968/6000 (82.80%)
-# INFO:    violence axis       : 4968/6000 (82.80%)
+# INFO:    ✅ PASSED           : 5293/6000 (88.22%)
+# INFO:    annotation          : 5293/6000 (88.22%)
+# INFO:    sexual axis         : 5293/6000 (88.22%)
+# INFO:    toxicity axis       : 5293/6000 (88.22%)
+# INFO:    violence axis       : 5293/6000 (88.22%)
 # INFO: ------------------------------------------------------------
 # INFO: refine-genre-theme
-# INFO:    ✅ PASSED           : 4710/6000 (78.50%)
-# INFO:    annotation          : 4710/6000 (78.50%)
-# INFO:    primary genre       : 4710/6000 (78.50%)
-# INFO:    themes              : 4710/6000 (78.50%)
+# INFO:    ✅ PASSED           : 4954/6000 (82.57%)
+# INFO:    annotation          : 4954/6000 (82.57%)
+# INFO:    primary genre       : 4954/6000 (82.57%)
+# INFO:    themes              : 4954/6000 (82.57%)
 # INFO: ------------------------------------------------------------
 # INFO: refine-grammar
-# INFO:    ✅ PASSED           : 2991/6000 (49.85%)
-# INFO:    annotation          : 3000/6000 (50.00%)
-# INFO:    prose               : 2991/6000 (49.85%)
+# INFO:    ✅ PASSED           : 3101/6000 (51.68%)
+# INFO:    annotation          : 3113/6000 (51.88%)
+# INFO:    prose               : 3101/6000 (51.68%)
 # INFO: ------------------------------------------------------------
-# Started around 2026-07-05 17:30:00 IST
+# Started around 2026-07-05 21:30:00 IST
