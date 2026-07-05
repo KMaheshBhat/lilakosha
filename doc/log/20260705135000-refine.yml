@@ -121,3 +121,5 @@ parameters:
 # INFO:    prose               : 2868/6000 (47.80%)
 # INFO: ------------------------------------------------------------
 # Starting around 2026-07-05 13:50:00 IST
+# Checked around 2026-07-05 14:50:00 IST - quota ran out around
+# 5889/6000 and thus stopped it.
