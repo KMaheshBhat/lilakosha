@@ -1,0 +1,123 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    - "refine-characters"
+    # - "refine-safety-dials"
+    # - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
+    gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+
+bindings:
+    refine-characters:
+        service: gemini
+        temperature: 0.1
+        max_tokens: 4096
+
+    # refine-safety-dials:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+
+parameters:
+    start_uuid: 019f30d5-198c-7d10-9be2-3e2298b4b922
+    stop_uuid: 019f30d5-89fe-7021-b9bd-6eccdb8db1d4
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Campaign:
+# Use Gemini quota on records 5001–6000 by for refine-characters.
+# The 5001–6000 records have been ingested (20260705113000-ingest).
+# Specifying only 5001–6000 records using start and stop UUID range.
+# currently running pipelines are on previous range. The previous
+# 20260705113500-refine got about 300 done with Cerebras.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 6000
+# INFO: Healthy Records:         2854 (47.57%)
+# INFO: Defective Records:       3146
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 5344/6000 (89.07%)
+# INFO:    annotation          : 5344/6000 (89.07%)
+# INFO:    bot detail          : 5344/6000 (89.07%)
+# INFO:    user info           : 5344/6000 (89.07%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 4963/6000 (82.72%)
+# INFO:    annotation          : 4963/6000 (82.72%)
+# INFO:    sexual axis         : 4963/6000 (82.72%)
+# INFO:    toxicity axis       : 4963/6000 (82.72%)
+# INFO:    violence axis       : 4963/6000 (82.72%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 4343/6000 (72.38%)
+# INFO:    annotation          : 4343/6000 (72.38%)
+# INFO:    primary genre       : 4343/6000 (72.38%)
+# INFO:    themes              : 4343/6000 (72.38%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 2868/6000 (47.80%)
+# INFO:    annotation          : 2877/6000 (47.95%)
+# INFO:    prose               : 2868/6000 (47.80%)
+# INFO: ------------------------------------------------------------
+# Starting around 2026-07-05 13:50:00 IST
