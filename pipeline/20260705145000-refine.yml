@@ -54,7 +54,7 @@ services:
 
 bindings:
     refine-characters:
-        service: gemini
+        service: groq
         temperature: 0.1
         max_tokens: 4096
 
@@ -81,48 +81,12 @@ parameters:
 # EXECUTION NOTES
 # ============================================================================
 # Campaign:
-# Use Gemini quota on records 5001–6000 by for refine-characters.
+# Use Groq quota on records 5001–6000 by for refine-characters.
 # The 5001–6000 records have been ingested (20260705113000-ingest).
 # Specifying only 5001–6000 records using start and stop UUID range.
 # currently running pipelines are on previous range. The previous
-# 20260705113500-refine got about 300 done with Cerebras.
+# 20260705135000-refine got about 800(+500) done with Gemini.
 # Overall status before starting.
-# INFO: ============================================================
-# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
-# INFO: ============================================================
-# INFO: Total Records Evaluated: 6000
-# INFO: Healthy Records:         2854 (47.57%)
-# INFO: Defective Records:       3146
-# INFO: ============================================================
-# INFO: 📈 PIPELINE STAGE BREAKDOWN
-# INFO: ============================================================
-# INFO: refine-characters
-# INFO:    ✅ PASSED           : 5344/6000 (89.07%)
-# INFO:    annotation          : 5344/6000 (89.07%)
-# INFO:    bot detail          : 5344/6000 (89.07%)
-# INFO:    user info           : 5344/6000 (89.07%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-safety-dials
-# INFO:    ✅ PASSED           : 4963/6000 (82.72%)
-# INFO:    annotation          : 4963/6000 (82.72%)
-# INFO:    sexual axis         : 4963/6000 (82.72%)
-# INFO:    toxicity axis       : 4963/6000 (82.72%)
-# INFO:    violence axis       : 4963/6000 (82.72%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-genre-theme
-# INFO:    ✅ PASSED           : 4343/6000 (72.38%)
-# INFO:    annotation          : 4343/6000 (72.38%)
-# INFO:    primary genre       : 4343/6000 (72.38%)
-# INFO:    themes              : 4343/6000 (72.38%)
-# INFO: ------------------------------------------------------------
-# INFO: refine-grammar
-# INFO:    ✅ PASSED           : 2868/6000 (47.80%)
-# INFO:    annotation          : 2877/6000 (47.95%)
-# INFO:    prose               : 2868/6000 (47.80%)
-# INFO: ------------------------------------------------------------
-# Starting around 2026-07-05 13:50:00 IST
-# Checked around 2026-07-05 14:50:00 IST - quota ran out around
-# 5889/6000 and thus stopped it.
 # INFO: ============================================================
 # INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
 # INFO: ============================================================
