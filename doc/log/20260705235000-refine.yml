@@ -136,3 +136,5 @@ parameters:
 # INFO:    prose               : 3173/6000 (52.88%)
 # INFO: ------------------------------------------------------------
 # Starting around 2026-07-05 23:40:00 IST.
+# Checking around 2026-07-06 07:15:00 IST - was still going on
+# but had been in a quota exhaustion loop.
