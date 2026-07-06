@@ -84,6 +84,9 @@ def run(config: dict) -> None:
         "refine-genre-theme": defaultdict(int),
         "refine-grammar": defaultdict(int),
     }
+    # Grammar conversion tracking: count turns with original_prose set
+    total_turns = 0
+    converted_turns = 0  # turns where original_prose is not None (grammar-passed)
 
     if audit_only:
         logger.info(
@@ -109,6 +112,15 @@ def run(config: dict) -> None:
             meta = session.meta
             items = session.items or []
             annotations = meta.annotations or []
+
+            # Count turns for grammar conversion tracking
+            turn_items = [item for item in items if item.kind == "turn"]
+            total_turns += len(turn_items)
+            converted_turns += sum(
+                1
+                for item in turn_items
+                if getattr(item, "original_prose", None) is not None
+            )
 
             # Extract kinds from Pydantic Annotation objects safely
             annotation_kinds = {
@@ -252,6 +264,15 @@ def run(config: dict) -> None:
     logger.info(f"Defective Records:       {len(failure_registry)}")
     logger.info("=" * 60)
 
+    conversion_percentage = (
+        (converted_turns / total_turns * 100) if total_turns > 0 else 0
+    )
+    remaining_turns = total_turns - converted_turns
+
+    # Conservative planning estimate: ~5 seconds per turn.
+    estimated_seconds = remaining_turns * 5
+    estimated_hours = estimated_seconds / 3600
+
     if report_breakdown:
         logger.info("📈 PIPELINE STAGE BREAKDOWN")
         logger.info("=" * 60)
@@ -273,6 +294,18 @@ def run(config: dict) -> None:
                     f"({successes / total_records * 100:.2f}%)"
                 )
             logger.info("-" * 60)
+
+        logger.info("📝 Grammar Conversion Summary")
+        logger.info(f"   Total Turns             : {total_turns}")
+        logger.info(
+            f"   Turns Converted         : {converted_turns} "
+            f"({conversion_percentage:.2f}%)"
+        )
+        logger.info(f"   Turns Remaining         : {remaining_turns}")
+        logger.info(
+            f"   Estimated Local Compute : {estimated_hours:.1f} hours (@5s/turn)"
+        )
+        logger.info("=" * 60)
 
     if failure_registry:
         if hide_anomaly_details:
