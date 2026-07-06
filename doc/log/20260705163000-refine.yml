@@ -1,0 +1,158 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    # - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
+    gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+
+bindings:
+    refine-characters:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 4096
+
+    refine-safety-dials:
+        service: openrouter
+        temperature: 0.1
+        max_tokens: 2048
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+
+parameters:
+    start_uuid: 019f30d5-198c-7d10-9be2-3e2298b4b922
+    stop_uuid: 019f30d5-89fe-7021-b9bd-6eccdb8db1d4
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Campaign:
+# Use Groq quota on records 5001–6000 by for refine-safety-dials
+# (and few stragglers from refine-characters from the Cerebras+
+# Gemini+Grok run).
+# The 5001–6000 records have been ingested (20260705113000-ingest).
+# Specifying only 5001–6000 records using start and stop UUID range.
+# currently running pipelines are on previous range.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 6000
+# INFO: Healthy Records:         2948 (49.13%)
+# INFO: Defective Records:       3052
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 5903/6000 (98.38%)
+# INFO:    annotation          : 5903/6000 (98.38%)
+# INFO:    bot detail          : 5903/6000 (98.38%)
+# INFO:    user info           : 5903/6000 (98.38%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 4963/6000 (82.72%)
+# INFO:    annotation          : 4963/6000 (82.72%)
+# INFO:    sexual axis         : 4963/6000 (82.72%)
+# INFO:    toxicity axis       : 4963/6000 (82.72%)
+# INFO:    violence axis       : 4963/6000 (82.72%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 4619/6000 (76.98%)
+# INFO:    annotation          : 4619/6000 (76.98%)
+# INFO:    primary genre       : 4619/6000 (76.98%)
+# INFO:    themes              : 4619/6000 (76.98%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 2962/6000 (49.37%)
+# INFO:    annotation          : 2972/6000 (49.53%)
+# INFO:    prose               : 2962/6000 (49.37%)
+# INFO: ------------------------------------------------------------
+# Checking around 2026-07-06 07:15:00 IST - was completed
+# but had been in a quota exhaustion around 5871/6000.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 6000
+# INFO: Healthy Records:         3386 (56.43%)
+# INFO: Defective Records:       2614
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 5972/6000 (99.53%)
+# INFO:    annotation          : 5972/6000 (99.53%)
+# INFO:    bot detail          : 5972/6000 (99.53%)
+# INFO:    user info           : 5972/6000 (99.53%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 5719/6000 (95.32%)
+# INFO:    annotation          : 5719/6000 (95.32%)
+# INFO:    sexual axis         : 5719/6000 (95.32%)
+# INFO:    toxicity axis       : 5719/6000 (95.32%)
+# INFO:    violence axis       : 5719/6000 (95.32%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 4994/6000 (83.23%)
+# INFO:    annotation          : 4994/6000 (83.23%)
+# INFO:    primary genre       : 4994/6000 (83.23%)
+# INFO:    themes              : 4994/6000 (83.23%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 3402/6000 (56.70%)
+# INFO:    annotation          : 3439/6000 (57.32%)
+# INFO:    prose               : 3402/6000 (56.70%)
+# INFO: ------------------------------------------------------------
