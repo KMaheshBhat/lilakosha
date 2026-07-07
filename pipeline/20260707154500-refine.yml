@@ -86,7 +86,6 @@ bindings:
         service: local
         temperature: 0.0
         max_tokens: 2048
-        max_inference_budget: 1200
 
 parameters:
     start_uuid: 019f2ced-1ed1-7222-8392-55944719287f
