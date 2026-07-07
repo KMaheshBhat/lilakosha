@@ -118,3 +118,45 @@ parameters:
 # INFO:    prose               : 2991/6000 (49.85%)
 # INFO: ------------------------------------------------------------
 # Started around 2026-07-05 17:30:00 IST
+# the workstation had stopped sometime overnight.
+# Status around 2026-07-07 10:45:00 IST
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 7000
+# INFO: Healthy Records:         3847 (54.96%)
+# INFO: Defective Records:       3153
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 6590/7000 (94.14%)
+# INFO:    annotation          : 6590/7000 (94.14%)
+# INFO:    bot detail          : 6590/7000 (94.14%)
+# INFO:    user info           : 6590/7000 (94.14%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 5996/7000 (85.66%)
+# INFO:    annotation          : 5996/7000 (85.66%)
+# INFO:    sexual axis         : 5996/7000 (85.66%)
+# INFO:    toxicity axis       : 5996/7000 (85.66%)
+# INFO:    violence axis       : 5996/7000 (85.66%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 5980/7000 (85.43%)
+# INFO:    annotation          : 5980/7000 (85.43%)
+# INFO:    primary genre       : 5980/7000 (85.43%)
+# INFO:    themes              : 5980/7000 (85.43%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 3863/7000 (55.19%)
+# INFO:    annotation          : 3900/7000 (55.71%)
+# INFO:    prose               : 3863/7000 (55.19%)
+# INFO: ------------------------------------------------------------
+# INFO: 📝 Grammar Conversion Summary
+# INFO:    Total Turns             : 324639
+# INFO:    Turns Converted         : 175057 (53.92%)
+# INFO:    Turns Remaining         : 149582
+# INFO:    Estimated Local Compute : 207.8 hours (@5s/turn)
+# INFO: ============================================================
+# restarting at 2026-07-07 10:45:00 IST
