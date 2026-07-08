@@ -1,0 +1,139 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    - "refine-characters"
+    - "refine-safety-dials"
+    - "refine-genre-theme"
+    # - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
+    google-gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
+        requests_per_minute: 12
+        allows_think_control: false
+        allows_extra_body: false
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+    nvidia:
+        provider: openai-compatible
+        base_url: https://integrate.api.nvidia.com/v1
+        api_key: "${NVIDIA_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        request_per_minute: 35
+
+bindings:
+    refine-characters:
+        service: nvidia
+        temperature: 0.1
+        max_tokens: 4096
+
+    refine-safety-dials:
+        service: nvidia
+        temperature: 0.1
+        max_tokens: 2048
+
+    refine-genre-theme:
+        service: nvidia
+        temperature: 0.1
+        max_tokens: 2048
+
+    # refine-grammar:
+    #     service: local
+    #     temperature: 0.0
+    #     max_tokens: 2048
+
+parameters:
+    start_uuid: 019f4021-a402-7951-8d99-ce193b3f2cbf
+    stop_uuid: 019f4022-7a5f-7f42-89d9-4331d8d61035
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Campaign:
+# Use Nvidia Nemotron on records 7001-8000 for refine-characters,
+# refine-safety-dials, refine-genre-theme.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 8000
+# INFO: Healthy Records:         4481 (56.01%)
+# INFO: Defective Records:       3519
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 6983/8000 (87.29%)
+# INFO:    annotation          : 6983/8000 (87.29%)
+# INFO:    bot detail          : 6983/8000 (87.29%)
+# INFO:    user info           : 6983/8000 (87.29%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 6997/8000 (87.46%)
+# INFO:    annotation          : 6997/8000 (87.46%)
+# INFO:    sexual axis         : 6997/8000 (87.46%)
+# INFO:    toxicity axis       : 6997/8000 (87.46%)
+# INFO:    violence axis       : 6997/8000 (87.46%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 6985/8000 (87.31%)
+# INFO:    annotation          : 6985/8000 (87.31%)
+# INFO:    primary genre       : 6985/8000 (87.31%)
+# INFO:    themes              : 6985/8000 (87.31%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 4495/8000 (56.19%)
+# INFO:    annotation          : 4513/8000 (56.41%)
+# INFO:    prose               : 4495/8000 (56.19%)
+# INFO: ------------------------------------------------------------
+# INFO: 📝 Grammar Conversion Summary
+# INFO:    Total Turns             : 375407
+# INFO:    Turns Converted         : 201926 (53.79%)
+# INFO:    Turns Remaining         : 173481
+# INFO:    Estimated Local Compute : 240.9 hours (@5s/turn)
+# INFO: ============================================================
