@@ -150,7 +150,7 @@ def run(config: dict) -> None:
                 kind="character",
                 subkind="info",
                 entity_id=str(bot_id),
-                content=raw_desc.strip(),
+                content=str(raw_desc.strip()),
             )
             session_trace.items.append(character_info)
 
@@ -162,7 +162,7 @@ def run(config: dict) -> None:
             turn_obj = TurnItem(
                 kind="turn",
                 actor_id=actor_id,
-                prose=raw_message.strip(),
+                prose=str(raw_message.strip()),
             )
             session_trace.items.append(turn_obj)
 
