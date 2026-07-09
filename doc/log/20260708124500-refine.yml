@@ -180,3 +180,49 @@ parameters:
 # INFO:    Estimated Local Compute : 214.6 hours (@5s/turn)
 # INFO: ============================================================
 # Restarting around 2026-07-09 09:30:00 IST
+# Checked around 2026-07-09 12:00:00 IST
+# Resource degradation by NVIDIA Provider
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 8000
+# INFO: Healthy Records:         5053 (63.16%)
+# INFO: Defective Records:       2947
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 7983/8000 (99.79%)
+# INFO:    annotation          : 7983/8000 (99.79%)
+# INFO:    bot detail          : 7983/8000 (99.79%)
+# INFO:    user info           : 7983/8000 (99.79%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 7998/8000 (99.98%)
+# INFO:    annotation          : 7998/8000 (99.98%)
+# INFO:    sexual axis         : 7998/8000 (99.98%)
+# INFO:    toxicity axis       : 7998/8000 (99.98%)
+# INFO:    violence axis       : 7998/8000 (99.98%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 7404/8000 (92.55%)
+# INFO:    annotation          : 7404/8000 (92.55%)
+# INFO:    primary genre       : 7404/8000 (92.55%)
+# INFO:    themes              : 7404/8000 (92.55%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 5067/8000 (63.34%)
+# INFO:    annotation          : 5087/8000 (63.59%)
+# INFO:    prose               : 5067/8000 (63.34%)
+# INFO: ------------------------------------------------------------
+# INFO: 📝 Grammar Conversion Summary
+# INFO:    Total Turns             : 375407
+# INFO:    Turns Converted         : 223315 (59.49%)
+# INFO:    Turns Remaining         : 152092
+# INFO:    Estimated Local Compute : 211.2 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# Checking couple of times till 2026-07-09 13:45:00 IST and the
+# NVDIA provider is still having issues.  Closing this pipeline and
+# starting a new one with Kilo.
