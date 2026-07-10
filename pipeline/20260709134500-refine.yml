@@ -68,17 +68,17 @@ services:
 
 bindings:
     refine-characters:
-        service: kilo
+        service: nvidia
         temperature: 0.1
         max_tokens: 4096
 
     refine-safety-dials:
-        service: kilo
+        service: nvidia
         temperature: 0.1
         max_tokens: 2048
 
     refine-genre-theme:
-        service: kilo
+        service: nvidia
         temperature: 0.1
         max_tokens: 2048
 
@@ -142,3 +142,47 @@ parameters:
 # I think Kilo routes to NVIDIA provider itself and looks like
 # has degraded now.
 # Restarted around 2026-07-09 19:30:00 IST
+# Checked around 2026-07-09 20:15:00 IST - model performance degraded
+# Had processed to around 7597/8000 on refine-genre-theme
+# Restarted around 2026-07-10 08:00:00 IST
+# Seems to be working now.  Swapping to NVIDIA provider and restarting.
+# Current status:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 8000
+# INFO: Healthy Records:         5547 (69.34%)
+# INFO: Defective Records:       2453
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 7983/8000 (99.79%)
+# INFO:    annotation          : 7983/8000 (99.79%)
+# INFO:    bot detail          : 7983/8000 (99.79%)
+# INFO:    user info           : 7983/8000 (99.79%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 7998/8000 (99.98%)
+# INFO:    annotation          : 7998/8000 (99.98%)
+# INFO:    sexual axis         : 7998/8000 (99.98%)
+# INFO:    toxicity axis       : 7998/8000 (99.98%)
+# INFO:    violence axis       : 7998/8000 (99.98%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 7601/8000 (95.01%)
+# INFO:    annotation          : 7601/8000 (95.01%)
+# INFO:    primary genre       : 7601/8000 (95.01%)
+# INFO:    themes              : 7601/8000 (95.01%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 5561/8000 (69.51%)
+# INFO:    annotation          : 5582/8000 (69.77%)
+# INFO:    prose               : 5561/8000 (69.51%)
+# INFO: ------------------------------------------------------------
+# INFO: 📝 Grammar Conversion Summary
+# INFO:    Total Turns             : 375407
+# INFO:    Turns Converted         : 247180 (65.84%)
+# INFO:    Turns Remaining         : 128227
+# INFO:    Estimated Local Compute : 178.1 hours (@5s/turn)
+# INFO: ============================================================
