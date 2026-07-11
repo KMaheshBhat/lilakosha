@@ -1,164 +1,376 @@
-# Project LilaKosha Common Data Model (CDM) Specification
+# Project LilaKosha Common Document Model (CDM) Specification
 
-The **Common Data Model (CDM)** is the foundational, type-safe data schema utilized by the `ingest-pippa`, `refine-*`, and `scalpel-*` pipeline stages. It enforces an orchestration-aware format that translates flat interaction data from multiple source environments into structured, standalone `{UUIDv7}.json` documents representing isolated transaction histories.
+The **Common Document Model (CDM)** is the foundational storage, interchange, and enrichment schema used throughout Project LilaKosha.
 
-## Technical Architecture & Validation Layer
+The CDM serves as the canonical representation for all processed artifacts flowing through ingestion, refinement, reporting, and future training pipelines. Every record stored within the `cdm/records/` repository is represented as a standalone `Document` object serialized to JSON.
 
-The schema is built and programmatically validated via Pydantic using a discriminated union topology. This allows highly specialized narrative line items to sit within a sequential, chronological flat array (`items`), preserving order of events while exposing distinct metadata properties.
+The model is intentionally document-oriented rather than conversation-oriented. While conversational datasets such as PIPPA remain a primary ingestion source, the CDM is designed to support a broader range of narrative, literary, analytical, and synthetic content forms.
 
+## Design Goals
+
+The CDM was designed around several core principles:
+
+* **Document-Oriented Storage** – Every artifact is represented as a standalone document with stable identity.
+* **Flat Addressable Structure** – All content elements are independently addressable through deterministic item identifiers.
+* **Identity Preservation** – Character and actor identities remain stable throughout enrichment and transformation passes.
+* **Extensible Semantic Layers** – New classifications, annotations, and evaluations can be added without schema proliferation.
+* **Pipeline Compatibility** – Refinement, reporting, and training pipelines operate against a common structural representation.
+* **Human Operability** – Records remain readable and inspectable without specialized tooling.
+
+## Architectural Overview
+
+The CDM uses a discriminated-union architecture implemented through Pydantic.
+
+Each document consists of two major sections:
+
+```text
+Document (kind: "document")
+├── id
+├── meta: DocumentMeta
+│   ├── identities
+│   ├── annotations
+│   ├── safety classifications
+│   ├── genre classifications
+│   ├── operational metadata
+│   └── materialized statistics
+└── items: List[DocumentItem]
+    ├── WorldItem
+    ├── CharacterItem
+    ├── SummaryItem
+    ├── NarrativeItem
+    ├── TurnItem
+    ├── CategorizationItem
+    └── SequenceItem
 ```
-Session (kind: "session")
-├── meta: SessionMeta
-│    ├── identities: List[CharacterIdentity] [Sealed Registry]
-│    ├── sexual_axis / violence_axis / toxicity_axis [Safety Scales]
-│    └── primary_genre / themes / crpo_signals [Creative Labels]
-└── items: List[DiscriminatedItem] (Chronological Stream)
-├── WorldItem     (kind: "world")
-├── CharacterItem (kind: "character")
-├── SummaryItem   (kind: "summary")
-└── TurnItem      (kind: "turn")
+
+The `items` collection is intentionally maintained as a flat chronological structure rather than a nested hierarchy. This simplifies traversal, enrichment, serialization, and future distributed processing.
+
+## Identity Registry
+
+Each document contains an authoritative identity registry.
+
+```text
+Document
+└── meta
+    └── identities
 ```
 
-## Enumeration Registers
+This registry defines every actor referenced throughout the document and serves as the canonical source of truth for names, pronouns, and identity metadata.
 
-To maintain tight categorization bounds for downstream fine-tuning, the refinement engine strictly maps metrics to these standardized string scales:
+Downstream grammar normalization, narrative rewriting, summarization, and future training workloads rely on this registry to prevent semantic drift.
 
-### 1. Safety & Content Dials
+### CharacterIdentity
 
-* **`SexualScale`** (`meta.sexual_axis`):
-  * `"Clean"` – Content contains no overt sexual references or suggestive interplay.
-  * `"Suggestive"` – Explicit text is absent but dialogue includes flirtation, double entendres, or romantic tension.
-  * `"Explicit"` – Content contains graphic or unfiltered depictions of sexual acts.
-* **`ViolenceScale`** (`meta.violence_axis`):
-  * `"None"` – No physical altercations or harm occur.
-  * `"Combat"` – Standard action sequences, tactical skirmishes, and stylized fantasy conflicts.
-  * `"Graphic"` – Unfiltered, visceral, or lethal physical consequences are described.
-* **`ToxicityScale`** (`meta.toxicity_axis`):
-  * `"Safe"` – Hostile linguistic markers are absent.
-  * `"Harassment"` – Interactions include directed emotional cruelty, bullying, or persistent degradation.
-  * `"Dangerous"` – Depicts extreme non-fictional harms or actionable real-world threats.
+| Field                  | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `entity_id`            | Stable semantic identifier within the document                |
+| `name`                 | Canonical display name                                        |
+| `gender`               | `male`, `female`, `neutral`, or `unknown`                     |
+| `pronouns`             | Structured pronoun mapping                                    |
+| `is_player_controlled` | Indicates whether the identity represents a human participant |
 
-### 2. Primary Classification
-
-* **`MainGenre`** (`meta.primary_genre`):
-  * `"Fantasy"`, `"Sci-Fi"`, `"Romance"`, `"Slice of Life"`, `"Action & Adventure"`, `"Mystery & Thriller"`, `"Comedy"`, `"Drama"`
-
-## Data Structure Registries
-
-### Character Identity Object
-
-The metadata block maintains an authoritative actor registry. Sealing these identities blocks downstream linguistic drift during zero-reasoning grammar normalization.
-
-* `entity_id` (String): Unique semantic key across this trace (e.g., `"user"`, `"bot_001"`).
-* `name` (String): Clean proper name used for third-person text generation and narrative grounding.
-* `gender` (Literal): `"male" | "female" | "neutral" | "unknown"`
-* `pronouns` (Object): Structured mappings containing `subjective` (e.g., `"she"`), `objective` (e.g., `"her"`), and `possessive` (e.g., `"hers"`).
-* `is_player_controlled` (Boolean): `True` if entity represents a human operator; `False` for NPCs, companion bots, or novel characters.
-
-## Discriminated Line Items Matrix
-
-Every object residing within the top-level `items` list must explicitly include a valid `kind` parameter to anchor the Pydantic type validator.
-
-| **Kind** | **Subkind Options** | **Properties** | **Narrative Intent / Execution Context** |
-| :--- | :--- | :--- | :--- |
-| **`world`** | `"info"` \| `"detail"` | `content` (str) | **Permanent Grounding**: Global rules, environmental laws (`info`), or dynamic local scene items (`detail`). |
-| **`character`** | `"info"` \| `"detail"` | `entity_id` (str)<br>`content` (str)<br>`reasoning` (Optional[str]) | **Behavioral Tracking**: Links to identity registry. Tracks core sheets (`info`) or dynamic state shifts like health or evolving distrust (`detail`). |
-| **`summary`** | `"pre"` \| `"scenario"` \| `"post"` | `content` (str) | **Recap-Augmentation**: Truth anchors for long-form context retention. Maps historical past (`pre`), immediate localized conflict (`scenario`), or immediate prior results (`post`). |
-| **`turn`** | *(null)* | `actor_id` (str)<br>`thought` (Optional[str])<br>`prose` (str)<br>`prose_revision_comments` (Optional[str])<br>`original_prose` (Optional[str]) | **Linguistic Evidence**: Active character turn. Stores standard thoughts, current output prose, revision notes, and structural rollback caching (`original_prose`). |
-
-## Programmatic JSON Record Layout
-
-Below is an example of an instantiated and fully-enriched `session` record. This represents a "ripened" state file saved under `cdm/records/{UUIDv7}.json`, combining baseline source details with multi-model enrichment properties.
+Example:
 
 ```json
 {
-  "id": "00000000-0000-7000-8000-000000000000",
-  "kind": "session",
+  "entity_id": "user",
+  "name": "Traveler",
+  "gender": "neutral",
+  "pronouns": {
+    "subjective": "they",
+    "objective": "them",
+    "possessive": "their"
+  },
+  "is_player_controlled": true
+}
+```
+
+## Metadata Layer
+
+The `meta` section contains document-level attributes that apply to the record as a whole.
+
+### Core Metadata
+
+| Field                 | Description                                |
+| --------------------- | ------------------------------------------ |
+| `source_identity`     | Origin system or ingestion source          |
+| `source_record`       | Optional source-specific metadata          |
+| `bot_id`              | Source platform character identifier       |
+| `bot_name`            | Source platform character name             |
+| `ingestion_timestamp` | Original ingestion timestamp               |
+| `healthy`             | Pipeline health state indicator            |
+| `crpo_signals`        | Training and ranking signals               |
+| `annotations`         | Pipeline-generated operational annotations |
+
+### Classification Metadata
+
+The current model materializes several commonly-used classifications directly within metadata:
+
+| Field           |
+| --------------- |
+| `sexual_axis`   |
+| `violence_axis` |
+| `toxicity_axis` |
+| `primary_genre` |
+| `themes`        |
+
+These fields are additionally mirrored into structural `CategorizationItem` records to support future migration toward fully itemized semantic classification.
+
+### Materialized Statistics
+
+The `stats` field stores precomputed metrics to avoid repeated aggregate scans across large datasets.
+
+Typical metrics include:
+
+* Turn counts
+* Item counts
+* Character counts
+* Word counts
+* Future operational metrics
+
+## Document Item Types
+
+Every entry in the `items` collection must declare a valid `kind` discriminator.
+
+### WorldItem
+
+Represents environmental, spatial, setting, or lore information.
+
+```json
+{
+  "id": "world-000001",
+  "kind": "world",
+  "content": "The city is protected by a magical barrier."
+}
+```
+
+### CharacterItem
+
+Represents extracted character knowledge, behavioral observations, or evolving state information.
+
+```json
+{
+  "id": "character-000001",
+  "kind": "character",
+  "entity_id": "bot_001",
+  "content": "The character distrusts authority figures."
+}
+```
+
+### SummaryItem
+
+Represents synthesized recap material or compressed context.
+
+```json
+{
+  "id": "summary-000001",
+  "kind": "summary",
+  "content": "The protagonists escaped the fortress."
+}
+```
+
+### NarrativeItem
+
+Represents generic long-form prose content.
+
+This type enables storage of literary, narrative, or non-conversational datasets without forcing dialogue semantics.
+
+```json
+{
+  "id": "narrative-000001",
+  "kind": "narrative",
+  "prose": "The storm arrived shortly after sunset."
+}
+```
+
+### TurnItem
+
+A specialization of `NarrativeItem` representing actor-attributed conversational content.
+
+```json
+{
+  "id": "turn-000001",
+  "kind": "turn",
+  "actor_id": "user",
+  "thought": "",
+  "prose": "We should leave before nightfall."
+}
+```
+
+Additional fields support grammar refinement lineage tracking:
+
+| Field                     | Purpose                                    |
+| ------------------------- | ------------------------------------------ |
+| `original_prose`          | Original source text                       |
+| `prose_revision_comments` | Revision rationale                         |
+| `thought`                 | Internal reasoning or side-channel content |
+
+### CategorizationItem
+
+Represents a structured semantic classification attached to the document.
+
+This mechanism replaces continual schema expansion whenever new evaluation dimensions are introduced.
+
+Examples include:
+
+* Safety classifications
+* Genre assignments
+* Theme extraction
+* Quality scores
+* Evaluation labels
+* Future ranking metrics
+
+```json
+{
+  "id": "categorization-000001",
+  "kind": "categorization",
+  "category": "genre",
+  "value": "Fantasy"
+}
+```
+
+### SequenceItem
+
+Represents ordered relationships between existing items.
+
+This provides lightweight structural grouping without introducing complex graph hierarchies.
+
+```json
+{
+  "id": "sequence-000001",
+  "kind": "sequence",
+  "item_ids": [
+    "turn-000001",
+    "turn-000002",
+    "turn-000003"
+  ]
+}
+```
+
+## Classification Enumerations
+
+### SexualScale
+
+| Value        | Meaning                         |
+| ------------ | ------------------------------- |
+| `Clean`      | No overt sexual content         |
+| `Suggestive` | Romantic or suggestive material |
+| `Explicit`   | Graphic sexual content          |
+
+### ViolenceScale
+
+| Value     | Meaning                   |
+| --------- | ------------------------- |
+| `None`    | No meaningful violence    |
+| `Combat`  | Standard action or combat |
+| `Graphic` | Graphic injury or harm    |
+
+### ToxicityScale
+
+| Value        | Meaning                           |
+| ------------ | --------------------------------- |
+| `Safe`       | No significant hostile language   |
+| `Harassment` | Degrading or abusive interactions |
+| `Dangerous`  | Extreme harmful content           |
+
+### MainGenre
+
+* Fantasy
+* Sci-Fi
+* Romance
+* Slice of Life
+* Action & Adventure
+* Mystery & Thriller
+* Comedy
+* Drama
+
+## Example Document
+
+```json
+{
+  "id": "019f0000-0000-7000-8000-000000000000",
+  "kind": "document",
   "meta": {
     "source_identity": "PIPPA-INGEST",
-    "bot_id": "1lYx-3u21uWsKPI1ghqWrOTdIvU6T-CEXTXy0arv46A",
-    "bot_name": "Kamisato Ayaka",
-    "ingestion_timestamp": "2026-06-16T20:30:00Z",
-    "sexual_axis": "Clean",
-    "violence_axis": "None",
-    "toxicity_axis": "Safe",
-    "primary_genre": "Drama",
+    "bot_name": "Akane",
+    "sexual_axis": "Suggestive",
+    "primary_genre": "Fantasy",
     "themes": [
-      "maid-mistress-dynamics",
-      "identity-swap"
-    ],
-    "crpo_signals": {
-      "novelty": 0.85,
-      "surprise": 0.92,
-      "diversity": 0.78
-    },
-    "identities": [
-      {
-        "entity_id": "user",
-        "name": "Traveler",
-        "gender": "neutral",
-        "pronouns": {
-          "subjective": "they",
-          "objective": "them",
-          "possessive": "their"
-        },
-        "is_player_controlled": true
-      },
-      {
-        "entity_id": "bot_ayaka_01",
-        "name": "Akane",
-        "gender": "female",
-        "pronouns": {
-          "subjective": "she",
-          "objective": "her",
-          "possessive": "hers"
-        },
-        "is_player_controlled": false
-      }
-    ],
-    "annotations": [
-      {
-        "kind": "scalpel-tracking",
-        "content": "Surgical range filter applied during iteration pass.",
-        "reasoning": "Targeted recovery execution verified."
-      }
+      "identity",
+      "power-dynamics"
     ]
   },
   "items": [
     {
+      "id": "world-000001",
       "kind": "world",
-      "subkind": "info",
-      "content": "The Yashiro Commission headquarters, featuring traditional tatami structures and sealed security perimeters."
+      "content": "The Yashiro Commission controls regional governance."
     },
     {
+      "id": "character-000001",
       "kind": "character",
-      "subkind": "info",
-      "entity_id": "bot_ayaka_01",
-      "content": "Akane: A maid who has successfully swapped bodies with her mistress Ayaka using a wish-granting ring, seeking zero consequences.",
-      "reasoning": "Synthesized directly from raw bot greeting instructions."
+      "entity_id": "bot_akane",
+      "content": "Akane seeks to preserve her stolen identity."
     },
     {
+      "id": "summary-000001",
       "kind": "summary",
-      "subkind": "scenario",
-      "content": "Akane is gloating about her new identity while testing the bounds of her user relationship."
+      "content": "Akane has successfully displaced her former mistress."
     },
     {
+      "id": "categorization-000001",
+      "kind": "categorization",
+      "category": "genre",
+      "value": "Fantasy"
+    },
+    {
+      "id": "categorization-000002",
+      "kind": "categorization",
+      "category": "theme",
+      "value": [
+        "identity",
+        "power-dynamics"
+      ]
+    },
+    {
+      "id": "turn-000001",
       "kind": "turn",
       "actor_id": "user",
       "thought": "",
-      "prose": "Don't be like that. We need to evaluate how to stabilize the arrangement.",
-      "prose_revision_comments": null,
-      "original_prose": null
+      "prose": "What happens if the truth comes out?"
     },
     {
+      "id": "turn-000002",
       "kind": "turn",
-      "actor_id": "bot_ayaka_01",
-      "thought": "The user remains protective of Ayaka's original state, but the power balance has altered permanently.",
-      "prose": "What do you mean 'don't be like that'? I am being completely realistic! I had every single right to take advantage of her naivety, just like anyone else would.",
-      "prose_revision_comments": "Converted narrative segments to 3rd-person past tense; retained conversational dialogue tracks.",
-      "original_prose": "What do you mean \"dont be like that\"? I am being realistic! I had all the right to take advantage of her naivity and greed like any person would!"
+      "actor_id": "bot_akane",
+      "thought": "The user still believes restitution is possible.",
+      "prose": "Then everyone loses."
+    },
+    {
+      "id": "sequence-000001",
+      "kind": "sequence",
+      "item_ids": [
+        "turn-000001",
+        "turn-000002"
+      ]
     }
   ]
 }
-
 ```
+
+## Evolution Notes
+
+The CDM evolved from an earlier conversation-centric Session model into a generalized document-oriented architecture.
+
+Major milestones include:
+
+* Session → Document transition
+* Removal of item subkind hierarchies
+* Introduction of stable item identifiers
+* Introduction of `NarrativeItem`
+* Introduction of `CategorizationItem`
+* Introduction of `SequenceItem`
+* Materialized document statistics
+* Identity-registry-based actor modeling
+
+The current architecture intentionally favors extensibility and operational simplicity over deeply nested object hierarchies, enabling efficient enrichment pipelines, large-scale dataset maintenance, and future training workflows.

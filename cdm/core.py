@@ -75,27 +75,6 @@ class CharacterIdentity(BaseModel):
 
 
 # ==========================================
-# Document Statistics Model
-# ==========================================
-class DocumentStats(BaseModel):
-    """
-    Materialized statistics block to prevent expensive aggregate pipeline workloads.
-    """
-
-    turn_count: int = Field(default=0, description="Total number of TurnItem entries.")
-    item_count: int = Field(
-        default=0,
-        description="Total count of all items in the array.",
-    )
-    character_count: int = Field(
-        default=0, description="Count of registered identities."
-    )
-    word_count: Optional[int] = Field(
-        default=None, description="Optional tracked absolute raw prose word length."
-    )
-
-
-# ==========================================
 # Base Item Layer (Addressability)
 # ==========================================
 class BaseDocumentItem(BaseModel):
@@ -241,14 +220,11 @@ class DocumentMeta(BaseModel):
     toxicity_axis: Optional[ToxicityScale] = None
     primary_genre: Optional[MainGenre] = None
     themes: Optional[List[str]] = Field(default_factory=list)
-
     identities: List[CharacterIdentity] = Field(
         default_factory=list,
         description="The sealed directory of all characters present within this trace.",
     )
-
-    # Materialized aggregated layout metrics
-    stats: Optional[DocumentStats] = None
+    stats: Dict[str, Any]
 
 
 class Document(BaseModel):

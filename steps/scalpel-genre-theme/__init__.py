@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document, DocumentStats
+from cdm.core import Annotation, Document
 
 logger = logging.getLogger(__name__)
 
@@ -131,15 +131,17 @@ def run(config: dict) -> None:
                     1 for doc_item in document.items if doc_item.kind == "turn"
                 )
                 current_word_count = (
-                    document.meta.stats.word_count if document.meta.stats else None
+                    document.meta.stats.get("word_count")
+                    if document.meta.stats
+                    else None
                 )
 
-                document.meta.stats = DocumentStats(
-                    turn_count=turn_count,
-                    item_count=len(document.items),
-                    character_count=len(document.meta.identities),
-                    word_count=current_word_count,
-                )
+                document.meta.stats = {
+                    "turn_count": turn_count,
+                    "item_count": len(document.items),
+                    "character_count": len(document.meta.identities),
+                    "word_count": current_word_count,
+                }
 
                 # 6. Save updates cleanly back to the filesystem
                 with open(file_path, "w", encoding="utf-8") as f:

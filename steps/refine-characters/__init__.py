@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CharacterItem, Document, DocumentStats
+from cdm.core import Annotation, CharacterItem, Document
 from cdm.refine import CharacterSynthesisResponse
 from inference import Message, OpenAIInference
 
@@ -233,11 +233,11 @@ def run(config: dict) -> None:
 
             # 8. Re-materialize Document runtime stats
             turn_count = sum(1 for item in document.items if item.kind == "turn")
-            document.meta.stats = DocumentStats(
-                turn_count=turn_count,
-                item_count=len(document.items),
-                character_count=len(document.meta.identities),
-            )
+            document.meta.stats = {
+                "turn_count": turn_count,
+                "item_count": len(document.items),
+                "character_count": len(document.meta.identities),
+            }
 
             # 9. Commit changes back to disk
             with open(file_path, "w", encoding="utf-8") as f:

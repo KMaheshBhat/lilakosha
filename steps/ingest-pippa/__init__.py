@@ -15,7 +15,6 @@ from cdm.core import (
     CharacterItem,
     Document,
     DocumentMeta,
-    DocumentStats,
     PronounSet,
     TurnItem,
 )
@@ -141,7 +140,7 @@ def run(config: dict) -> None:
             identities=identities_pool,
             source_record=raw_record,
             annotations=[],
-            stats=DocumentStats(),
+            stats={},
         )
 
         document_trace = Document(
@@ -190,11 +189,11 @@ def run(config: dict) -> None:
         )
 
         # 12. Materialize basic document runtime statistics metrics block
-        document_trace.meta.stats = DocumentStats(
-            turn_count=turn_item_counter,
-            item_count=len(document_trace.items),
-            character_count=len(identities_pool),
-        )
+        document_trace.meta.stats = {
+            "turn_count": turn_item_counter,
+            "item_count": len(document_trace.items),
+            "character_count": len(identities_pool),
+        }
 
         # 13. Write the singular living canvas artifact directly to its slot
         with open(target_file, "w", encoding="utf-8") as f:
