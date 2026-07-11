@@ -69,16 +69,19 @@ services:
 bindings:
     refine-characters:
         service: nvidia
+        # service: cerebras
         temperature: 0.1
         max_tokens: 4096
 
     refine-safety-dials:
         service: nvidia
+        # service: cerebras
         temperature: 0.1
         max_tokens: 2048
 
     refine-genre-theme:
         service: nvidia
+        # service: cerebras
         temperature: 0.1
         max_tokens: 2048
 
@@ -140,3 +143,95 @@ parameters:
 # INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
 # INFO: ============================================================
 # Started around 2026-07-10 10:30:00 IST
+# Checked around 2026-07-10 18:00:00 IST - had completed but
+# effectively skipped after on the last leg of
+# refine-characters estimated around 8900/9000 records.
+# Restarted around 2026-07-10 21:45:00 IST.
+# While it did chew through the rest of the refine-characters
+# it stopped after few refine-safety-dials tasks.  Stopping
+# it in order to not overwhelm the provider with requests that
+# I assume will anyway fail.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 9000
+# INFO: Healthy Records:         5926 (65.84%)
+# INFO: Defective Records:       3074
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 8983/9000 (99.81%)
+# INFO:    annotation          : 8983/9000 (99.81%)
+# INFO:    bot detail          : 8983/9000 (99.81%)
+# INFO:    user info           : 8983/9000 (99.81%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 8125/9000 (90.28%)
+# INFO:    annotation          : 8125/9000 (90.28%)
+# INFO:    sexual axis         : 8125/9000 (90.28%)
+# INFO:    toxicity axis       : 8125/9000 (90.28%)
+# INFO:    violence axis       : 8125/9000 (90.28%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 8019/9000 (89.10%)
+# INFO:    annotation          : 8019/9000 (89.10%)
+# INFO:    primary genre       : 8019/9000 (89.10%)
+# INFO:    themes              : 8019/9000 (89.10%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 5940/9000 (66.00%)
+# INFO:    annotation          : 5961/9000 (66.23%)
+# INFO:    prose               : 5940/9000 (66.00%)
+# INFO: ------------------------------------------------------------
+# INFO: 📝 Grammar Conversion Summary
+# INFO:    Total Turns             : 422504
+# INFO:    Turns Converted         : 262654 (62.17%)
+# INFO:    Turns Remaining         : 159850
+# INFO:    Estimated Local Compute : 222.0 hours (@5s/turn)
+# INFO: ============================================================
+# Switching to Cerebras and trying to resume.
+# Restarted around 2026-07-10 22:45:00 IST.
+# Checked at 2026-07-11 08:30:00 IST - the pipeline completed
+# but only processes until it ran out of tokens per day.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 9000
+# INFO: Healthy Records:         5966 (66.29%)
+# INFO: Defective Records:       3034
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:    ✅ PASSED           : 8983/9000 (99.81%)
+# INFO:    annotation          : 8983/9000 (99.81%)
+# INFO:    bot detail          : 8983/9000 (99.81%)
+# INFO:    user info           : 8983/9000 (99.81%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:    ✅ PASSED           : 8634/9000 (95.93%)
+# INFO:    annotation          : 8634/9000 (95.93%)
+# INFO:    sexual axis         : 8634/9000 (95.93%)
+# INFO:    toxicity axis       : 8634/9000 (95.93%)
+# INFO:    violence axis       : 8634/9000 (95.93%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:    ✅ PASSED           : 8159/9000 (90.66%)
+# INFO:    annotation          : 8159/9000 (90.66%)
+# INFO:    primary genre       : 8159/9000 (90.66%)
+# INFO:    themes              : 8159/9000 (90.66%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:    ✅ PASSED           : 5980/9000 (66.44%)
+# INFO:    annotation          : 6000/9000 (66.67%)
+# INFO:    prose               : 5980/9000 (66.44%)
+# INFO: ------------------------------------------------------------
+# INFO: 📝 Grammar Conversion Summary
+# INFO:    Total Turns             : 422504
+# INFO:    Turns Converted         : 264208 (62.53%)
+# INFO:    Turns Remaining         : 158296
+# INFO:    Estimated Local Compute : 219.9 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
