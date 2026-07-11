@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, Session, TurnItem
+from cdm.core import Annotation, Document, DocumentStats, TurnItem
 from cdm.refine import SingleTurnGrammarResponse
 from inference import Message, OpenAIInference
 
@@ -66,8 +66,8 @@ def run(config: dict) -> None:
     if start_uuid or stop_uuid:
         logger.info(
             f"🎯 Targeted Refinement Scope Activated (Grammar):\n"
-            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
     else:
         logger.info(
@@ -108,20 +108,17 @@ def run(config: dict) -> None:
 
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
-                    session = Session.model_validate_json(f.read())
+                    document = Document.model_validate_json(f.read())
 
                 # --- Health Guard Gate ---
-                # Skip if a previous telemetry pass explicitly identified
-                # this file as defective
-                if session.meta and session.meta.healthy is False:
+                if document.meta and document.meta.healthy is False:
                     continue
 
                 history_turns = []
 
-                # Swap from legacy session.children to the compliant
-                # transaction session.items
+                # Iterate through tracking transaction items
                 for item in tqdm(
-                    session.items, desc=f" → {file_path.name[:12]}...", leave=False
+                    document.items, desc=f" → {file_path.name[:12]}...", leave=False
                 ):
                     if not isinstance(item, TurnItem):
                         continue
@@ -140,12 +137,13 @@ def run(config: dict) -> None:
 
                         history_context = history_turns[-CONTEXT_WINDOW_SIZE:]
 
+                        # Render context parameters passing document layout to templates
                         user_prompt = user_tmpl.render(
-                            session=session,
+                            session=document,
                             target_turn=item,
                             history_context=history_context,
                         )
-                        system_prompt = system_tmpl.render(session=session)
+                        system_prompt = system_tmpl.render(session=document)
 
                         # Calculate raw token overhead (roughly 1 word ≈ 1.3 tokens)
                         estimated_input_tokens = int(len(item.prose.split()) * 1.3)
@@ -197,7 +195,7 @@ def run(config: dict) -> None:
                         # for this run phase
                         has_annotation = any(
                             anno.kind == "refine-grammar"
-                            for anno in (session.meta.annotations or [])
+                            for anno in (document.meta.annotations or [])
                         )
                         if not has_annotation:
                             grammar_annotation = Annotation(
@@ -205,17 +203,25 @@ def run(config: dict) -> None:
                                 content="step-by-step single-turn third-person",
                                 reasoning=reasoning,
                             )
-                            if not session.meta.annotations:
-                                session.meta.annotations = []
-                            session.meta.annotations.append(grammar_annotation)
+                            if not document.meta.annotations:
+                                document.meta.annotations = []
+                            document.meta.annotations.append(grammar_annotation)
+
+                        # Re-materialize layout metric statistics post-mutation
+                        turn_count = sum(
+                            1 for doc_item in document.items if doc_item.kind == "turn"
+                        )
+                        document.meta.stats = DocumentStats(
+                            turn_count=turn_count,
+                            item_count=len(document.items),
+                            character_count=len(document.meta.identities),
+                        )
 
                         # Flush state to flat file immediately after single turn success
                         with open(file_path, "w", encoding="utf-8") as f:
-                            f.write(session.model_dump_json(indent=2))
+                            f.write(document.model_dump_json(indent=2))
 
                     except InferenceBudgetExhausted:
-                        # Explicit intercept to prevent general loop handlers
-                        # from catching the signal
                         raise
                     except Exception as turn_err:
                         logger.error(

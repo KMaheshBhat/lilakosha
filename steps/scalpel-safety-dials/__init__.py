@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Session
+from cdm.core import Annotation, Document, DocumentStats
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def run(config: dict) -> None:
     """
     LilaKosha Scalpel Pass: Clear Safety Dials.
-    Iterates through standalone Common Data Model (CDM) records, purging
+    Iterates through standalone Common Document Model (CDM) records, purging
     computed safety metrics and tracking annotations to allow clean evaluations.
     Supports optional runtime range filtering via 'start_uuid' and
     'stop_uuid' parameters.
@@ -40,8 +40,8 @@ def run(config: dict) -> None:
     if start_uuid or stop_uuid:
         logger.info(
             f"🎯 Targeted Scalpel Scope Activated:\n"
-            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
     else:
         logger.info(
@@ -69,30 +69,30 @@ def run(config: dict) -> None:
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                session = Session.model_validate_json(f.read())
+                document = Document.model_validate_json(f.read())
 
             # Evaluate state vectors for pending execution conditions
             has_metrics = (
-                getattr(session.meta, "sexual_axis", None) is not None
-                or getattr(session.meta, "violence_axis", None) is not None
-                or getattr(session.meta, "toxicity_axis", None) is not None
+                getattr(document.meta, "sexual_axis", None) is not None
+                or getattr(document.meta, "violence_axis", None) is not None
+                or getattr(document.meta, "toxicity_axis", None) is not None
             )
 
             if has_metrics:
                 # 1. Nullify structural safety layout vectors
-                session.meta.sexual_axis = None
-                session.meta.violence_axis = None
-                session.meta.toxicity_axis = None
+                document.meta.sexual_axis = None
+                document.meta.violence_axis = None
+                document.meta.toxicity_axis = None
 
                 # 2. Purge stale lineage tracking details to clean up metrics
-                if session.meta.annotations:
-                    session.meta.annotations = [
+                if document.meta.annotations:
+                    document.meta.annotations = [
                         anno
-                        for anno in session.meta.annotations
+                        for anno in document.meta.annotations
                         if anno.kind != "refine-safety-dials"
                     ]
                 else:
-                    session.meta.annotations = []
+                    document.meta.annotations = []
 
                 # 3. Inject explicit scalpel audit token
                 scalpel_annotation = Annotation(
@@ -102,11 +102,21 @@ def run(config: dict) -> None:
                     ),
                     reasoning=None,
                 )
-                session.meta.annotations.append(scalpel_annotation)
+                document.meta.annotations.append(scalpel_annotation)
 
-                # 4. Commit modification atomicity directly to local slot
+                # 4. Re-materialize layout metric statistics post-mutation
+                turn_count = sum(
+                    1 for doc_item in document.items if doc_item.kind == "turn"
+                )
+                document.meta.stats = DocumentStats(
+                    turn_count=turn_count,
+                    item_count=len(document.items),
+                    character_count=len(document.meta.identities),
+                )
+
+                # 5. Commit modification atomicity directly to local slot
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(session.model_dump_json(indent=2))
+                    f.write(document.model_dump_json(indent=2))
 
                 purged_count += 1
 

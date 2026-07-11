@@ -1,4 +1,5 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
 pipeline:
     - "refine-characters"
     - "refine-safety-dials"
@@ -24,42 +25,72 @@ services:
         provider: openai-compatible
         base_url: https://openrouter.ai/api/v1
         api_key: "${OPENROUTER_API_KEY}"
-        # model: "nvidia/nemotron-3-ultra-550b-a55b:free"
-        model: "openrouter/owl-alpha"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        requests_per_minute: 3
+    google-gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
+        requests_per_minute: 12
+        allows_think_control: false
+        allows_extra_body: false
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+    nvidia:
+        provider: openai-compatible
+        base_url: https://integrate.api.nvidia.com/v1
+        api_key: "${NVIDIA_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        request_per_minute: 35
 
 bindings:
     refine-characters:
-        service: openrouter
+        service: local
         temperature: 0.1
         max_tokens: 4096
-        execution:
-            requests_per_minute: 20
-
-    refine-genre-theme:
-        service: openrouter
-        temperature: 0.1
-        max_tokens: 2048
-        execution:
-            requests_per_minute: 20
 
     refine-safety-dials:
-        service: openrouter
+        service: local
         temperature: 0.1
         max_tokens: 2048
-        execution:
-            requests_per_minute: 20
+
+    refine-genre-theme:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
 
     refine-grammar:
-        service: openrouter
+        service: local
         temperature: 0.0
         max_tokens: 2048
-        execution:
-            requests_per_minute: 20
 
 # The start and stop is set to minimum UUID to avoid erraneous overwites.
 # Inpsect the ${LILAKOSHA_VOLUME_PROCESSED}/cdm/records to pick the
 # range that should be processed and pass it as command line parameters
 # to get the refine processes run on the range.
-parameters:
-    start_uuid: 00000000-0000-7000-8000-000000000000
-    stop_uuid: 00000000-0000-7000-8000-000000000000
+# parameters:
+#     start_uuid: 00000000-0000-7000-8000-000000000000
+#     stop_uuid: 00000000-0000-7000-8000-000000000000

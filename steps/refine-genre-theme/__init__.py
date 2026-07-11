@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, Session
+from cdm.core import Annotation, CategorizationItem, Document, DocumentStats
 from cdm.refine import GenreAndThemesResponse
 from inference import Message, OpenAIInference
 
@@ -31,7 +31,7 @@ def run(config: dict) -> None:
     """
     LilaKosha Refinement Pass: Genre & Theme Classification.
     Processes standalone canvas documents within the records folder using an
-    in-line metadata sniff test for robust idempotency.
+    in-line metadata sniff test for robust idempotency, injecting item targets.
     """
     templates_str = load_jinja_templates(["system", "user"])
     jinja_env = Environment(loader=BaseLoader())
@@ -61,8 +61,8 @@ def run(config: dict) -> None:
     if start_uuid or stop_uuid:
         logger.info(
             f"🎯 Targeted Refinement Scope Activated (Genre/Theme):\n"
-            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
     else:
         logger.info(
@@ -96,29 +96,29 @@ def run(config: dict) -> None:
             continue
 
         try:
-            # 1. Load the standalone canvas session
+            # 1. Load the standalone canvas document
             with open(file_path, "r", encoding="utf-8") as f:
-                session = Session.model_validate_json(f.read())
+                document = Document.model_validate_json(f.read())
 
             # --- Health Guard Gate ---
-            # Skip if a previous telemetry pass explicitly identified
-            # this file as defective
-            if session.meta and session.meta.healthy is False:
+            if document.meta and document.meta.healthy is False:
                 continue
 
             # 2. Idempotency Sniff Test
-            if session.meta.primary_genre is not None or (
-                session.meta.themes and len(session.meta.themes) > 0
+            if document.meta.primary_genre is not None or (
+                document.meta.themes and len(document.meta.themes) > 0
             ):
                 continue
 
             # 3. Generate structured prompt inputs from templates
-            user_prompt = user_tmpl.render(session=session)
-            system_prompt = system_tmpl.render(session=session)
+            user_prompt = user_tmpl.render(session=document)
+            system_prompt = system_tmpl.render(session=document)
+
             if requests_per_minute and next_request_time is not None:
                 now = time.monotonic()
                 if now < next_request_time:
                     time.sleep(next_request_time - now)
+
             result = inference.generate(
                 messages=[
                     Message.system(system_prompt),
@@ -128,31 +128,69 @@ def run(config: dict) -> None:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+
             if requests_per_minute:
                 next_request_time = time.monotonic() + (60.0 / requests_per_minute)
+
             extracted_data = result.value
             reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
-            # 5. Hydrate session metadata genre and theme configurations
-            session.meta.primary_genre = extracted_data.primary_genre
-            session.meta.themes = extracted_data.themes
+            # 5. Hydrate cached snapshot metadata fields
+            document.meta.primary_genre = extracted_data.primary_genre
+            document.meta.themes = extracted_data.themes
 
-            # 6. Append tracking annotations cleanly
-            if session.meta.annotations is None:
-                session.meta.annotations = []
+            # 6. Inject structured CategorizationItems into the timeline matrix
+            existing_cat_count = sum(
+                1 for item in document.items if item.kind == "categorization"
+            )
 
-            session.meta.annotations.append(
+            # Genre Categorization Item
+            genre_item = CategorizationItem(
+                id=f"categorization-{existing_cat_count + 1:06d}",
+                kind="categorization",
+                category="genre",
+                value=extracted_data.primary_genre,
+                reasoning=reasoning,
+            )
+            document.items.append(genre_item)
+
+            # Themes Categorization Item
+            theme_item = CategorizationItem(
+                id=f"categorization-{existing_cat_count + 2:06d}",
+                kind="categorization",
+                category="theme",
+                value=extracted_data.themes,
+                reasoning=reasoning,
+            )
+            document.items.append(theme_item)
+
+            # 7. Append tracking annotations safely
+            if document.meta.annotations is None:
+                document.meta.annotations = []
+
+            document.meta.annotations.append(
                 Annotation(
                     kind="refine-genre-theme",
-                    content="classified genre and themes for the session",
+                    content=(
+                        "classified primary genre and thematic indicators "
+                        "as structured layout items"
+                    ),
                     reasoning=reasoning,
                 )
             )
 
-            # 7. Commit changes back to disk with pretty-print layout
+            # 8. Re-materialize runtime document stats
+            turn_count = sum(1 for item in document.items if item.kind == "turn")
+            document.meta.stats = DocumentStats(
+                turn_count=turn_count,
+                item_count=len(document.items),
+                character_count=len(document.meta.identities),
+            )
+
+            # 9. Commit changes back to disk with pretty-print layout
             with open(file_path, "w", encoding="utf-8") as f:
-                f.write(session.model_dump_json(indent=2))
+                f.write(document.model_dump_json(indent=2))
 
         except Exception as e:
             logger.error(

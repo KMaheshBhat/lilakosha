@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CharacterItem, Session
+from cdm.core import Annotation, CharacterItem, Document, DocumentStats
 from cdm.refine import CharacterSynthesisResponse
 from inference import Message, OpenAIInference
 
@@ -30,7 +30,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
 def run(config: dict) -> None:
     """
     LilaKosha Refinement Pass: Character Synthesis.
-    Operates incrementally over discrete canvas record files using an in-line
+    Operates incrementally over discrete CDM Document records using an inline
     idempotency check, resolving pronouns and updating the sealed identity registry.
     """
     templates_str = load_jinja_templates(["system", "user", "character-detail"])
@@ -62,8 +62,8 @@ def run(config: dict) -> None:
     if start_uuid or stop_uuid:
         logger.info(
             f"🎯 Targeted Refinement Scope Activated (Characters):\n"
-            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
     else:
         logger.info(
@@ -95,33 +95,32 @@ def run(config: dict) -> None:
             continue
 
         try:
-            # 1. Load the standalone canvas session
+            # 1. Load the standalone canvas document
             with open(file_path, "r", encoding="utf-8") as f:
-                session = Session.model_validate_json(f.read())
+                document = Document.model_validate_json(f.read())
 
             # --- Health Guard Gate ---
-            # Skip if a previous telemetry pass explicitly identified
-            # this file as defective
-            if session.meta and session.meta.healthy is False:
+            if document.meta and document.meta.healthy is False:
                 continue
 
             # Idempotency Check
-            # Check for an existing character detail item for the bot or
-            # a refined user registry name
+            # Check if a character description for the user has already been injected
             already_refined = any(
-                item.kind == "character" and item.subkind == "detail"
-                for item in session.items
+                item.kind == "character" and item.entity_id == "user"
+                for item in document.items
             )
             if already_refined:
                 continue
 
             # Generate structured prompt inputs from templates
-            user_prompt = user_tmpl.render(session=session)
-            system_prompt = system_tmpl.render(session=session)
+            user_prompt = user_tmpl.render(session=document)
+            system_prompt = system_tmpl.render(session=document)
+
             if requests_per_minute and next_request_time is not None:
                 now = time.monotonic()
                 if now < next_request_time:
                     time.sleep(next_request_time - now)
+
             result = inference.generate(
                 messages=[
                     Message.system(system_prompt),
@@ -131,22 +130,22 @@ def run(config: dict) -> None:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+
             if requests_per_minute:
                 next_request_time = time.monotonic() + (60.0 / requests_per_minute)
+
             extracted_data = result.value
             reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
-            # Update the Authoritative Identity Registry in SessionMeta
-            bot_id = session.meta.bot_id or "unknown_bot"
+            # Update the Authoritative Identity Registry in DocumentMeta
+            bot_id = document.meta.bot_id or "unknown_bot"
 
             # Dynamically import cdm.core's PronounSet to avoid namespace collisions
-            # with the refine model
             from cdm.core import PronounSet as CorePronounSet
 
-            for identity in session.meta.identities:
+            for identity in document.meta.identities:
                 if identity.entity_id == "user":
-                    # A. Force gender resolution to strict type-safe literals
                     user_gender_raw = extracted_data.user_character.gender.lower()
                     resolved_user_gender = (
                         "male"
@@ -160,8 +159,6 @@ def run(config: dict) -> None:
 
                     identity.name = extracted_data.user_character.name
                     identity.gender = resolved_user_gender
-
-                    # B. Re-hydrate using cdm.core's expected model type
                     identity.pronouns = CorePronounSet(
                         subjective=extracted_data.user_character.pronouns.subjective,
                         objective=extracted_data.user_character.pronouns.objective,
@@ -169,7 +166,6 @@ def run(config: dict) -> None:
                     )
 
                 elif identity.entity_id == bot_id:
-                    # A. Force gender resolution to strict type-safe literals
                     bot_gender_raw = extracted_data.bot_character.gender.lower()
                     resolved_bot_gender = (
                         "male"
@@ -183,8 +179,6 @@ def run(config: dict) -> None:
 
                     identity.name = extracted_data.bot_character.name
                     identity.gender = resolved_bot_gender
-
-                    # B. Re-hydrate using cdm.core's expected model type
                     identity.pronouns = CorePronounSet(
                         subjective=extracted_data.bot_character.pronouns.subjective,
                         objective=extracted_data.bot_character.pronouns.objective,
@@ -199,29 +193,34 @@ def run(config: dict) -> None:
                 extracted_data.bot_character
             )
 
+            # Calculate deterministic unique sequence IDs for new character items
+            existing_char_count = sum(
+                1 for item in document.items if item.kind == "character"
+            )
+
             bot_character_detail = CharacterItem(
+                id=f"character-{existing_char_count + 1:06d}",
                 kind="character",
-                subkind="detail",
                 entity_id=bot_id,
                 content=bot_character_content,
             )
             user_character_info = CharacterItem(
+                id=f"character-{existing_char_count + 2:06d}",
                 kind="character",
-                subkind="info",
                 entity_id="user",
                 content=user_character_content,
             )
 
-            # Prepend the newly generated character deep-lore snapshots to
-            # the transactional timeline
-            session.items.insert(0, bot_character_detail)
-            session.items.insert(1, user_character_info)
+            # Prepend the newly generated character deep-lore snapshots
+            # to the transactional timeline
+            document.items.insert(0, bot_character_detail)
+            document.items.insert(1, user_character_info)
 
-            # 7. Append tracking annotations safely to satisfy static type checking
-            if session.meta.annotations is None:
-                session.meta.annotations = []
+            # 7. Append tracking annotations safely
+            if document.meta.annotations is None:
+                document.meta.annotations = []
 
-            session.meta.annotations.append(
+            document.meta.annotations.append(
                 Annotation(
                     kind="refine-characters",
                     content=(
@@ -232,9 +231,17 @@ def run(config: dict) -> None:
                 )
             )
 
-            # 8. Commit changes back to disk
+            # 8. Re-materialize Document runtime stats
+            turn_count = sum(1 for item in document.items if item.kind == "turn")
+            document.meta.stats = DocumentStats(
+                turn_count=turn_count,
+                item_count=len(document.items),
+                character_count=len(document.meta.identities),
+            )
+
+            # 9. Commit changes back to disk
             with open(file_path, "w", encoding="utf-8") as f:
-                f.write(session.model_dump_json(indent=2))
+                f.write(document.model_dump_json(indent=2))
 
         except Exception as e:
             logger.error(

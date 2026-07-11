@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, PronounSet, Session
+from cdm.core import Annotation, Document, DocumentStats, PronounSet
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def run(config: dict) -> None:
     """
     LilaKosha Scalpel Pass: Clear Character Synthesis.
-    Iterates through standalone Common Data Model (CDM) records, purging synthesized
+    Iterates through standalone Common Document Model (CDM) records, purging synthesized
     character profiles from the timeline, resetting core identities inside the
     authoritative registry back to base tracking defaults, and cleaning historical
     tracking annotations. Supports optional runtime lexical range filtering
@@ -38,7 +38,9 @@ def run(config: dict) -> None:
     stop_uuid = params.get("stop_uuid")
     pc_names = params.get("pc_names")
     if isinstance(pc_names, str):
-        pc_names = {name.strip().lower for name in pc_names.split(",") if name.strip()}
+        pc_names = {
+            name.strip().lower() for name in pc_names.split(",") if name.strip()
+        }
     elif pc_names:
         pc_names = {name.lower() for name in pc_names}
     else:
@@ -79,13 +81,13 @@ def run(config: dict) -> None:
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                session = Session.model_validate_json(f.read())
+                document = Document.model_validate_json(f.read())
 
             if pc_names is not None:
                 player = next(
                     (
                         identity
-                        for identity in session.meta.identities
+                        for identity in document.meta.identities
                         if identity.is_player_controlled
                     ),
                     None,
@@ -97,50 +99,50 @@ def run(config: dict) -> None:
                     continue
 
             # Detect whether character items or refinement annotations exist
-            has_timeline_items = any(item.kind == "character" for item in session.items)
+            has_timeline_items = any(
+                item.kind == "character" for item in document.items
+            )
             has_refine_annotations = any(
                 anno.kind == "refine-characters"
-                for anno in (session.meta.annotations or [])
+                for anno in (document.meta.annotations or [])
             )
 
             if has_timeline_items or has_refine_annotations:
-                # A. Purge inline character lore blocks from the top of the
-                #    transactional timeline
-                session.items = [
-                    item for item in session.items if item.kind != "character"
+                # A. Purge inline character lore blocks from the transactional timeline
+                document.items = [
+                    item for item in document.items if item.kind != "character"
                 ]
 
-                # B. Reset Authoritative Identity Registry fields to default
-                #    fallback states (Reverting names to standard tracking handles
-                #    and clearing pronoun/gender sets)
-                bot_id = session.meta.bot_id or "unknown_bot"
+                # B. Reset Authoritative Identity Registry fields
+                #    to default fallback states
+                bot_id = document.meta.bot_id or "unknown_bot"
 
                 default_pronouns = PronounSet(
                     subjective="they", objective="them", possessive="their"
                 )
-                for identity in session.meta.identities:
+                for identity in document.meta.identities:
                     if identity.entity_id == "user":
                         identity.name = "User"
                         identity.gender = "unknown"
                         identity.pronouns = default_pronouns
                     elif identity.entity_id == bot_id:
-                        identity.name = session.meta.bot_name or "Bot"
+                        identity.name = document.meta.bot_name or "Bot"
                         identity.gender = "unknown"
                         identity.pronouns = default_pronouns
 
-                # C. Filter out historical processing annotations to prevent
-                #    tracking pollution
-                if session.meta.annotations:
-                    session.meta.annotations = [
+                # C. Filter out historical processing annotations to
+                #    prevent tracking pollution
+                if document.meta.annotations:
+                    document.meta.annotations = [
                         anno
-                        for anno in session.meta.annotations
+                        for anno in document.meta.annotations
                         if anno.kind != "refine-characters"
                     ]
                 else:
-                    session.meta.annotations = []
+                    document.meta.annotations = []
 
-                # D. Append standard surgical tracking trace token to satisfy
-                #    tracking audit trails
+                # D. Append standard surgical tracking trace token to
+                #    satisfy audit trails
                 scalpel_annotation = Annotation(
                     kind="scalpel-character",
                     content=(
@@ -149,11 +151,21 @@ def run(config: dict) -> None:
                     ),
                     reasoning=None,
                 )
-                session.meta.annotations.append(scalpel_annotation)
+                document.meta.annotations.append(scalpel_annotation)
 
-                # E. Commit updates cleanly back to disk
+                # E. Re-materialize layout metric statistics post-mutation
+                turn_count = sum(
+                    1 for doc_item in document.items if doc_item.kind == "turn"
+                )
+                document.meta.stats = DocumentStats(
+                    turn_count=turn_count,
+                    item_count=len(document.items),
+                    character_count=len(document.meta.identities),
+                )
+
+                # F. Commit updates cleanly back to disk
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(session.model_dump_json(indent=2))
+                    f.write(document.model_dump_json(indent=2))
 
                 purged_count += 1
 

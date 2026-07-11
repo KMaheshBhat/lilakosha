@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from cdm.core import Session
+from cdm.core import Document
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ def run(config: dict) -> None:
         for record_path in record_files:
             try:
                 with open(record_path, "r", encoding="utf-8") as in_f:
-                    session = Session.model_validate_json(in_f.read())
+                    document = Document.model_validate_json(in_f.read())
 
                 # Write as single-line JSON (compact, no indentation)
-                out_f.write(session.model_dump_json() + "\n")
+                out_f.write(document.model_dump_json() + "\n")
                 success += 1
             except Exception:
                 RuntimeError("Packaging aborted: 1 record failed validation.")

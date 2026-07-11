@@ -3,7 +3,7 @@ import logging
 from collections import Counter
 from pathlib import Path
 
-from cdm.core import Session
+from cdm.core import Document
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            session = Session.model_validate(data)
-            meta = session.meta
+            document = Document.model_validate(data)
+            meta = document.meta
 
             # Extract and count safety classifications (handle Enums safely via .value)
             sexual_counts[meta.sexual_axis.value if meta.sexual_axis else "Unset"] += 1
@@ -69,7 +69,7 @@ def run(config: dict) -> None:
                 theme_counts["[No Themes Assigned]"] += 1
 
             # Count conversation turns in this record
-            turn_count = sum(1 for item in session.items if item.kind == "turn")
+            turn_count = sum(1 for item in document.items if item.kind == "turn")
             turn_counts.append(turn_count)
 
         except Exception:

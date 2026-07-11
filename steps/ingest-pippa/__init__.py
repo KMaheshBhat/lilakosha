@@ -13,9 +13,10 @@ from cdm.core import (
     Annotation,
     CharacterIdentity,
     CharacterItem,
+    Document,
+    DocumentMeta,
+    DocumentStats,
     PronounSet,
-    Session,
-    SessionMeta,
     TurnItem,
 )
 
@@ -36,9 +37,9 @@ def compute_content_address(raw_record: dict) -> str:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Stage 1: PIPPA Ingestion (Source -> Individual UUIDv7 Canvas Records).
-    Utilizes an append-only mapping ledger alongside an isolated metadata envelope
-    and pure SHA-256 content-addressable keys.
+    LilaKosha Stage 1: PIPPA Ingestion (Source -> Individual CDM Document Records).
+    Utilizes an append-only mapping ledger alongside an isolated metadata envelope,
+    local unique item identifier schemas, and pure SHA-256 content-addressable keys.
     """
     # 1. Resolve Volumes from Grounded Config
     processed_vol = Path(config["volumes"]["processed"])
@@ -109,6 +110,7 @@ def run(config: dict) -> None:
             target_file = records_dir / f"{target_uuid}.json"
 
         # 7. Pre-seed Identity Registry placeholders to establish data topology
+        # Typo correction: Pydantic base model core uses possessive
         default_pronouns = PronounSet(
             subjective="they", objective="them", possessive="their"
         )
@@ -130,8 +132,8 @@ def run(config: dict) -> None:
             ),
         ]
 
-        # 8. Construct CDM Session Envelope using structural Models
-        meta_obj = SessionMeta(
+        # 8. Construct CDM Document Envelope using structural Models
+        meta_obj = DocumentMeta(
             source_identity="PygmalionAI/PIPPA",
             bot_id=str(bot_id),
             bot_name=raw_record.get("bot_name"),
@@ -139,46 +141,64 @@ def run(config: dict) -> None:
             identities=identities_pool,
             source_record=raw_record,
             annotations=[],
+            stats=DocumentStats(),
         )
 
-        session_trace = Session(id=target_uuid, kind="session", meta=meta_obj, items=[])
+        document_trace = Document(
+            id=target_uuid, kind="document", meta=meta_obj, items=[]
+        )
 
-        # 9. Map Primary Character Initial Persona (character:info Line Item)
+        # Track internal counters for local deterministic unique identifiers
+        character_item_counter = 0
+        turn_item_counter = 0
+
+        # 9. Map Primary Character Initial Persona (character Line Item)
+        # Note: subkind parameter has been removed entirely per CDM specifications
         raw_desc = raw_record.get("bot_description") or ""
         if raw_desc.strip():
+            character_item_counter += 1
             character_info = CharacterItem(
+                id=f"character-{character_item_counter:06d}",
                 kind="character",
-                subkind="info",
                 entity_id=str(bot_id),
                 content=str(raw_desc.strip()),
             )
-            session_trace.items.append(character_info)
+            document_trace.items.append(character_info)
 
         # 10. Map Conversational Turns (Linguistic Evidence Line Items)
         for turn in raw_record.get("conversation", []) or []:
             actor_id = "user" if turn.get("is_human") else str(bot_id)
             raw_message = turn.get("message") or ""
 
+            turn_item_counter += 1
             turn_obj = TurnItem(
+                id=f"turn-{turn_item_counter:06d}",
                 kind="turn",
                 actor_id=actor_id,
                 prose=str(raw_message.strip()),
             )
-            session_trace.items.append(turn_obj)
+            document_trace.items.append(turn_obj)
 
-        # 11. Append the basic lineage trace token
-        if session_trace.meta.annotations is None:
-            session_trace.meta.annotations = []
-        session_trace.meta.annotations.append(
+        # 11. Append the basic lineage trace token to meta annotations
+        if document_trace.meta.annotations is None:
+            document_trace.meta.annotations = []
+        document_trace.meta.annotations.append(
             Annotation(
                 kind="ingestion",
                 content="created from PIPPA raw record",
             )
         )
 
-        # 12. Write the singular living canvas artifact directly to its slot
+        # 12. Materialize basic document runtime statistics metrics block
+        document_trace.meta.stats = DocumentStats(
+            turn_count=turn_item_counter,
+            item_count=len(document_trace.items),
+            character_count=len(identities_pool),
+        )
+
+        # 13. Write the singular living canvas artifact directly to its slot
         with open(target_file, "w", encoding="utf-8") as f:
-            f.write(session_trace.model_dump_json(indent=2))
+            f.write(document_trace.model_dump_json(indent=2))
 
     logger.info(
         f"✅ Ingestion cycle tracking updated. "

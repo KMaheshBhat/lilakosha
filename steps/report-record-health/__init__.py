@@ -3,7 +3,7 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 
-from cdm.core import Session
+from cdm.core import Document
 
 logger = logging.getLogger(__name__)
 
@@ -107,10 +107,10 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            # Authoritative validation against cdm.core.Session
-            session = Session.model_validate(data)
-            meta = session.meta
-            items = session.items or []
+            # Authoritative validation against cdm.core.Document
+            document = Document.model_validate(data)
+            meta = document.meta
+            items = document.items or []
             annotations = meta.annotations or []
 
             # Count turns for grammar conversion tracking
@@ -132,9 +132,7 @@ def run(config: dict) -> None:
                 issues.append("Missing 'refine-characters' annotation")
                 stage_stats["refine-characters"]["issue:annotation"] += 1
             has_bot_detail = any(
-                item.kind == "character"
-                and getattr(item, "subkind", None) == "detail"
-                and getattr(item, "entity_id", None) != "user"
+                item.kind == "character" and getattr(item, "entity_id", None) != "user"
                 for item in items
             )
             if not has_bot_detail:
@@ -143,9 +141,7 @@ def run(config: dict) -> None:
                 )
                 stage_stats["refine-characters"]["issue:bot_detail"] += 1
             has_user_info = any(
-                item.kind == "character"
-                and getattr(item, "subkind", None) == "info"
-                and getattr(item, "entity_id", None) == "user"
+                item.kind == "character" and getattr(item, "entity_id", None) == "user"
                 for item in items
             )
             if not has_user_info:
@@ -220,16 +216,19 @@ def run(config: dict) -> None:
             # --- Consolidation State Sync ---
             if not issues:
                 healthy_count += 1
-                session.meta.healthy = True
+                document.meta.healthy = True
             else:
                 failure_registry[uuid_str] = issues
-                session.meta.healthy = False
+                document.meta.healthy = False
 
             # Persist mutations back to disk ONLY if audit-only mode is deactivated
             if not audit_only:
                 with open(file_path, "w", encoding="utf-8") as f:
                     json.dump(
-                        session.model_dump(mode="json"), f, indent=2, ensure_ascii=False
+                        document.model_dump(mode="json"),
+                        f,
+                        indent=2,
+                        ensure_ascii=False,
                     )
 
         except Exception as e:

@@ -13,4 +13,5 @@ volumes:
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
 
 parameters:
-    limit: 3000 # limit the number of samples to process, if empty, all would be processed
+    limit: 5 # used to test for major refactors
+    # limit: 3000 # limit the number of samples to process, if empty, all would be processed

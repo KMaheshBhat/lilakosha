@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Session
+from cdm.core import Annotation, Document, DocumentStats
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +11,9 @@ logger = logging.getLogger(__name__)
 def run(config: dict) -> None:
     """
     LilaKosha Scalpel Pass: Clear Genre & Themes.
-    Iterates through standalone Common Data Model (CDM) records, purging
-    computed narrative genres and thematic tags alongside related history annotations.
+    Iterates through standalone Common Document Model (CDM) records, purging
+    computed narrative genres and thematic tags alongside related history annotations
+    and timeline categorization items.
     Supports optional runtime range filtering via 'start_uuid' and
     'stop_uuid' parameters.
     """
@@ -40,8 +41,8 @@ def run(config: dict) -> None:
     if start_uuid or stop_uuid:
         logger.info(
             f"🎯 Targeted Scalpel Scope Activated (Genre/Theme):\n"
-            f"   - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"   - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
     else:
         logger.info(
@@ -71,43 +72,78 @@ def run(config: dict) -> None:
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                session = Session.model_validate_json(f.read())
+                document = Document.model_validate_json(f.read())
 
-            # Check if active metadata elements are present to clear
-            has_metadata = session.meta.primary_genre is not None or (
-                session.meta.themes is not None and len(session.meta.themes) > 0
+            # Detect if timeline items contain target categorizations
+            has_timeline_items = any(
+                item.kind == "categorization"
+                and item.category in ("primary_genre", "themes")
+                for item in document.items
+            )
+
+            # Check if active metadata elements or timeline records are present to clear
+            has_metadata = (
+                document.meta.primary_genre is not None
+                or (document.meta.themes is not None and len(document.meta.themes) > 0)
+                or has_timeline_items
             )
 
             if has_metadata:
-                # 1. Nullify the genre and theme dimensions on session metadata
-                session.meta.primary_genre = None
-                session.meta.themes = None
+                # 1. Nullify the genre and theme dimensions on document metadata
+                document.meta.primary_genre = None
+                document.meta.themes = None
 
-                # 2. Filter out historical refinement annotations to maintain
-                #    track integrity
-                if session.meta.annotations:
-                    session.meta.annotations = [
+                # 2. Clear out discrete timeline serialization elements
+                document.items = [
+                    item
+                    for item in document.items
+                    if not (
+                        item.kind == "categorization"
+                        and item.category in ("primary_genre", "themes")
+                    )
+                ]
+
+                # 3. Filter out historical refinement annotations to maintain
+                # track integrity
+                if document.meta.annotations:
+                    document.meta.annotations = [
                         anno
-                        for anno in session.meta.annotations
+                        for anno in document.meta.annotations
                         if anno.kind != "refine-genre-theme"
                     ]
                 else:
-                    session.meta.annotations = []
+                    document.meta.annotations = []
 
-                # 3. Append a surgical tracking trace token
+                # 4. Append a surgical tracking trace token
                 scalpel_annotation = Annotation(
                     kind="scalpel-genre-theme",
                     content=(
                         "cleared narrative genre classifications and thematic tags "
-                        "via scalpel range"
+                        "from metadata caches and timeline items via scalpel range"
                     ),
                     reasoning=None,
                 )
-                session.meta.annotations.append(scalpel_annotation)
+                document.meta.annotations.append(scalpel_annotation)
 
-                # 4. Save updates cleanly back to the filesystem
+                # 5. Re-materialize layout metric statistics post-mutation
+                #    (preserve word_count)
+                turn_count = sum(
+                    1 for doc_item in document.items if doc_item.kind == "turn"
+                )
+                current_word_count = (
+                    document.meta.stats.word_count if document.meta.stats else None
+                )
+
+                document.meta.stats = DocumentStats(
+                    turn_count=turn_count,
+                    item_count=len(document.items),
+                    character_count=len(document.meta.identities),
+                    word_count=current_word_count,
+                )
+
+                # 6. Save updates cleanly back to the filesystem
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(session.model_dump_json(indent=2))
+                    f.write(document.model_dump_json(indent=2))
 
                 purged_count += 1
 

@@ -1,7 +1,7 @@
 from .core import (
     CharacterItem,
-    Session,
-    SessionMeta,
+    Document,
+    DocumentMeta,
     SummaryItem,
     TurnItem,
     WorldItem,
@@ -14,8 +14,8 @@ from .refine import (
 
 __all__ = [
     "LedgerIndex",
-    "Session",
-    "SessionMeta",
+    "Document",
+    "DocumentMeta",
     "TurnItem",
     "WorldItem",
     "CharacterItem",
