@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document, DocumentStats, TurnItem
+from cdm.core import Annotation, Document, TurnItem
 from cdm.refine import SingleTurnGrammarResponse
 from inference import Message, OpenAIInference
 
@@ -211,11 +211,11 @@ def run(config: dict) -> None:
                         turn_count = sum(
                             1 for doc_item in document.items if doc_item.kind == "turn"
                         )
-                        document.meta.stats = DocumentStats(
-                            turn_count=turn_count,
-                            item_count=len(document.items),
-                            character_count=len(document.meta.identities),
-                        )
+                        document.meta.stats = {
+                            "turn_count": turn_count,
+                            "item_count": len(document.items),
+                            "character_count": len(document.meta.identities),
+                        }
 
                         # Flush state to flat file immediately after single turn success
                         with open(file_path, "w", encoding="utf-8") as f:

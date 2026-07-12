@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CategorizationItem, Document, DocumentStats
+from cdm.core import Annotation, CategorizationItem, Document
 from cdm.refine import SafetyDialsResponse
 from inference import Message, OpenAIInference
 
@@ -189,15 +189,15 @@ def run(config: dict) -> None:
             #    word_count)
             turn_count = sum(1 for item in document.items if item.kind == "turn")
             current_word_count = (
-                document.meta.stats.word_count if document.meta.stats else None
+                document.meta.stats.get("word_count") if document.meta.stats else None
             )
 
-            document.meta.stats = DocumentStats(
-                turn_count=turn_count,
-                item_count=len(document.items),
-                character_count=len(document.meta.identities),
-                word_count=current_word_count,
-            )
+            document.meta.stats = {
+                "turn_count": turn_count,
+                "item_count": len(document.items),
+                "character_count": len(document.meta.identities),
+                "word_count": current_word_count,
+            }
 
             # 9. Commit changes back to disk with pretty-print layout
             with open(file_path, "w", encoding="utf-8") as f:
