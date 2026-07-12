@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document, DocumentStats
+from cdm.core import Annotation, Document
 
 logger = logging.getLogger(__name__)
 
@@ -108,11 +108,11 @@ def run(config: dict) -> None:
                 turn_count = sum(
                     1 for doc_item in document.items if doc_item.kind == "turn"
                 )
-                document.meta.stats = DocumentStats(
-                    turn_count=turn_count,
-                    item_count=len(document.items),
-                    character_count=len(document.meta.identities),
-                )
+                document.meta.stats = {
+                    "turn_count": turn_count,
+                    "item_count": len(document.items),
+                    "character_count": len(document.meta.identities),
+                }
 
                 # 5. Commit modification atomicity directly to local slot
                 with open(file_path, "w", encoding="utf-8") as f:
