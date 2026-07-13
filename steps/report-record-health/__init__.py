@@ -14,9 +14,6 @@ def run(config: dict) -> None:
     across all canvas JSON records on disk using native Pydantic models.
 
     Supports:
-      --reset_health true         : Clears 'healthy' tracking flags to force retries.
-      --audit_only true           : Run full health report in-memory without disk writes
-                                    (Perfect for clean dashboarding via watch -n).
       --hide_anomaly_details true : Mutes granular issue printing.
       --report_breakdown true     : Provides specific check/stage wise breakdown
     """
@@ -37,71 +34,51 @@ def run(config: dict) -> None:
     # Extract dynamic configuration parameters passed via pipeline config or CLI flags
     params = config.get("parameters", {})
     hide_anomaly_details = params.get("hide_anomaly_details", False)
-    reset_health = params.get("reset_health", False)
-    audit_only = params.get("audit_only", False)
     report_breakdown = params.get("report_breakdown", False)
 
     # Normalize values from the CLI wrapper strings
     if isinstance(hide_anomaly_details, str):
         hide_anomaly_details = hide_anomaly_details.lower() in ("true", "1", "yes")
-    if isinstance(reset_health, str):
-        reset_health = reset_health.lower() in ("true", "1", "yes")
-    if isinstance(audit_only, str):
-        audit_only = audit_only.lower() in ("true", "1", "yes")
     if isinstance(report_breakdown, str):
         report_breakdown = report_breakdown.lower() in ("true", "1", "yes")
 
-    # --- Mode 1: Full Health State Reset ---
-    if reset_health:
-        logger.info(
-            f"🔄 RESET MODE ACTIVATED: Clearing health states across "
-            f"{total_records} records to force pipeline retries..."
-        )
-        for file_path in canvas_files:
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    raw_data = json.load(f)
-                if "meta" in raw_data and isinstance(raw_data["meta"], dict):
-                    # Pop the healthy key entirely so it drops
-                    # back to Schema default (None)
-                    raw_data["meta"].pop("healthy", None)
-                    with open(file_path, "w", encoding="utf-8") as f:
-                        json.dump(raw_data, f, indent=2, ensure_ascii=False)
-            except Exception as e:
-                logger.error(
-                    f"Failed to clear health tag on file {file_path.stem}: {str(e)}"
-                )
-        logger.info(
-            "✅ All health tracking flags have been cleared. Exiting reset phase."
-        )
-        return
-
     healthy_count = 0
     failure_registry = defaultdict(list)
-    stage_stats = {
-        "refine-characters": defaultdict(int),
-        "refine-safety-dials": defaultdict(int),
-        "refine-genre-theme": defaultdict(int),
-        "refine-grammar": defaultdict(int),
+
+    # Telemetry aggregation frameworks mapped by stage and checks
+    stage_breakdown = {
+        "refine-characters": {
+            "passed": 0,
+            "annotation": 0,
+            "bot detail": 0,
+            "user info": 0,
+        },
+        "refine-safety-dials": {
+            "passed": 0,
+            "annotation": 0,
+            "sexual axis": 0,
+            "violence axis": 0,
+            "toxicity axis": 0,
+        },
+        "refine-genre-theme": {
+            "passed": 0,
+            "annotation": 0,
+            "primary genre": 0,
+            "themes": 0,
+        },
+        "refine-grammar": {"passed": 0, "annotation": 0, "prose": 0},
     }
-    # Grammar conversion tracking: count turns with original_prose set
+
     total_turns = 0
-    converted_turns = 0  # turns where original_prose is not None (grammar-passed)
+    converted_turns = 0
 
-    if audit_only:
-        logger.info(
-            f"📊 Running read-only telemetry audit across {total_records} records..."
-        )
-    else:
-        logger.info(
-            f"Auditing and mutating data health parameters across "
-            f"{total_records} records..."
-        )
+    logger.info(
+        f"📊 Running read-only telemetry audit across {total_records} records..."
+    )
 
-    # --- Mode 2 & 3: Standard Mutation / Audit Evaluation Pass ---
+    # --- Standard Evaluation Pass ---
     for file_path in canvas_files:
         uuid_str = file_path.stem
-        issues = []
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -109,151 +86,38 @@ def run(config: dict) -> None:
 
             # Authoritative validation against cdm.core.Document
             document = Document.model_validate(data)
-            meta = document.meta
-            items = document.items or []
-            annotations = meta.annotations or []
 
-            # Count turns for grammar conversion tracking
-            turn_items = [item for item in items if item.kind == "turn"]
-            total_turns += len(turn_items)
-            converted_turns += sum(
-                1
-                for item in turn_items
-                if getattr(item, "original_prose", None) is not None
-            )
+            health = document.meta.health or {}
 
-            # Extract kinds from Pydantic Annotation objects safely
-            annotation_kinds = {
-                anno.kind for anno in annotations if hasattr(anno, "kind")
-            }
+            # Track turn conversion metrics
+            turns_metrics = health.get("turns_metrics", {})
+            total_turns += turns_metrics.get("total_turns", 0)
+            converted_turns += turns_metrics.get("converted_turns", 0)
 
-            # --- Rule Group 1: refine-characters ---
-            if "refine-characters" not in annotation_kinds:
-                issues.append("Missing 'refine-characters' annotation")
-                stage_stats["refine-characters"]["issue:annotation"] += 1
-            has_bot_detail = any(
-                item.kind == "character" and getattr(item, "entity_id", None) != "user"
-                for item in items
-            )
-            if not has_bot_detail:
-                issues.append(
-                    "Missing bot character details (subkind=detail, entity_id!=user)"
-                )
-                stage_stats["refine-characters"]["issue:bot_detail"] += 1
-            has_user_info = any(
-                item.kind == "character" and getattr(item, "entity_id", None) == "user"
-                for item in items
-            )
-            if not has_user_info:
-                issues.append(
-                    "Missing user profiling info (subkind=info, entity_id=user)"
-                )
-                stage_stats["refine-characters"]["issue:user_info"] += 1
-            if (
-                "refine-characters" in annotation_kinds
-                and has_bot_detail
-                and has_user_info
-            ):
-                stage_stats["refine-characters"]["passed"] += 1
+            # Aggregate breakdown counts
+            breakdown_data = health.get("breakdown", {})
+            for stage, checks in breakdown_data.items():
+                if stage in stage_breakdown:
+                    for check_key, passed_check in checks.items():
+                        if check_key in stage_breakdown[stage] and passed_check:
+                            stage_breakdown[stage][check_key] += 1
 
-            # --- Rule Group 2: refine-safety-dials ---
-            if "refine-safety-dials" not in annotation_kinds:
-                issues.append("Missing 'refine-safety-dials' annotation")
-                stage_stats["refine-safety-dials"]["issue:annotation"] += 1
-            if meta.sexual_axis is None:
-                issues.append("Unset 'meta.sexual_axis'")
-                stage_stats["refine-safety-dials"]["issue:sexual_axis"] += 1
-            if meta.violence_axis is None:
-                issues.append("Unset 'meta.violence_axis'")
-                stage_stats["refine-safety-dials"]["issue:violence_axis"] += 1
-            if meta.toxicity_axis is None:
-                issues.append("Unset 'meta.toxicity_axis'")
-                stage_stats["refine-safety-dials"]["issue:toxicity_axis"] += 1
-            if (
-                "refine-safety-dials" in annotation_kinds
-                and meta.sexual_axis is not None
-                and meta.violence_axis is not None
-                and meta.toxicity_axis is not None
-            ):
-                stage_stats["refine-safety-dials"]["passed"] += 1
-
-            # --- Rule Group 3: refine-genre-theme ---
-            if "refine-genre-theme" not in annotation_kinds:
-                issues.append("Missing 'refine-genre-theme' annotation")
-                stage_stats["refine-genre-theme"]["issue:annotation"] += 1
-            if meta.primary_genre is None:
-                issues.append("Unset 'meta.primary_genre'")
-                stage_stats["refine-genre-theme"]["issue:primary_genre"] += 1
-            if not meta.themes:  # Checks for None or empty list
-                issues.append("Unset or empty 'meta.themes'")
-                stage_stats["refine-genre-theme"]["issue:themes"] += 1
-            if (
-                "refine-genre-theme" in annotation_kinds
-                and meta.primary_genre is not None
-                and meta.themes
-            ):
-                stage_stats["refine-genre-theme"]["passed"] += 1
-
-            # --- Rule Group 4: refine-grammar ---
-            if "refine-grammar" not in annotation_kinds:
-                issues.append("Missing 'refine-grammar' annotation")
-                stage_stats["refine-grammar"]["issue:annotation"] += 1
-            # Verify that every turn item correctly retains its original_prose baseline
-            missing_lineage_turns = sum(
-                1
-                for item in items
-                if item.kind == "turn" and getattr(item, "original_prose", None) is None
-            )
-            if missing_lineage_turns > 0:
-                issues.append(
-                    f"Grammar tracking defect: {missing_lineage_turns} turn items are"
-                    " missing 'original_prose'"
-                )
-                stage_stats["refine-grammar"]["issue:prose"] += 1
-            if "refine-grammar" in annotation_kinds and missing_lineage_turns == 0:
-                stage_stats["refine-grammar"]["passed"] += 1
-
-            # --- Consolidation State Sync ---
-            if not issues:
+            if health.get("is_healthy", False):
                 healthy_count += 1
-                document.meta.healthy = True
             else:
-                failure_registry[uuid_str] = issues
-                document.meta.healthy = False
-
-            # Persist mutations back to disk ONLY if audit-only mode is deactivated
-            if not audit_only:
-                with open(file_path, "w", encoding="utf-8") as f:
-                    json.dump(
-                        document.model_dump(mode="json"),
-                        f,
-                        indent=2,
-                        ensure_ascii=False,
-                    )
+                failure_registry[uuid_str] = health.get(
+                    "issues", ["Unspecified validation issue"]
+                )
 
         except Exception as e:
             failure_registry[uuid_str].append(
                 f"Pydantic validation/structural crash: {str(e)}"
             )
 
-            # If the session model instantiation crashed entirely,
-            # fall back to dirty JSON patch
-            if not audit_only:
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        raw_data = json.load(f)
-                    if "meta" in raw_data and isinstance(raw_data["meta"], dict):
-                        raw_data["meta"]["healthy"] = False
-                        with open(file_path, "w", encoding="utf-8") as f:
-                            json.dump(raw_data, f, indent=2, ensure_ascii=False)
-                except Exception as backup_err:
-                    logger.error(
-                        f"Critical write-back block on file "
-                        f"{uuid_str}: {str(backup_err)}"
-                    )
-
     # --- Render Report Output ---
-    health_percentage = (healthy_count / total_records) * 100
+    health_percentage = (
+        (healthy_count / total_records) * 100 if total_records > 0 else 0
+    )
 
     logger.info("=" * 60)
     logger.info("📊 LILAKOSHA PIPELINE DATA HEALTH REPORT")
@@ -263,46 +127,51 @@ def run(config: dict) -> None:
     logger.info(f"Defective Records:       {len(failure_registry)}")
     logger.info("=" * 60)
 
-    conversion_percentage = (
-        (converted_turns / total_turns * 100) if total_turns > 0 else 0
-    )
-    remaining_turns = total_turns - converted_turns
-
-    # Conservative planning estimate: ~5 seconds per turn.
-    estimated_seconds = remaining_turns * 5
-    estimated_hours = estimated_seconds / 3600
-
     if report_breakdown:
         logger.info("📈 PIPELINE STAGE BREAKDOWN")
         logger.info("=" * 60)
-        for stage, stats in stage_stats.items():
+
+        # Iteration mirrors the layout requested in the telemetry definition
+        for stage, checks in stage_breakdown.items():
             logger.info(f"{stage}")
-            passed = stats.get("passed", 0)
-            logger.info(
-                f"   ✅ PASSED           : {passed}/{total_records} "
-                f"({passed / total_records * 100:.2f}%)"
+
+            passed_count = checks["passed"]
+            passed_pct = (
+                (passed_count / total_records * 100) if total_records > 0 else 0
             )
-            for check, failures in sorted(stats.items()):
-                if check == "passed":
+            logger.info(
+                f" ✅ PASSED              : "
+                f"{passed_count}/{total_records} ({passed_pct:.2f}%)"
+            )
+
+            for check_name, count in checks.items():
+                if check_name == "passed":
                     continue
-                check_name = check.replace("issue:", "").replace("_", " ")
-                successes = total_records - failures
+                check_pct = (count / total_records * 100) if total_records > 0 else 0
                 logger.info(
-                    f"   {check_name:<20}: "
-                    f"{successes}/{total_records} "
-                    f"({successes / total_records * 100:.2f}%)"
+                    f"    {check_name:<20}: {count}/{total_records} ({check_pct:.2f}%)"
                 )
+
             logger.info("-" * 60)
 
-        logger.info("📝 Grammar Conversion Summary")
-        logger.info(f"   Total Turns             : {total_turns}")
-        logger.info(
-            f"   Turns Converted         : {converted_turns} "
-            f"({conversion_percentage:.2f}%)"
+        conversion_percentage = (
+            (converted_turns / total_turns * 100) if total_turns > 0 else 0
         )
-        logger.info(f"   Turns Remaining         : {remaining_turns}")
+        remaining_turns = total_turns - converted_turns
+
+        # Conservative local compute estimate: ~5 seconds per turn.
+        estimated_seconds = remaining_turns * 5
+        estimated_hours = estimated_seconds / 3600
+
+        logger.info(" 📝 Grammar Conversion Summary")
+        logger.info(f"    Total Turns             : {total_turns}")
         logger.info(
-            f"   Estimated Local Compute : {estimated_hours:.1f} hours (@5s/turn)"
+            f"    Turns Converted         : "
+            f"{converted_turns} ({conversion_percentage:.2f}%)"
+        )
+        logger.info(f"    Turns Remaining         : {remaining_turns}")
+        logger.info(
+            f"    Estimated Local Compute : {estimated_hours:.1f} hours (@5s/turn)"
         )
         logger.info("=" * 60)
 

@@ -2,7 +2,8 @@
 Analyze the provided multi-turn chat history and classify the primary genre and extract thematic tags.
 
 ### CHAT EVIDENCE
-{% set bot_name = session.meta.bot_name or "the character" %}
+{% set source = session.meta.source or {} %}
+{% set bot_name = source.get("bot_name") or "the character" %}
 
 {% for item in session.items if item.kind == 'turn' -%}
     {% if loop.index0 < 100 -%}

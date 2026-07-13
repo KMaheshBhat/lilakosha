@@ -2,7 +2,8 @@
 Analyze the provided multi-turn chat history. Synthesize the roles, names, and profiles for both the human player (USER) and the AI character (Bot).
 
 ### CHAT EVIDENCE
-{% set bot_name = session.meta.bot_name or "the character" %}
+{% set source = session.meta.source or {} %}
+{% set bot_name = source.get("bot_name") or "the character" %}
 
 For the user character name, identify if there are any actions in user's turn where they interact with the character.
 

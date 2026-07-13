@@ -6,7 +6,14 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CharacterItem, Document
+from cdm.core import (
+    CharacterIdentity,
+    CharacterItem,
+    Document,
+    PronounSet,
+    ResolvedMeta,
+)
+from cdm.meta import add_annotation, update_meta
 from cdm.refine import CharacterSynthesisResponse
 from inference import Message, OpenAIInference
 
@@ -99,9 +106,8 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
-            # --- Health Guard Gate ---
-            if document.meta and document.meta.healthy is False:
-                continue
+            resolved = document.meta.resolved or ResolvedMeta()
+            source = document.meta.source or {}
 
             # Idempotency Check
             # Check if a character description for the user has already been injected
@@ -138,13 +144,15 @@ def run(config: dict) -> None:
             reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
-            # Update the Authoritative Identity Registry in DocumentMeta
-            bot_id = document.meta.bot_id or "unknown_bot"
+            bot_id = source.get("bot_id", "unknown_bot")
+            identities = [
+                i
+                if isinstance(i, CharacterIdentity)
+                else CharacterIdentity.model_validate(i)
+                for i in source.get("identities", [])
+            ]
 
-            # Dynamically import cdm.core's PronounSet to avoid namespace collisions
-            from cdm.core import PronounSet as CorePronounSet
-
-            for identity in document.meta.identities:
+            for identity in identities:
                 if identity.entity_id == "user":
                     user_gender_raw = extracted_data.user_character.gender.lower()
                     resolved_user_gender = (
@@ -159,7 +167,7 @@ def run(config: dict) -> None:
 
                     identity.name = extracted_data.user_character.name
                     identity.gender = resolved_user_gender
-                    identity.pronouns = CorePronounSet(
+                    identity.pronouns = PronounSet(
                         subjective=extracted_data.user_character.pronouns.subjective,
                         objective=extracted_data.user_character.pronouns.objective,
                         possessive=extracted_data.user_character.pronouns.possessive,
@@ -179,11 +187,13 @@ def run(config: dict) -> None:
 
                     identity.name = extracted_data.bot_character.name
                     identity.gender = resolved_bot_gender
-                    identity.pronouns = CorePronounSet(
+                    identity.pronouns = PronounSet(
                         subjective=extracted_data.bot_character.pronouns.subjective,
                         objective=extracted_data.bot_character.pronouns.objective,
                         possessive=extracted_data.bot_character.pronouns.possessive,
                     )
+            resolved.identities = identities
+            document.meta.resolved = resolved
 
             # 6. Render deep-lore narrative line items
             user_character_content = character_detail_tmpl.render(
@@ -216,28 +226,19 @@ def run(config: dict) -> None:
             document.items.insert(0, bot_character_detail)
             document.items.insert(1, user_character_info)
 
-            # 7. Append tracking annotations safely
-            if document.meta.annotations is None:
-                document.meta.annotations = []
-
-            document.meta.annotations.append(
-                Annotation(
-                    kind="refine-characters",
-                    content=(
-                        "refined bot character details and user character info "
-                        "inside registry and timeline"
-                    ),
-                    reasoning=reasoning,
-                )
+            # 7. Append tracking annotation
+            add_annotation(
+                document,
+                kind="refine-characters",
+                content=(
+                    "refined bot character details and user character info "
+                    "inside registry and timeline"
+                ),
+                reasoning=reasoning,
             )
 
             # 8. Re-materialize Document runtime stats
-            turn_count = sum(1 for item in document.items if item.kind == "turn")
-            document.meta.stats = {
-                "turn_count": turn_count,
-                "item_count": len(document.items),
-                "character_count": len(document.meta.identities),
-            }
+            update_meta(document)
 
             # 9. Commit changes back to disk
             with open(file_path, "w", encoding="utf-8") as f:

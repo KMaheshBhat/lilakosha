@@ -114,7 +114,7 @@ def run(config: dict) -> None:
             subjective="they", objective="them", possessive="their"
         )
 
-        identities_pool = [
+        identities = [
             CharacterIdentity(
                 entity_id="user",
                 name="User",
@@ -133,14 +133,17 @@ def run(config: dict) -> None:
 
         # 8. Construct CDM Document Envelope using structural Models
         meta_obj = DocumentMeta(
-            source_identity="PygmalionAI/PIPPA",
-            bot_id=str(bot_id),
-            bot_name=raw_record.get("bot_name"),
-            ingestion_timestamp=timestamp,
-            identities=identities_pool,
-            source_record=raw_record,
-            annotations=[],
+            source={
+                "source_identity": "PygmalionAI/PIPPA",
+                "bot_id": str(bot_id),
+                "bot_name": raw_record.get("bot_name"),
+                "ingestion_timestamp": timestamp,
+                "source_record": raw_record,
+                "identities": identities,
+            },
+            health={},
             stats={},
+            annotations=[],
         )
 
         document_trace = Document(
@@ -192,7 +195,7 @@ def run(config: dict) -> None:
         document_trace.meta.stats = {
             "turn_count": turn_item_counter,
             "item_count": len(document_trace.items),
-            "character_count": len(identities_pool),
+            "character_count": len(identities),
         }
 
         # 13. Write the singular living canvas artifact directly to its slot

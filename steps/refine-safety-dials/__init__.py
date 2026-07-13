@@ -6,7 +6,8 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CategorizationItem, Document
+from cdm.core import CategorizationItem, Document
+from cdm.meta import add_annotation, update_meta
 from cdm.refine import SafetyDialsResponse
 from inference import Message, OpenAIInference
 
@@ -100,10 +101,6 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
-            # --- Health Guard Gate ---
-            if document.meta and document.meta.healthy is False:
-                continue
-
             # 2. Idempotency Check aligned with structural CDM category definitions
             existing_categories = {
                 item.category
@@ -139,13 +136,7 @@ def run(config: dict) -> None:
             reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
-            # 5. Hydrate document metadata safety properties (Cached materialization
-            #    snapshots)
-            document.meta.sexual_axis = extracted_data.sexual_axis
-            document.meta.violence_axis = extracted_data.violence_axis
-            document.meta.toxicity_axis = extracted_data.toxicity_axis
-
-            # 6. Inject structured CategorizationItems into the timeline layout
+            # 5. Inject structured CategorizationItems into the timeline layout
             existing_cat_count = sum(
                 1 for item in document.items if item.kind == "categorization"
             )
@@ -170,36 +161,21 @@ def run(config: dict) -> None:
                     )
                     document.items.append(safety_item)
 
-            # 7. Append tracking annotations safely to satisfy static type checking
-            if document.meta.annotations is None:
-                document.meta.annotations = []
-
-            document.meta.annotations.append(
-                Annotation(
-                    kind="refine-safety-dials",
-                    content=(
-                        "classified safety axes for the document and "
-                        "appended discrete serialization categorization items"
-                    ),
-                    reasoning=reasoning,
-                )
+            # 6. Append tracking annotation
+            add_annotation(
+                document,
+                kind="refine-safety-dials",
+                content=(
+                    "classified safety axes for the document and "
+                    "appended discrete serialization categorization items"
+                ),
+                reasoning=reasoning,
             )
 
-            # 8. Materialize runtime stats to account for the layout mutation (preserve
-            #    word_count)
-            turn_count = sum(1 for item in document.items if item.kind == "turn")
-            current_word_count = (
-                document.meta.stats.get("word_count") if document.meta.stats else None
-            )
+            # 7. Materialize runtime stats to account for the layout mutation
+            update_meta(document)
 
-            document.meta.stats = {
-                "turn_count": turn_count,
-                "item_count": len(document.items),
-                "character_count": len(document.meta.identities),
-                "word_count": current_word_count,
-            }
-
-            # 9. Commit changes back to disk with pretty-print layout
+            # 8. Commit changes back to disk with pretty-print layout
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(document.model_dump_json(indent=2))
 

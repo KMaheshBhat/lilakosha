@@ -1,0 +1,11 @@
+# LilaKosha-MK1: Report on Record Health and Statistics
+pipeline:
+    - "refresh-meta"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"

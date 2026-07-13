@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 
-from cdm.core import Document
+from cdm.core import Document, ResolvedMeta
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,8 @@ def run(config: dict) -> None:
                 data = json.load(f)
 
             document = Document.model_validate(data)
-            identities = document.meta.identities
+            resolved = document.meta.resolved or ResolvedMeta()
+            identities = resolved.identities
 
             # Find player-controlled identity (user)
             player_identity = next(

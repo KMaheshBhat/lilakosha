@@ -6,7 +6,8 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document, TurnItem
+from cdm.core import Document, TurnItem
+from cdm.meta import add_annotation, has_annotation, update_meta
 from cdm.refine import SingleTurnGrammarResponse
 from inference import Message, OpenAIInference
 
@@ -110,10 +111,6 @@ def run(config: dict) -> None:
                 with open(file_path, "r", encoding="utf-8") as f:
                     document = Document.model_validate_json(f.read())
 
-                # --- Health Guard Gate ---
-                if document.meta and document.meta.healthy is False:
-                    continue
-
                 history_turns = []
 
                 # Iterate through tracking transaction items
@@ -192,30 +189,16 @@ def run(config: dict) -> None:
                         item.prose = extracted_data.rewritten_prose
 
                         # Append tracking step annotation if not present
-                        # for this run phase
-                        has_annotation = any(
-                            anno.kind == "refine-grammar"
-                            for anno in (document.meta.annotations or [])
-                        )
-                        if not has_annotation:
-                            grammar_annotation = Annotation(
+                        if not has_annotation(document, "refine-grammar"):
+                            add_annotation(
+                                document,
                                 kind="refine-grammar",
                                 content="step-by-step single-turn third-person",
                                 reasoning=reasoning,
                             )
-                            if not document.meta.annotations:
-                                document.meta.annotations = []
-                            document.meta.annotations.append(grammar_annotation)
 
                         # Re-materialize layout metric statistics post-mutation
-                        turn_count = sum(
-                            1 for doc_item in document.items if doc_item.kind == "turn"
-                        )
-                        document.meta.stats = {
-                            "turn_count": turn_count,
-                            "item_count": len(document.items),
-                            "character_count": len(document.meta.identities),
-                        }
+                        update_meta(document)
 
                         # Flush state to flat file immediately after single turn success
                         with open(file_path, "w", encoding="utf-8") as f:

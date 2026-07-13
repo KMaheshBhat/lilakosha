@@ -3,7 +3,8 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document
+from cdm.core import Document
+from cdm.meta import add_annotation, remove_annotation, update_meta
 
 logger = logging.getLogger(__name__)
 
@@ -75,73 +76,40 @@ def run(config: dict) -> None:
                 document = Document.model_validate_json(f.read())
 
             # Detect if timeline items contain target categorizations
+            # matching new schemas
             has_timeline_items = any(
-                item.kind == "categorization"
-                and item.category in ("primary_genre", "themes")
+                item.kind == "categorization" and item.category in ("genre", "theme")
                 for item in document.items
             )
 
-            # Check if active metadata elements or timeline records are present to clear
-            has_metadata = (
-                document.meta.primary_genre is not None
-                or (document.meta.themes is not None and len(document.meta.themes) > 0)
-                or has_timeline_items
-            )
-
-            if has_metadata:
-                # 1. Nullify the genre and theme dimensions on document metadata
-                document.meta.primary_genre = None
-                document.meta.themes = None
-
-                # 2. Clear out discrete timeline serialization elements
+            if has_timeline_items:
+                # 2. Clear out discrete timeline serialization elements matching
+                #    the refinement pass
                 document.items = [
                     item
                     for item in document.items
                     if not (
                         item.kind == "categorization"
-                        and item.category in ("primary_genre", "themes")
+                        and item.category in ("genre", "theme")
                     )
                 ]
 
-                # 3. Filter out historical refinement annotations to maintain
-                # track integrity
-                if document.meta.annotations:
-                    document.meta.annotations = [
-                        anno
-                        for anno in document.meta.annotations
-                        if anno.kind != "refine-genre-theme"
-                    ]
-                else:
-                    document.meta.annotations = []
+                # 3. Filter out historical refinement annotations to
+                #    maintain track integrity
+                remove_annotation(document, "refine-genre-theme")
 
                 # 4. Append a surgical tracking trace token
-                scalpel_annotation = Annotation(
+                add_annotation(
+                    document,
                     kind="scalpel-genre-theme",
                     content=(
                         "cleared narrative genre classifications and thematic tags "
                         "from metadata caches and timeline items via scalpel range"
                     ),
-                    reasoning=None,
                 )
-                document.meta.annotations.append(scalpel_annotation)
 
                 # 5. Re-materialize layout metric statistics post-mutation
-                #    (preserve word_count)
-                turn_count = sum(
-                    1 for doc_item in document.items if doc_item.kind == "turn"
-                )
-                current_word_count = (
-                    document.meta.stats.get("word_count")
-                    if document.meta.stats
-                    else None
-                )
-
-                document.meta.stats = {
-                    "turn_count": turn_count,
-                    "item_count": len(document.items),
-                    "character_count": len(document.meta.identities),
-                    "word_count": current_word_count,
-                }
+                update_meta(document)
 
                 # 6. Save updates cleanly back to the filesystem
                 with open(file_path, "w", encoding="utf-8") as f:

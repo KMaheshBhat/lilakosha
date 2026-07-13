@@ -195,6 +195,18 @@ DocumentItemUnion = Union[
 DiscriminatedDocumentItem = Annotated[DocumentItemUnion, Field(discriminator="kind")]
 
 
+class ResolvedMeta(BaseModel):
+    identities: List[CharacterIdentity] = Field(
+        default_factory=list,
+        description="The of all characters present within this trace.",
+    )
+    sexuality: Optional[SexualScale] = None
+    violence: Optional[ViolenceScale] = None
+    toxicity: Optional[ToxicityScale] = None
+    genre: Optional[MainGenre] = None
+    themes: Optional[List[str]] = Field(default_factory=list)
+
+
 class Annotation(BaseModel):
     kind: str
     content: str
@@ -206,25 +218,11 @@ class Annotation(BaseModel):
 # ==========================================
 class DocumentMeta(BaseModel):
     model_config = ConfigDict(extra="allow")
-
-    source_identity: str
-    source_record: Optional[Dict[str, Any]] = None
-    bot_id: Optional[str] = None
-    bot_name: Optional[str] = "the character"
-    ingestion_timestamp: Optional[str] = None
-    healthy: Optional[bool] = None
-    crpo_signals: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    source: Optional[Dict[str, Any]] = None
+    resolved: Optional[ResolvedMeta] = None
+    health: Optional[Dict[str, Any]] = None
+    stats: Optional[Dict[str, Any]] = None
     annotations: Optional[List[Annotation]] = None
-    sexual_axis: Optional[SexualScale] = None
-    violence_axis: Optional[ViolenceScale] = None
-    toxicity_axis: Optional[ToxicityScale] = None
-    primary_genre: Optional[MainGenre] = None
-    themes: Optional[List[str]] = Field(default_factory=list)
-    identities: List[CharacterIdentity] = Field(
-        default_factory=list,
-        description="The sealed directory of all characters present within this trace.",
-    )
-    stats: Dict[str, Any]
 
 
 class Document(BaseModel):

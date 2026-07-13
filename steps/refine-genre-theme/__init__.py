@@ -6,7 +6,8 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Annotation, CategorizationItem, Document
+from cdm.core import CategorizationItem, Document
+from cdm.meta import add_annotation, update_meta
 from cdm.refine import GenreAndThemesResponse
 from inference import Message, OpenAIInference
 
@@ -100,14 +101,13 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
-            # --- Health Guard Gate ---
-            if document.meta and document.meta.healthy is False:
-                continue
-
-            # 2. Idempotency Sniff Test
-            if document.meta.primary_genre is not None or (
-                document.meta.themes and len(document.meta.themes) > 0
-            ):
+            # 2. Idempotency Check aligned with structural CDM category definitions
+            existing_categories = {
+                item.category
+                for item in document.items
+                if item.kind == "categorization"
+            }
+            if {"theme", "genre"}.issubset(existing_categories):
                 continue
 
             # 3. Generate structured prompt inputs from templates
@@ -136,11 +136,7 @@ def run(config: dict) -> None:
             reasoning = result.reasoning
             logger.debug(f"extracted_data: {extracted_data}")
 
-            # 5. Hydrate cached snapshot metadata fields
-            document.meta.primary_genre = extracted_data.primary_genre
-            document.meta.themes = extracted_data.themes
-
-            # 6. Inject structured CategorizationItems into the timeline matrix
+            # 5. Inject structured CategorizationItems into the timeline matrix
             existing_cat_count = sum(
                 1 for item in document.items if item.kind == "categorization"
             )
@@ -165,30 +161,21 @@ def run(config: dict) -> None:
             )
             document.items.append(theme_item)
 
-            # 7. Append tracking annotations safely
-            if document.meta.annotations is None:
-                document.meta.annotations = []
-
-            document.meta.annotations.append(
-                Annotation(
-                    kind="refine-genre-theme",
-                    content=(
-                        "classified primary genre and thematic indicators "
-                        "as structured layout items"
-                    ),
-                    reasoning=reasoning,
-                )
+            # 6. Append tracking annotation
+            add_annotation(
+                document,
+                kind="refine-genre-theme",
+                content=(
+                    "classified primary genre and thematic indicators "
+                    "as structured layout items"
+                ),
+                reasoning=reasoning,
             )
 
-            # 8. Re-materialize runtime document stats
-            turn_count = sum(1 for item in document.items if item.kind == "turn")
-            document.meta.stats = {
-                "turn_count": turn_count,
-                "item_count": len(document.items),
-                "character_count": len(document.meta.identities),
-            }
+            # 7. Re-materialize runtime document stats
+            update_meta(document)
 
-            # 9. Commit changes back to disk with pretty-print layout
+            # 8. Commit changes back to disk with pretty-print layout
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(document.model_dump_json(indent=2))
 

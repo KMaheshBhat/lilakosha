@@ -2,11 +2,12 @@
 Convert the target roleplay turn into strict third-person, past-tense narrative prose while enforcing verbatim structural retention.
 
 ### CHARACTER DESIGNATIONS
-{# Use a namespace object to persist assignments outside of the loop block #}
+{# Use a namespace object to persist assignments outside of loop scope #}
 {%- set ns = namespace(target_char=None) -%}
 {%- set secondary_chars = [] -%}
-
-{%- for identity in session.meta.identities -%}
+{% set resolved = session.meta.resolved %}
+{% set identities = resolved.identities if resolved and resolved.identities else [] %}
+{%- for identity in identities -%}
     {%- if identity.entity_id == target_turn.actor_id -%}
         {%- set ns.target_char = identity -%}
     {%- else -%}
@@ -26,13 +27,15 @@ Convert the target roleplay turn into strict third-person, past-tense narrative 
 
 ### CHRONOLOGICAL HISTORY CONTEXT
 Use this context solely for establishing continuity, tracking gender consistency, and locking down pronoun mappings. Do NOT modify or repeat this data.
+
 {% for past_item in history_context if past_item.kind == 'turn' -%}
-    {# Resolve the historical actor's name dynamically from the registry #}
-    {%- set past_char_name = "Unknown" -%}
-    {%- for identity in session.meta.identities -%}
-        {%- if identity.entity_id == past_item.actor_id -%}{%- set past_char_name = identity.name -%}{%- endif -%}
+    {%- set hist = namespace(name="Unknown") -%}
+    {%- for identity in identities -%}
+        {%- if identity.entity_id == past_item.actor_id -%}
+            {%- set hist.name = identity.name -%}
+        {%- endif -%}
     {%- endfor -%}
-* {{ past_char_name }}: {{ past_item.prose }}
+* {{ hist.name }}: {{ past_item.prose }}
 {%- endfor %}
 
 ### REWRITE RULES

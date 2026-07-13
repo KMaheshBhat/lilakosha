@@ -9,9 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 def run(config: dict) -> None:
-    """
-    LilaKosha Telemetry Step: Aggregate and report corpus statistics,
-    including breakdowns by safety dials, primary genres, and thematic distributions.
+    """LilaKosha Telemetry Step: Aggregate and report corpus statistics,
+
+    including breakdowns by safety dials, primary genres, and thematic
+    distributions.
     """
     processed_vol = Path(config["volumes"]["processed"])
     records_dir = processed_vol / "cdm" / "records"
@@ -45,32 +46,19 @@ def run(config: dict) -> None:
                 data = json.load(f)
 
             document = Document.model_validate(data)
-            meta = document.meta
 
-            # Extract and count safety classifications (handle Enums safely via .value)
-            sexual_counts[meta.sexual_axis.value if meta.sexual_axis else "Unset"] += 1
-            violence_counts[
-                meta.violence_axis.value if meta.violence_axis else "Unset"
-            ] += 1
-            toxicity_counts[
-                meta.toxicity_axis.value if meta.toxicity_axis else "Unset"
-            ] += 1
+            stats = document.meta.stats or {}
 
-            # Extract and count primary genres
-            genre_counts[
-                meta.primary_genre.value if meta.primary_genre else "Unset"
-            ] += 1
+            # Update aggregators using the returned dictionary values
+            sexual_counts[stats["sexual_axis"]] += 1
+            violence_counts[stats["violence_axis"]] += 1
+            toxicity_counts[stats["toxicity_axis"]] += 1
+            genre_counts[stats["primary_genre"]] += 1
 
-            # Extract and count themes
-            if meta.themes:
-                for theme in meta.themes:
-                    theme_counts[theme] += 1
-            else:
-                theme_counts["[No Themes Assigned]"] += 1
+            for theme in stats["themes"]:
+                theme_counts[theme] += 1
 
-            # Count conversation turns in this record
-            turn_count = sum(1 for item in document.items if item.kind == "turn")
-            turn_counts.append(turn_count)
+            turn_counts.append(stats["turn_count"])
 
         except Exception:
             # Skip unparseable files during stats aggregation to avoid

@@ -3,7 +3,8 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document, PronounSet
+from cdm.core import Document, ResolvedMeta
+from cdm.meta import add_annotation, remove_annotation, update_meta
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +84,14 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
+            resolved = document.meta.resolved or ResolvedMeta()
+            identities = resolved.identities or []
+
             if pc_names is not None:
                 player = next(
                     (
                         identity
-                        for identity in document.meta.identities
+                        for identity in identities
                         if identity.is_player_controlled
                     ),
                     None,
@@ -98,72 +102,46 @@ def run(config: dict) -> None:
                     skipped_name_count += 1
                     continue
 
-            # Detect whether character items or refinement annotations exist
+            # Detect whether character items, refinement annotations,
+            # or resolved identities exist
             has_timeline_items = any(
                 item.kind == "character" for item in document.items
             )
+
             has_refine_annotations = any(
                 anno.kind == "refine-characters"
                 for anno in (document.meta.annotations or [])
             )
 
-            if has_timeline_items or has_refine_annotations:
+            has_resolved_identities = bool(identities)
+
+            if has_timeline_items or has_refine_annotations or has_resolved_identities:
                 # A. Purge inline character lore blocks from the transactional timeline
                 document.items = [
                     item for item in document.items if item.kind != "character"
                 ]
 
-                # B. Reset Authoritative Identity Registry fields
-                #    to default fallback states
-                bot_id = document.meta.bot_id or "unknown_bot"
+                # B. Clear synthesized identity registry
+                if document.meta.resolved:
+                    document.meta.resolved.identities = []
 
-                default_pronouns = PronounSet(
-                    subjective="they", objective="them", possessive="their"
-                )
-                for identity in document.meta.identities:
-                    if identity.entity_id == "user":
-                        identity.name = "User"
-                        identity.gender = "unknown"
-                        identity.pronouns = default_pronouns
-                    elif identity.entity_id == bot_id:
-                        identity.name = document.meta.bot_name or "Bot"
-                        identity.gender = "unknown"
-                        identity.pronouns = default_pronouns
+                # C. Remove refinement annotation
+                remove_annotation(document, "refine-characters")
 
-                # C. Filter out historical processing annotations to
-                #    prevent tracking pollution
-                if document.meta.annotations:
-                    document.meta.annotations = [
-                        anno
-                        for anno in document.meta.annotations
-                        if anno.kind != "refine-characters"
-                    ]
-                else:
-                    document.meta.annotations = []
-
-                # D. Append standard surgical tracking trace token to
-                #    satisfy audit trails
-                scalpel_annotation = Annotation(
-                    kind="scalpel-character",
+                # D. Append audit trace
+                add_annotation(
+                    document,
+                    kind="scalpel-characters",
                     content=(
                         "cleared synthesized character timeline profiles and reset "
                         "identity registries via scalpel range"
                     ),
-                    reasoning=None,
                 )
-                document.meta.annotations.append(scalpel_annotation)
 
-                # E. Re-materialize layout metric statistics post-mutation
-                turn_count = sum(
-                    1 for doc_item in document.items if doc_item.kind == "turn"
-                )
-                document.meta.stats = {
-                    "turn_count": turn_count,
-                    "item_count": len(document.items),
-                    "character_count": len(document.meta.identities),
-                }
+                # E. Re-materialize metadata
+                update_meta(document)
 
-                # F. Commit updates cleanly back to disk
+                # F. Commit updates
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(document.model_dump_json(indent=2))
 

@@ -3,7 +3,8 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document
+from cdm.core import Document, TurnItem
+from cdm.meta import add_annotation, remove_annotation, update_meta
 
 logger = logging.getLogger(__name__)
 
@@ -79,75 +80,46 @@ def run(config: dict) -> None:
             # Optional safety guard: only restore prose if the player identity
             # has been reset to the default tracking placeholder.
             if character_reset_sentinel:
-                player_identity = next(
-                    (
-                        identity
-                        for identity in document.meta.identities
-                        if identity.is_player_controlled
-                    ),
-                    None,
+                health = document.meta.health or {}
+                has_user_info = (
+                    health.get("breakdown", {})
+                    .get("refine-characters", {})
+                    .get("user info", False)
                 )
-                if (
-                    player_identity is None
-                    or player_identity.name != "User"
-                    or player_identity.gender != "unknown"
-                ):
+                if not has_user_info:
                     continue
 
             modified_file = False
 
-            # Traverse the transactional ledger items matching discriminated kind tokens
+            # Traverse the transactional ledger items using unified type-checking
             for item in document.items:
-                if item.kind != "turn":
+                if not isinstance(item, TurnItem):
                     continue
 
                 # Inverted Idempotency check: Only target turns that have been modified
-                if getattr(item, "original_prose", None) is not None:
+                if item.original_prose is not None:
                     # Restore the raw snapshot back to the main prose track
-                    item.prose = item.original_prose or ""
+                    item.prose = item.original_prose
                     item.original_prose = None
                     item.prose_revision_comments = None
                     modified_file = True
 
             if modified_file:
                 # Filter out legacy grammar annotations to prevent pipeline confusion
-                if document.meta.annotations:
-                    document.meta.annotations = [
-                        anno
-                        for anno in document.meta.annotations
-                        if anno.kind != "refine-grammar"
-                    ]
-                else:
-                    document.meta.annotations = []
+                remove_annotation(document, "refine-grammar")
 
                 # Append a surgical track annotation for trace lineage
-                scalpel_annotation = Annotation(
+                add_annotation(
+                    document,
                     kind="scalpel-grammar",
                     content=(
                         "roll-back of grammar mutations to original prose state "
                         "via scalpel range"
                     ),
-                    reasoning=None,
                 )
-                document.meta.annotations.append(scalpel_annotation)
 
                 # Re-materialize layout metric statistics post-mutation
-                # (preserve word_count)
-                turn_count = sum(
-                    1 for doc_item in document.items if doc_item.kind == "turn"
-                )
-                current_word_count = (
-                    document.meta.stats.get("word_count")
-                    if document.meta.stats
-                    else None
-                )
-
-                document.meta.stats = {
-                    "turn_count": turn_count,
-                    "item_count": len(document.items),
-                    "character_count": len(document.meta.identities),
-                    "word_count": current_word_count,
-                }
+                update_meta(document)
 
                 # Commit updates smoothly back to disk
                 with open(file_path, "w", encoding="utf-8") as f:

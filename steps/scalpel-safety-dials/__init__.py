@@ -3,7 +3,8 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cdm.core import Annotation, Document
+from cdm.core import Document
+from cdm.meta import add_annotation, remove_annotation, update_meta
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +13,9 @@ def run(config: dict) -> None:
     """
     LilaKosha Scalpel Pass: Clear Safety Dials.
     Iterates through standalone Common Document Model (CDM) records, purging
-    computed safety metrics and tracking annotations to allow clean evaluations.
-    Supports optional runtime range filtering via 'start_uuid' and
-    'stop_uuid' parameters.
+    computed safety metrics from the items timeline and tracking annotations
+    to allow clean evaluations. Supports optional runtime range filtering
+    via 'start_uuid' and 'stop_uuid' parameters.
     """
     # 1. Resolve Data Infrastructure
     processed_vol = Path(config["volumes"]["processed"])
@@ -54,6 +55,8 @@ def run(config: dict) -> None:
     purged_count = 0
     skipped_range_count = 0
 
+    target_categories = {"sexuality", "violence", "toxicity"}
+
     for file_path in tqdm(record_files, desc="Processing Scalpel Operation"):
         record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
 
@@ -71,48 +74,37 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
-            # Evaluate state vectors for pending execution conditions
-            has_metrics = (
-                getattr(document.meta, "sexual_axis", None) is not None
-                or getattr(document.meta, "violence_axis", None) is not None
-                or getattr(document.meta, "toxicity_axis", None) is not None
+            # Evaluate state vectors for pending execution conditions within items loop
+            has_metrics = any(
+                item.kind == "categorization" and item.category in target_categories
+                for item in document.items
             )
 
             if has_metrics:
-                # 1. Nullify structural safety layout vectors
-                document.meta.sexual_axis = None
-                document.meta.violence_axis = None
-                document.meta.toxicity_axis = None
+                # 1. Filter out the specific structural safety layout vectors
+                document.items = [
+                    item
+                    for item in document.items
+                    if not (
+                        item.kind == "categorization"
+                        and item.category in target_categories
+                    )
+                ]
 
                 # 2. Purge stale lineage tracking details to clean up metrics
-                if document.meta.annotations:
-                    document.meta.annotations = [
-                        anno
-                        for anno in document.meta.annotations
-                        if anno.kind != "refine-safety-dials"
-                    ]
-                else:
-                    document.meta.annotations = []
+                remove_annotation(document, "refine-safety-dials")
 
                 # 3. Inject explicit scalpel audit token
-                scalpel_annotation = Annotation(
+                add_annotation(
+                    document,
                     kind="scalpel-safety-dials",
                     content=(
                         "cleared safety dial metrics and annotations via scalpel range"
                     ),
-                    reasoning=None,
                 )
-                document.meta.annotations.append(scalpel_annotation)
 
                 # 4. Re-materialize layout metric statistics post-mutation
-                turn_count = sum(
-                    1 for doc_item in document.items if doc_item.kind == "turn"
-                )
-                document.meta.stats = {
-                    "turn_count": turn_count,
-                    "item_count": len(document.items),
-                    "character_count": len(document.meta.identities),
-                }
+                update_meta(document)
 
                 # 5. Commit modification atomicity directly to local slot
                 with open(file_path, "w", encoding="utf-8") as f:
