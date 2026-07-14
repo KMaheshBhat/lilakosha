@@ -18,6 +18,7 @@ from cdm.core import (
     PronounSet,
     TurnItem,
 )
+from cdm.meta import calculate_health, calculate_stats
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +147,7 @@ def run(config: dict) -> None:
             annotations=[],
         )
 
-        document_trace = Document(
-            id=target_uuid, kind="document", meta=meta_obj, items=[]
-        )
+        document = Document(id=target_uuid, kind="document", meta=meta_obj, items=[])
 
         # Track internal counters for local deterministic unique identifiers
         character_item_counter = 0
@@ -165,7 +164,7 @@ def run(config: dict) -> None:
                 entity_id=str(bot_id),
                 content=str(raw_desc.strip()),
             )
-            document_trace.items.append(character_info)
+            document.items.append(character_info)
 
         # 10. Map Conversational Turns (Linguistic Evidence Line Items)
         for turn in raw_record.get("conversation", []) or []:
@@ -179,28 +178,25 @@ def run(config: dict) -> None:
                 actor_id=actor_id,
                 prose=str(raw_message.strip()),
             )
-            document_trace.items.append(turn_obj)
+            document.items.append(turn_obj)
 
         # 11. Append the basic lineage trace token to meta annotations
-        if document_trace.meta.annotations is None:
-            document_trace.meta.annotations = []
-        document_trace.meta.annotations.append(
+        if document.meta.annotations is None:
+            document.meta.annotations = []
+        document.meta.annotations.append(
             Annotation(
                 kind="ingestion",
                 content="created from PIPPA raw record",
             )
         )
 
-        # 12. Materialize basic document runtime statistics metrics block
-        document_trace.meta.stats = {
-            "turn_count": turn_item_counter,
-            "item_count": len(document_trace.items),
-            "character_count": len(identities),
-        }
+        # 12. Materialize basic document (only health and stats)
+        document.meta.health = calculate_health(document)
+        document.meta.stats = calculate_stats(document)
 
         # 13. Write the singular living canvas artifact directly to its slot
         with open(target_file, "w", encoding="utf-8") as f:
-            f.write(document_trace.model_dump_json(indent=2))
+            f.write(document.model_dump_json(indent=2))
 
     logger.info(
         f"✅ Ingestion cycle tracking updated. "
