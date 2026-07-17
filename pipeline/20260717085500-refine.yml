@@ -64,7 +64,7 @@ services:
         base_url: https://integrate.api.nvidia.com/v1
         api_key: "${NVIDIA_API_KEY}"
         model: "nvidia/nemotron-3-ultra-550b-a55b"
-        request_per_minute: 35
+        request_per_minute: 31
 
 bindings:
     refine-characters:
@@ -144,3 +144,4 @@ parameters:
 # Checked around 2026-07-17 10:30:00 IST - the provider had
 # degraded around refine-characters 15332/16000 mark.
 # Stopping the pipeline.
+# Restarted around 2026-07-17 18:10:00 IST
