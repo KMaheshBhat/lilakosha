@@ -178,3 +178,43 @@ parameters:
 # INFO:     Turns Remaining         : 323156
 # INFO:     Estimated Local Compute : 448.8 hours (@5s/turn)
 # INFO: ============================================================
+# Checked around 2026-07-17 18:20:00 IST - completed
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16000
+# INFO: Healthy Records:         8948 (55.93%)
+# INFO: Defective Records:       7052
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 15354/16000 (95.96%)
+# INFO:     annotation          : 15354/16000 (95.96%)
+# INFO:     bot detail          : 15970/16000 (99.81%)
+# INFO:     user info           : 15354/16000 (95.96%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 14999/16000 (93.74%)
+# INFO:     annotation          : 14999/16000 (93.74%)
+# INFO:     sexual axis         : 14999/16000 (93.74%)
+# INFO:     violence axis       : 14999/16000 (93.74%)
+# INFO:     toxicity axis       : 14999/16000 (93.74%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 14987/16000 (93.67%)
+# INFO:     annotation          : 14987/16000 (93.67%)
+# INFO:     primary genre       : 14987/16000 (93.67%)
+# INFO:     themes              : 14987/16000 (93.67%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 8962/16000 (56.01%)
+# INFO:     annotation          : 9000/16000 (56.25%)
+# INFO:     prose               : 8962/16000 (56.01%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 759561
+# INFO:     Turns Converted         : 422454 (55.62%)
+# INFO:     Turns Remaining         : 337107
+# INFO:     Estimated Local Compute : 468.2 hours (@5s/turn)
+# INFO: ============================================================
