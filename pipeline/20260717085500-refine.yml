@@ -140,4 +140,7 @@ parameters:
 # INFO: ============================================================
 # INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
 # INFO: ============================================================
-# Started around 2026-07-15 08:55:00 IST
+# Started around 2026-07-17 08:55:00 IST
+# Checked around 2026-07-17 10:30:00 IST - the provider had
+# degraded around refine-characters 15332/16000 mark.
+# Stopping the pipeline.
