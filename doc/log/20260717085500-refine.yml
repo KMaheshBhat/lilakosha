@@ -203,4 +203,47 @@ parameters:
 # to be a quota issue).
 # Around 2026-07-18 12:00:00 IST there had been a power outage and
 # the power backup was on its last leg. So all pipelines were stopped.
-# Restarted around 2026-07-18 17:30:00 IST once power was restored.
+# Restarted around 2026-07-18 22:30:00 IST once power was restored
+# and got a 'retry on rate limit' feature implemented in the OpenAI
+# inference logic.
+# Checked at 2026-07-18 23:40:00 IST - completed. Retry logic
+# managed to take it to completion.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16000
+# INFO: Healthy Records:         9593 (59.96%)
+# INFO: Defective Records:       6407
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 15977/16000 (99.86%)
+# INFO:     annotation          : 15977/16000 (99.86%)
+# INFO:     bot detail          : 15999/16000 (99.99%)
+# INFO:     user info           : 15977/16000 (99.86%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 15999/16000 (99.99%)
+# INFO:     annotation          : 15999/16000 (99.99%)
+# INFO:     sexual axis         : 15999/16000 (99.99%)
+# INFO:     violence axis       : 15999/16000 (99.99%)
+# INFO:     toxicity axis       : 15999/16000 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 15988/16000 (99.92%)
+# INFO:     annotation          : 15988/16000 (99.92%)
+# INFO:     primary genre       : 15988/16000 (99.92%)
+# INFO:     themes              : 15988/16000 (99.92%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 9607/16000 (60.04%)
+# INFO:     annotation          : 9648/16000 (60.30%)
+# INFO:     prose               : 9607/16000 (60.04%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 759561
+# INFO:     Turns Converted         : 453033 (59.64%)
+# INFO:     Turns Remaining         : 306528
+# INFO:     Estimated Local Compute : 425.7 hours (@5s/turn)
+# INFO: ===========================================================

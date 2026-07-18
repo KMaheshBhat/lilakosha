@@ -139,6 +139,4 @@ parameters:
 # Started around 2026-07-17 18:30:00 IST
 # Around 2026-07-18 12:00:00 IST there had been a power outage and
 # the power backup was on its last leg. So all pipelines were stopped.
-# Restarted around 2026-07-18 22:30:00 IST once power was restored
-# and got a 'retry on rate limit' feature implemented in the OpenAI
-# inference logic.
+# Restarted around 2026-07-18 17:30:00 IST once power was restored.
