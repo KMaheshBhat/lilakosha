@@ -64,7 +64,7 @@ services:
         base_url: https://integrate.api.nvidia.com/v1
         api_key: "${NVIDIA_API_KEY}"
         model: "nvidia/nemotron-3-ultra-550b-a55b"
-        request_per_minute: 35
+        requests_per_minute: 35
 
 bindings:
     refine-characters:
@@ -137,3 +137,8 @@ parameters:
 # INFO:     Estimated Local Compute : 468.2 hours (@5s/turn)
 # INFO: ============================================================
 # Started around 2026-07-17 18:30:00 IST
+# Around 2026-07-18 12:00:00 IST there had been a power outage and
+# the power backup was on its last leg. So all pipelines were stopped.
+# Restarted around 2026-07-18 22:30:00 IST once power was restored
+# and got a 'retry on rate limit' feature implemented in the OpenAI
+# inference logic.

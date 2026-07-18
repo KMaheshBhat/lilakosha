@@ -37,7 +37,8 @@ services:
         provider: openai-compatible
         base_url: https://api.groq.com/openai/v1
         api_key: "${GROQ_API_KEY}"
-        model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        # model: "meta-llama/llama-4-scout-17b-16e-instruct"
+        model: "openai/gpt-oss-120b"
         requests_per_minute: 3
     google-gemini:
         provider: openai-compatible
@@ -63,9 +64,10 @@ services:
         provider: openai-compatible
         base_url: https://integrate.api.nvidia.com/v1
         api_key: "${NVIDIA_API_KEY}"
-        # model: "nvidia/nemotron-3-ultra-550b-a55b"
-        model: "z-ai/glm-5.2"
-        request_per_minute: 31
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        # model: "z-ai/glm-5.2"
+        requests_per_minute: 31
+        retry_on_rate_limit: true
 
 bindings:
     refine-characters:
@@ -80,6 +82,8 @@ bindings:
 
     refine-genre-theme:
         service: nvidia
+        # service: cerebras
+        # service: groq
         temperature: 0.1
         max_tokens: 2048
 
@@ -197,3 +201,6 @@ parameters:
 # model specific but at the provider (NVIDIA) level.  Repeatedly
 # hitting 'Too Many Requests' errors (though this does not indicate
 # to be a quota issue).
+# Around 2026-07-18 12:00:00 IST there had been a power outage and
+# the power backup was on its last leg. So all pipelines were stopped.
+# Restarted around 2026-07-18 17:30:00 IST once power was restored.
