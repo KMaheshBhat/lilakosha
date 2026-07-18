@@ -44,3 +44,4 @@ class InferenceConfig(BaseModel):
     model: str
     timeout: float = 300.0
     max_retries: int = 3
+    retry_on_rate_limit: bool = False

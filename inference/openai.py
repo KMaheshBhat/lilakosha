@@ -2,7 +2,7 @@ import json
 import time
 from typing import Any, Sequence, TypeVar
 
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from pydantic import BaseModel, ValidationError
 
 from inference.contract import Inference
@@ -38,6 +38,7 @@ class OpenAIInference(Inference):
                 model=service_cfg.get("model", ""),
                 timeout=service_cfg.get("timeout", 300.0),
                 max_retries=service_cfg.get("max_retries", 3),
+                retry_on_rate_limit=service_cfg.get("retry_on_rate_limit", False),
             )
         )
 
@@ -90,81 +91,111 @@ class OpenAIInference(Inference):
 
         start = time.perf_counter()
 
-        try:
-            response = self._client.chat.completions.create(**request)
-            latency_ms = (time.perf_counter() - start) * 1000.0
-
-            choice = response.choices[0]
-            message = choice.message
-
-            content = message.content or ""
-
-            #
-            # Stage 1 : JSON decoding
-            #
+        while True:
             try:
-                parsed = json.loads(content)
-            except json.JSONDecodeError:
-                print("=" * 80)
-                print("MODEL RETURNED INVALID JSON")
-                print("=" * 80)
-                print(f"Provider : {self._config.base_url}")
-                print(f"Model    : {self._config.model}")
-                print("-" * 80)
-                print(content)
-                print("=" * 80)
-                raise
+                response = self._client.chat.completions.create(**request)
+                latency_ms = (time.perf_counter() - start) * 1000.0
 
-            #
-            # Stage 2 : Contract validation
-            #
-            try:
-                value = response_model.model_validate(parsed)
-            except ValidationError as e:
-                print("=" * 80)
-                print("INFERENCE CONTRACT VIOLATION")
-                print("=" * 80)
-                print(f"Provider : {self._config.base_url}")
-                print(f"Model    : {self._config.model}")
-                print(f"Contract : {response_model.__name__}")
-                print("-" * 80)
-                print("Validation errors:")
+                choice = response.choices[0]
+                message = choice.message
+                content = message.content or ""
 
-                for error in e.errors():
-                    location = ".".join(str(x) for x in error["loc"])
-                    print(f"  • {location}: {error['msg']}")
+                # Stage 1 : JSON decoding
+                try:
+                    parsed = json.loads(content)
+                except json.JSONDecodeError:
+                    print("=" * 80)
+                    print("MODEL RETURNED INVALID JSON")
+                    print("=" * 80)
+                    print(f"Provider : {self._config.base_url}")
+                    print(f"Model    : {self._config.model}")
+                    print("-" * 80)
+                    print(content)
+                    print("=" * 80)
+                    raise
 
-                print("-" * 80)
-                print("Returned JSON:")
-                print(json.dumps(parsed, indent=2, ensure_ascii=False))
-                print("=" * 80)
-                raise
+                # Stage 2 : Contract validation
+                try:
+                    value = response_model.model_validate(parsed)
+                except ValidationError as e:
+                    print("=" * 80)
+                    print("INFERENCE CONTRACT VIOLATION")
+                    print("=" * 80)
+                    print(f"Provider : {self._config.base_url}")
+                    print(f"Model    : {self._config.model}")
+                    print(f"Contract : {response_model.__name__}")
+                    print("-" * 80)
+                    print("Validation errors:")
 
-            usage = None
-            if response.usage is not None:
-                usage = Usage(
-                    prompt_tokens=response.usage.prompt_tokens,
-                    completion_tokens=response.usage.completion_tokens,
-                    total_tokens=response.usage.total_tokens,
+                    for error in e.errors():
+                        location = ".".join(str(x) for x in error["loc"])
+                        print(f"  • {location}: {error['msg']}")
+
+                    print("-" * 80)
+                    print("Returned JSON:")
+                    print(json.dumps(parsed, indent=2, ensure_ascii=False))
+                    print("=" * 80)
+                    raise
+
+                usage = None
+                if response.usage is not None:
+                    usage = Usage(
+                        prompt_tokens=response.usage.prompt_tokens,
+                        completion_tokens=response.usage.completion_tokens,
+                        total_tokens=response.usage.total_tokens,
+                    )
+
+                return InferenceResult(
+                    value=value,
+                    finish_reason=choice.finish_reason,
+                    reasoning=(
+                        getattr(message, "reasoning_content", None)
+                        or getattr(message, "reasoning", None)
+                    ),
+                    usage=usage,
+                    latency_ms=latency_ms,
+                    raw=response.model_dump(),
                 )
 
-            return InferenceResult(
-                value=value,
-                finish_reason=choice.finish_reason,
-                reasoning=(
-                    getattr(message, "reasoning_content", None)
-                    or getattr(message, "reasoning", None)
-                ),
-                usage=usage,
-                latency_ms=latency_ms,
-                raw=response.model_dump(),
-            )
+            except RateLimitError as e:
+                # Only handle if retry_on_rate_limit is enabled
+                if self._config.retry_on_rate_limit:
+                    # Look for the standard 'retry-after' header (case-insensitive)
+                    retry_after_header = e.response.headers.get("retry-after")
 
-        except Exception:
-            print("=" * 80)
-            print("INFERENCE REQUEST FAILED")
-            print("=" * 80)
-            print(f"Provider : {self._config.base_url}")
-            print(f"Model    : {self._config.model}")
-            print("=" * 80)
-            raise
+                    try:
+                        # Attempt to parse it as an integer number of seconds
+                        sleep_seconds = float(
+                            retry_after_header
+                        ) if retry_after_header else 5.0
+                    except ValueError:
+                        # Fallback default if headers contain a date
+                        # stamp or are missing
+                        sleep_seconds = 5.0
+
+                    print("=" * 80)
+                    print(
+                        f"RATE LIMIT (429) DETECTED. Retrying after "
+                        f"{sleep_seconds} seconds...")
+                    print(f"Provider : {self._config.base_url}")
+                    print(f"Model    : {self._config.model}")
+                    print("=" * 80)
+
+                    time.sleep(sleep_seconds)
+                    continue  # Restart the loop to retry execution
+                else:
+                    # If config says no retry, execute general exception log
+                    # and let it bubble up
+                    self._log_and_raise_failure()
+
+            except Exception:
+                self._log_and_raise_failure()
+
+    def _log_and_raise_failure(self) -> None:
+        print("=" * 80)
+        print("INFERENCE REQUEST FAILED")
+        print("=" * 80)
+        print(f"Provider : {self._config.base_url}")
+        print(f"Model    : {self._config.model}")
+        print("=" * 80)
+        raise
