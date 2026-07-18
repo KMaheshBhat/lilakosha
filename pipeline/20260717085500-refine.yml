@@ -63,7 +63,8 @@ services:
         provider: openai-compatible
         base_url: https://integrate.api.nvidia.com/v1
         api_key: "${NVIDIA_API_KEY}"
-        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        # model: "nvidia/nemotron-3-ultra-550b-a55b"
+        model: "z-ai/glm-5.2"
         request_per_minute: 31
 
 bindings:
@@ -145,3 +146,54 @@ parameters:
 # degraded around refine-characters 15332/16000 mark.
 # Stopping the pipeline.
 # Restarted around 2026-07-17 18:10:00 IST
+# Checked around 2026-07-17 20:30:00 IST - the provider
+# degraded around refine-characters 15410/16000 mark.
+# Stopping the pipeline.
+# Rest of the day, attempted and checked every now and
+# then and it seemed to work before closing for the day.
+# However, when checked in the morning, it seemed to have
+# degraded again overnight with refine-characters completed
+# and refine-safety-dials underway.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16000
+# INFO: Healthy Records:         9263 (57.89%)
+# INFO: Defective Records:       6737
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 15977/16000 (99.86%)
+# INFO:     annotation          : 15977/16000 (99.86%)
+# INFO:     bot detail          : 15999/16000 (99.99%)
+# INFO:     user info           : 15977/16000 (99.86%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 15975/16000 (99.84%)
+# INFO:     annotation          : 15975/16000 (99.84%)
+# INFO:     sexual axis         : 15975/16000 (99.84%)
+# INFO:     violence axis       : 15975/16000 (99.84%)
+# INFO:     toxicity axis       : 15975/16000 (99.84%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 15010/16000 (93.81%)
+# INFO:     annotation          : 15010/16000 (93.81%)
+# INFO:     primary genre       : 15010/16000 (93.81%)
+# INFO:     themes              : 15010/16000 (93.81%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 9277/16000 (57.98%)
+# INFO:     annotation          : 9317/16000 (58.23%)
+# INFO:     prose               : 9277/16000 (57.98%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 759561
+# INFO:     Turns Converted         : 439615 (57.88%)
+# INFO:     Turns Remaining         : 319946
+# INFO:     Estimated Local Compute : 444.4 hours (@5s/turn)
+# INFO: ============================================================
+# Swapping to z-ai/glm-5.2 and restarting.  Looks like it is not
+# model specific but at the provider (NVIDIA) level.  Repeatedly
+# hitting 'Too Many Requests' errors (though this does not indicate
+# to be a quota issue).
