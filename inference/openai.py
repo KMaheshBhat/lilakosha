@@ -90,6 +90,7 @@ class OpenAIInference(Inference):
             request["max_tokens"] = max_tokens
 
         start = time.perf_counter()
+        attempt = 0  # Initialize the retry counter for tracking exponential backoff
 
         while True:
             try:
@@ -158,34 +159,46 @@ class OpenAIInference(Inference):
                 )
 
             except RateLimitError as e:
-                # Only handle if retry_on_rate_limit is enabled
                 if self._config.retry_on_rate_limit:
-                    # Look for the standard 'retry-after' header (case-insensitive)
+                    if attempt == 1:
+                        print(dict(e.response.headers))
+                        print(e.response.text)
+                    attempt += 1
                     retry_after_header = e.response.headers.get("retry-after")
 
                     try:
-                        # Attempt to parse it as an integer number of seconds
-                        sleep_seconds = float(
-                            retry_after_header
-                        ) if retry_after_header else 5.0
+                        if retry_after_header:
+                            sleep_seconds = float(retry_after_header)
+                        else:
+                            # Exponential Backoff Strategy: 2, 4, 8, 16...
+                            # capped at 128 seconds
+                            base_delay = 2.0
+                            max_delay = 128.0
+                            sleep_seconds = min(
+                                base_delay * (2 ** (attempt - 1)),
+                                max_delay,
+                            )
                     except ValueError:
-                        # Fallback default if headers contain a date
-                        # stamp or are missing
-                        sleep_seconds = 5.0
+                        # Fallback if header contains an unparseable HTTP-date string
+                        base_delay = 2.0
+                        max_delay = 128.0
+                        sleep_seconds = min(
+                            base_delay * (2 ** (attempt - 1)),
+                            max_delay,
+                        )
 
                     print("=" * 80)
                     print(
-                        f"RATE LIMIT (429) DETECTED. Retrying after "
-                        f"{sleep_seconds} seconds...")
+                        f"RATE LIMIT (429) DETECTED (Attempt {attempt}). "
+                        f"Retrying after {sleep_seconds:.2f} seconds..."
+                    )
                     print(f"Provider : {self._config.base_url}")
                     print(f"Model    : {self._config.model}")
                     print("=" * 80)
 
                     time.sleep(sleep_seconds)
-                    continue  # Restart the loop to retry execution
+                    continue
                 else:
-                    # If config says no retry, execute general exception log
-                    # and let it bubble up
                     self._log_and_raise_failure()
 
             except Exception:
