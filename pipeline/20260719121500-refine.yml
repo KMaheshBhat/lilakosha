@@ -1,0 +1,149 @@
+# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+
+pipeline:
+    # - "refine-characters"
+    # - "refine-safety-dials"
+    # - "refine-genre-theme"
+    - "refine-grammar"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "openai/gpt-oss-120b"
+        requests_per_minute: 3
+    google-gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
+        requests_per_minute: 12
+        allows_think_control: false
+        allows_extra_body: false
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+        retry_on_rate_limit: true
+        allows_extra_body: false
+    nvidia:
+        provider: openai-compatible
+        base_url: https://integrate.api.nvidia.com/v1
+        api_key: "${NVIDIA_API_KEY}"
+        # model: "nvidia/nemotron-3-ultra-550b-a55b"
+        model: "nvidia/nemotron-3-super-120b-a12b"
+        allows_extra_body: false
+        requests_per_minute: 31
+        retry_on_rate_limit: true
+
+bindings:
+    # refine-characters:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 4096
+
+    # refine-safety-dials:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    # refine-genre-theme:
+    #     service: local
+    #     temperature: 0.1
+    #     max_tokens: 2048
+
+    refine-grammar:
+        service: nvidia
+        temperature: 0.0
+        max_tokens: 2048
+
+parameters:
+    start_uuid: 019f6e09-aaf7-7af1-b0ec-da7e1f81a9d4
+    stop_uuid: 019f6e09-fefd-7ad0-831b-8000bddd0b40
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# Campaign:
+# Use NVIDIA Nemotron-3-Ultra on records 15001-16000 for refine-grammar.
+# Overall status before starting.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         9841 (58.47%)
+# INFO: Defective Records:       6991
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16806/16832 (99.85%)
+# INFO:     annotation          : 16806/16832 (99.85%)
+# INFO:     bot detail          : 16831/16832 (99.99%)
+# INFO:     user info           : 16806/16832 (99.85%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16831/16832 (99.99%)
+# INFO:     annotation          : 16831/16832 (99.99%)
+# INFO:     sexual axis         : 16831/16832 (99.99%)
+# INFO:     violence axis       : 16831/16832 (99.99%)
+# INFO:     toxicity axis       : 16831/16832 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16815/16832 (99.90%)
+# INFO:     annotation          : 16815/16832 (99.90%)
+# INFO:     primary genre       : 16815/16832 (99.90%)
+# INFO:     themes              : 16815/16832 (99.90%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 9855/16832 (58.55%)
+# INFO:     annotation          : 9898/16832 (58.80%)
+# INFO:     prose               : 9855/16832 (58.55%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 798675
+# INFO:     Turns Converted         : 467255 (58.50%)
+# INFO:     Turns Remaining         : 331420
+# INFO:     Estimated Local Compute : 460.3 hours (@5s/turn)
+# INFO: ============================================================
+# Started around 2026-07-19 12:25:00 IST
+# The provider was giving quite a few 429 triggering retry.
+# Switched to nvidia/nemotron-3-super-120b-a12b, a similar model
+# from NVIDIA that seems to have reduced slightly (but not fully
+# eliminated)the 429 errors. Switch was done
+# around 2026-07-19 12:55:00 IST (and thus a restart).
