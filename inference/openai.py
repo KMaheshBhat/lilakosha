@@ -171,9 +171,9 @@ class OpenAIInference(Inference):
                             sleep_seconds = float(retry_after_header)
                         else:
                             # Exponential Backoff Strategy: 2, 4, 8, 16...
-                            # capped at 128 seconds
+                            # capped at 2480 seconds
                             base_delay = 2.0
-                            max_delay = 128.0
+                            max_delay = 2480.0
                             sleep_seconds = min(
                                 base_delay * (2 ** (attempt - 1)),
                                 max_delay,
@@ -181,7 +181,7 @@ class OpenAIInference(Inference):
                     except ValueError:
                         # Fallback if header contains an unparseable HTTP-date string
                         base_delay = 2.0
-                        max_delay = 128.0
+                        max_delay = 2480.0
                         sleep_seconds = min(
                             base_delay * (2 ** (attempt - 1)),
                             max_delay,

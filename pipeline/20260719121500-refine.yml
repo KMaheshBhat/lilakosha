@@ -65,8 +65,8 @@ services:
         provider: openai-compatible
         base_url: https://integrate.api.nvidia.com/v1
         api_key: "${NVIDIA_API_KEY}"
-        # model: "nvidia/nemotron-3-ultra-550b-a55b"
-        model: "nvidia/nemotron-3-super-120b-a12b"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        # model: "nvidia/nemotron-3-super-120b-a12b"
         allows_extra_body: false
         requests_per_minute: 31
         retry_on_rate_limit: true
@@ -147,3 +147,8 @@ parameters:
 # from NVIDIA that seems to have reduced slightly (but not fully
 # eliminated)the 429 errors. Switch was done
 # around 2026-07-19 12:55:00 IST (and thus a restart).
+# Around 2026-07-19 14:45:00 IST, saw continuous 429 errors and
+# thus implemented exponential backoff strategy and restarted.
+# Checked around 2026-07-19 17:30:00 IST and still was having
+# continuous 429 errors. Thus switched back to
+# nvidia/nemotron-3-ultra-550b-a55b and restarted.
