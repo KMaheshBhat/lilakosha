@@ -50,7 +50,7 @@ services:
         base_url: https://generativelanguage.googleapis.com/v1beta/openai/
         api_key: "${GEMINI_API_KEY}"
         model: "gemma-4-31b-it"
-        requests_per_minute: 12
+        requests_per_minute: 30
         allows_think_control: false
         allows_extra_body: false
     cerebras:
@@ -58,7 +58,7 @@ services:
         base_url: https://api.cerebras.ai/v1
         api_key: "${CEREBRAS_API_KEY}"
         model: "gemma-4-31b"
-        requests_per_minute: 5
+        requests_per_minute: 2
         retry_on_rate_limit: true
         allows_extra_body: false
     nvidia:
@@ -87,6 +87,7 @@ bindings:
 
     refine-grammar:
         service: cerebras
+        # service: google-gemma
         temperature: 0.0
         max_tokens: 2048
 
@@ -145,3 +146,11 @@ parameters:
 # Started around 2026-07-19 11:25:00 IST.
 # There was one retry based on 429 error but Cerebras did not seem
 # to send Retry-After header and we defaulted to 5 seconds.
+# After around 2400 requests, Cerebras provided a 24 hour Retry-After
+# header, and thus switched to google-gemma on 2026-07-19 20:10:00 IST.
+# Around 2026-07-19 21:34:00 IST, found quota limits were not
+# properly responded by Google with 429 error, and the retry and
+# backoff logic did not work as expected.  Stopping and resuming
+# with Cerebras on 2026-07-21:45:00 IST.
+# Reduced the RPM to 2 requests per minute to avoid rate limiting
+# and have sustained workloads.
