@@ -50,7 +50,7 @@ services:
         base_url: https://generativelanguage.googleapis.com/v1beta/openai/
         api_key: "${GEMINI_API_KEY}"
         model: "gemma-4-31b-it"
-        requests_per_minute: 30
+        requests_per_minute: 20
         allows_think_control: false
         allows_extra_body: false
     cerebras:
@@ -154,3 +154,7 @@ parameters:
 # with Cerebras on 2026-07-21:45:00 IST.
 # Reduced the RPM to 2 requests per minute to avoid rate limiting
 # and have sustained workloads.
+# Around 2026-07-20 20:50:00 IST, switched to google-gemma.
+# Around 2026-07-20 22:50:00 IST, switched to cerebras.
+# Around 2026-07-21 08:30:00 IST, switched to google-gemma.
+# Around 2026-07-21 09:30:00 IST, switched to google-gemma.
