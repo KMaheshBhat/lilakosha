@@ -160,25 +160,26 @@ def run(config: dict) -> None:
                             {"thinking_budget_tokens": 0} if allows_extra_body else {}
                         )
                         reasoning_effort = "none" if allows_think_control else None
-                        result = inference.generate(
-                            messages=[
-                                Message.system(system_prompt),
-                                Message.user(user_prompt),
-                            ],
-                            response_model=SingleTurnGrammarResponse,
-                            temperature=temperature,
-                            max_tokens=unbound_max_tokens,
-                            reasoning_effort=reasoning_effort,
-                            extra_body=extra_body_payload,
-                        )
 
-                        # 2. Increment Inference Allocation
-                        inference_counter += 1
-
-                        if requests_per_minute:
-                            next_request_time = time.monotonic() + (
-                                60.0 / requests_per_minute
+                        try :
+                            result = inference.generate(
+                                messages=[
+                                    Message.system(system_prompt),
+                                    Message.user(user_prompt),
+                                ],
+                                response_model=SingleTurnGrammarResponse,
+                                temperature=temperature,
+                                max_tokens=unbound_max_tokens,
+                                reasoning_effort=reasoning_effort,
+                                extra_body=extra_body_payload,
                             )
+                        finally:
+                            # 2. Increment Inference Allocation
+                            inference_counter += 1
+                            if requests_per_minute:
+                                next_request_time = time.monotonic() + (
+                                    60.0 / requests_per_minute
+                                )
 
                         extracted_data = result.value
                         reasoning = result.reasoning

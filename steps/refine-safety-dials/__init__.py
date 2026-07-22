@@ -119,18 +119,19 @@ def run(config: dict) -> None:
                 if now < next_request_time:
                     time.sleep(next_request_time - now)
 
-            result = inference.generate(
-                messages=[
-                    Message.system(system_prompt),
-                    Message.user(user_prompt),
-                ],
-                response_model=SafetyDialsResponse,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-
-            if requests_per_minute:
-                next_request_time = time.monotonic() + (60.0 / requests_per_minute)
+            try :
+                result = inference.generate(
+                    messages=[
+                        Message.system(system_prompt),
+                        Message.user(user_prompt),
+                    ],
+                    response_model=SafetyDialsResponse,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            finally:
+                if requests_per_minute:
+                    next_request_time = time.monotonic() + (60.0 / requests_per_minute)
 
             extracted_data = result.value
             reasoning = result.reasoning

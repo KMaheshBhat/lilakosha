@@ -86,8 +86,8 @@ bindings:
         max_tokens: 2048
 
     refine-grammar:
-        service: cerebras
-        # service: google-gemma
+        # service: cerebras
+        service: google-gemma
         temperature: 0.0
         max_tokens: 2048
 
@@ -157,4 +157,7 @@ parameters:
 # Around 2026-07-20 20:50:00 IST, switched to google-gemma.
 # Around 2026-07-20 22:50:00 IST, switched to cerebras.
 # Around 2026-07-21 08:30:00 IST, switched to google-gemma.
-# Around 2026-07-21 09:30:00 IST, switched to google-gemma.
+# Around 2026-07-21 09:30:00 IST, switched to cerebras.
+# Around 2026-07-21 15:30:00 IST, switched to google-gemma.
+# Around 2026-07-21 18:00:00 IST, switched to cerebras.
+# Around 2026-07-22 08:40:00 IST, switched to google-gemma.
