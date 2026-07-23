@@ -142,3 +142,43 @@ parameters:
 # INFO:     Estimated Local Compute : 369.5 hours (@5s/turn)
 # INFO: ============================================================
 # Started around 2026-07-21 10:30:00 IST
+# Checked around 2026-07-23 09:10:00 IST - completed.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         12732 (75.64%)
+# INFO: Defective Records:       4100
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16806/16832 (99.85%)
+# INFO:     annotation          : 16806/16832 (99.85%)
+# INFO:     bot detail          : 16831/16832 (99.99%)
+# INFO:     user info           : 16806/16832 (99.85%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16831/16832 (99.99%)
+# INFO:     annotation          : 16831/16832 (99.99%)
+# INFO:     sexual axis         : 16831/16832 (99.99%)
+# INFO:     violence axis       : 16831/16832 (99.99%)
+# INFO:     toxicity axis       : 16831/16832 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16821/16832 (99.93%)
+# INFO:     annotation          : 16821/16832 (99.93%)
+# INFO:     primary genre       : 16821/16832 (99.93%)
+# INFO:     themes              : 16821/16832 (99.93%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 12749/16832 (75.74%)
+# INFO:     annotation          : 12977/16832 (77.10%)
+# INFO:     prose               : 12749/16832 (75.74%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 798675
+# INFO:     Turns Converted         : 605402 (75.80%)
+# INFO:     Turns Remaining         : 193273
+# INFO:     Estimated Local Compute : 268.4 hours (@5s/turn)
+# INFO: ============================================================
