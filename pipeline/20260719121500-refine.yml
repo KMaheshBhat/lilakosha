@@ -193,3 +193,44 @@ parameters:
 # INFO:     Turns Remaining         : 112905
 # INFO:     Estimated Local Compute : 156.8 hours (@5s/turn)
 # INFO: ============================================================
+# There was a power outage sometime after 2026-07-25 12:00:00 IST
+# and thus restarted around 2026-07-25 17:15:00 IST.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         14217 (84.46%)
+# INFO: Defective Records:       2615
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16811/16832 (99.88%)
+# INFO:     annotation          : 16811/16832 (99.88%)
+# INFO:     bot detail          : 16830/16832 (99.99%)
+# INFO:     user info           : 16811/16832 (99.88%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16830/16832 (99.99%)
+# INFO:     annotation          : 16830/16832 (99.99%)
+# INFO:     sexual axis         : 16830/16832 (99.99%)
+# INFO:     violence axis       : 16830/16832 (99.99%)
+# INFO:     toxicity axis       : 16830/16832 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16821/16832 (99.93%)
+# INFO:     annotation          : 16821/16832 (99.93%)
+# INFO:     primary genre       : 16821/16832 (99.93%)
+# INFO:     themes              : 16821/16832 (99.93%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 14235/16832 (84.57%)
+# INFO:     annotation          : 14554/16832 (86.47%)
+# INFO:     prose               : 14235/16832 (84.57%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 797970
+# INFO:     Turns Converted         : 692912 (86.83%)
+# INFO:     Turns Remaining         : 105058
+# INFO:     Estimated Local Compute : 145.9 hours (@5s/turn)
+# INFO: ============================================================
