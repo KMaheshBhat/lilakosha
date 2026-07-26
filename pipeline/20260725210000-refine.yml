@@ -94,7 +94,7 @@ bindings:
 
 parameters:
     start_uuid: 019f5f68-ea7e-73f3-a528-5f0049f28efe
-    stop_uuid: 019f5f69-6cf0-7321-8c2c-add765ea219d
+    stop_uuid: 019f766f-662e-7223-844d-ec78f8d3bbd2
 
 # ============================================================================
 # EXECUTION NOTES
@@ -142,3 +142,5 @@ parameters:
 # INFO:     Estimated Local Compute : 141.8 hours (@5s/turn)
 # INFO: ============================================================
 # Started around 2026-07-25 21:00:00 IST
+# Restarting around 2026-07-26 12:45:00 IST over full
+# remaining 13001-16832 record range

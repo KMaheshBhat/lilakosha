@@ -142,3 +142,7 @@ parameters:
 # INFO:     Estimated Local Compute : 141.8 hours (@5s/turn)
 # INFO: ============================================================
 # Started around 2026-07-25 21:05:00 IST
+# Update at 2026-07-26 12:45:00 IST
+# Had major power outage, and issue with power button on the
+# main workstation.  Cancelling this pipeline, and would run
+# the rest with the local pipeline.
