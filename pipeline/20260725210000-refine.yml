@@ -144,3 +144,47 @@ parameters:
 # Started around 2026-07-25 21:00:00 IST
 # Restarting around 2026-07-26 12:45:00 IST over full
 # remaining 13001-16832 record range
+# current status
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         14871 (88.35%)
+# INFO: Defective Records:       1961
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16812/16832 (99.88%)
+# INFO:     annotation          : 16812/16832 (99.88%)
+# INFO:     bot detail          : 16828/16832 (99.98%)
+# INFO:     user info           : 16812/16832 (99.88%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16828/16832 (99.98%)
+# INFO:     annotation          : 16828/16832 (99.98%)
+# INFO:     sexual axis         : 16828/16832 (99.98%)
+# INFO:     violence axis       : 16828/16832 (99.98%)
+# INFO:     toxicity axis       : 16828/16832 (99.98%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16820/16832 (99.93%)
+# INFO:     annotation          : 16820/16832 (99.93%)
+# INFO:     primary genre       : 16820/16832 (99.93%)
+# INFO:     themes              : 16820/16832 (99.93%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 14889/16832 (88.46%)
+# INFO:     annotation          : 15216/16832 (90.40%)
+# INFO:     prose               : 14889/16832 (88.46%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 797858
+# INFO:     Turns Converted         : 718781 (90.09%)
+# INFO:     Turns Remaining         : 79077
+# INFO:     Estimated Local Compute : 109.8 hours (@5s/turn)
+# INFO: ============================================================
+# Effectively all day of 2026-07-26 and early morning of 2026-07-27
+# the pipeline was down - the workstation was shutdown owing to
+# power fluctuations.
+# Started again after 2026-07-27 10:00:00 IST.
