@@ -188,3 +188,85 @@ parameters:
 # the pipeline was down - the workstation was shutdown owing to
 # power fluctuations.
 # Started again after 2026-07-27 10:00:00 IST.
+# Status as of 2026-07-27 10:15:00 IST.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         15122 (89.84%)
+# INFO: Defective Records:       1710
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16814/16832 (99.89%)
+# INFO:     annotation          : 16814/16832 (99.89%)
+# INFO:     bot detail          : 16827/16832 (99.97%)
+# INFO:     user info           : 16814/16832 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16827/16832 (99.97%)
+# INFO:     annotation          : 16827/16832 (99.97%)
+# INFO:     sexual axis         : 16827/16832 (99.97%)
+# INFO:     violence axis       : 16827/16832 (99.97%)
+# INFO:     toxicity axis       : 16827/16832 (99.97%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16828/16832 (99.98%)
+# INFO:     annotation          : 16828/16832 (99.98%)
+# INFO:     primary genre       : 16828/16832 (99.98%)
+# INFO:     themes              : 16828/16832 (99.98%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 15137/16832 (89.93%)
+# INFO:     annotation          : 15467/16832 (91.89%)
+# INFO:     prose               : 15137/16832 (89.93%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 797708
+# INFO:     Turns Converted         : 726992 (91.14%)
+# INFO:     Turns Remaining         : 70716
+# INFO:     Estimated Local Compute : 98.2 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# Shutting down the workstation at 2026-07-28 00:40:00 IST
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         15388 (91.42%)
+# INFO: Defective Records:       1444
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16813/16832 (99.89%)
+# INFO:     annotation          : 16813/16832 (99.89%)
+# INFO:     bot detail          : 16826/16832 (99.96%)
+# INFO:     user info           : 16813/16832 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16826/16832 (99.96%)
+# INFO:     annotation          : 16826/16832 (99.96%)
+# INFO:     sexual axis         : 16826/16832 (99.96%)
+# INFO:     violence axis       : 16826/16832 (99.96%)
+# INFO:     toxicity axis       : 16826/16832 (99.96%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16827/16832 (99.97%)
+# INFO:     annotation          : 16827/16832 (99.97%)
+# INFO:     primary genre       : 16827/16832 (99.97%)
+# INFO:     themes              : 16827/16832 (99.97%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 15403/16832 (91.51%)
+# INFO:     annotation          : 15735/16832 (93.48%)
+# INFO:     prose               : 15403/16832 (91.51%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 797697
+# INFO:     Turns Converted         : 741942 (93.01%)
+# INFO:     Turns Remaining         : 55755
+# INFO:     Estimated Local Compute : 77.4 hours (@5s/turn)
+# INFO: ============================================================
