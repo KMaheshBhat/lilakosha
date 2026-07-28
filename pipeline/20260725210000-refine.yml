@@ -93,7 +93,8 @@ bindings:
         max_tokens: 2048
 
 parameters:
-    start_uuid: 019f5f68-ea7e-73f3-a528-5f0049f28efe
+    # start_uuid: 019f5f68-ea7e-73f3-a528-5f0049f28efe
+    start_uuid: 019f6394-d988-7cb2-90c0-c7ed9af69ae4
     stop_uuid: 019f766f-662e-7223-844d-ec78f8d3bbd2
 
 # ============================================================================
@@ -269,4 +270,46 @@ parameters:
 # INFO:     Turns Converted         : 741942 (93.01%)
 # INFO:     Turns Remaining         : 55755
 # INFO:     Estimated Local Compute : 77.4 hours (@5s/turn)
+# INFO: ============================================================
+# Started around 2026-07-28 08:30:00 IST
+# Checked around 2026-07-28 11:45:00 IST and refine-grammar is
+# around 14199/16832. Thus updating the start range to 14001.
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         15484 (91.99%)
+# INFO: Defective Records:       1348
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16813/16832 (99.89%)
+# INFO:     annotation          : 16813/16832 (99.89%)
+# INFO:     bot detail          : 16826/16832 (99.96%)
+# INFO:     user info           : 16813/16832 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16826/16832 (99.96%)
+# INFO:     annotation          : 16826/16832 (99.96%)
+# INFO:     sexual axis         : 16826/16832 (99.96%)
+# INFO:     violence axis       : 16826/16832 (99.96%)
+# INFO:     toxicity axis       : 16826/16832 (99.96%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16827/16832 (99.97%)
+# INFO:     annotation          : 16827/16832 (99.97%)
+# INFO:     primary genre       : 16827/16832 (99.97%)
+# INFO:     themes              : 16827/16832 (99.97%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 15499/16832 (92.08%)
+# INFO:     annotation          : 15820/16832 (93.99%)
+# INFO:     prose               : 15499/16832 (92.08%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 797697
+# INFO:     Turns Converted         : 745351 (93.44%)
+# INFO:     Turns Remaining         : 52346
+# INFO:     Estimated Local Compute : 72.7 hours (@5s/turn)
 # INFO: ============================================================
