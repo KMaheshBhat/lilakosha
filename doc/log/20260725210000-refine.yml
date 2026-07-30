@@ -102,7 +102,7 @@ parameters:
 # EXECUTION NOTES
 # ============================================================================
 # Campaign:
-# Use local Gemma4 12B on records 13001-14000 for full refine sweep.
+# Use local Gemma4 12B on records 13001-16832 for full refine sweep.
 # Overall status before starting.
 # INFO: ============================================================
 # INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT

@@ -68,3 +68,61 @@ class LedgerIndex:
         # any nested dictionaries into value slots
         self._lookup[(source, native_id)] = new_uuid
         return new_uuid
+
+    def delete_record(self, record_uuid: str) -> bool:
+            """
+            Deletes a record matching the target UUID from both memory
+            and the mapping file.
+
+            Returns True if a record was removed, False if not found.
+            """
+            target_uuid = str(record_uuid)
+
+            # 1. Check if the UUID exists in the in-memory lookup table
+            found_key: Tuple[str, str] | None = None
+            for key, cached_uuid in self._lookup.items():
+                if cached_uuid == target_uuid:
+                    found_key = key
+                    break
+
+            if not found_key:
+                logger.warning(
+                    f"Record with UUID '{target_uuid}' not found in ledger index."
+                )
+                return False
+
+            # 2. Rewrite the file omitting the entry with the matching UUID
+            temp_path = self.mapping_path.with_suffix(".tmp")
+            try:
+                with open(self.mapping_path, "r", encoding="utf-8") as src_file, \
+                    open(temp_path, "w", encoding="utf-8") as dst_file:
+                    for line in src_file:
+                        line_str = line.strip()
+                        if not line_str:
+                            continue
+                        try:
+                            entry: Dict[str, Any] = json.loads(line_str)
+                            if str(entry.get("uuid")) == target_uuid:
+                                continue  # Skip target record to delete it
+                        except json.JSONDecodeError:
+                            pass
+                        dst_file.write(line_str + "\n")
+
+                # Atomically replace old ledger file with updated temporary file
+                temp_path.replace(self.mapping_path)
+
+            except Exception as err:
+                logger.error(
+                    f"Failed to write updated ledger mapping during deletion: {err}"
+                )
+                if temp_path.exists():
+                    temp_path.unlink()
+                raise err
+
+            # 3. Evict key from in-memory cache
+            del self._lookup[found_key]
+            logger.info(
+                f"Successfully deleted record with UUID '{target_uuid}' "
+                "from ledger index."
+            )
+            return True
