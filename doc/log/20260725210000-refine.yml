@@ -93,8 +93,9 @@ bindings:
         max_tokens: 2048
 
 parameters:
-    # start_uuid: 019f5f68-ea7e-73f3-a528-5f0049f28efe
-    start_uuid: 019f6394-d988-7cb2-90c0-c7ed9af69ae4
+    # start_uuid: 019f5f68-ea7e-73f3-a528-5f0049f28efe # 13001
+    # start_uuid: 019f6394-d988-7cb2-90c0-c7ed9af69ae4 # 14001
+    start_uuid: 019f6e09-aaf7-7af1-b0ec-da7e1f81a9d4 # 15001
     stop_uuid: 019f766f-662e-7223-844d-ec78f8d3bbd2
 
 # ============================================================================
@@ -312,4 +313,56 @@ parameters:
 # INFO:     Turns Converted         : 745351 (93.44%)
 # INFO:     Turns Remaining         : 52346
 # INFO:     Estimated Local Compute : 72.7 hours (@5s/turn)
+# INFO: ============================================================
+# Stopping around 2026-07-29 00:00:00 IST
+# Starting around 2026-07-29 08:30:00 IST
+# Checked around 2026-07-30 17:00:00 IST - completed
+# There are few turns "remaining", but these are expected because
+# not all could be converted.  Effectively, the first "automated"
+# pass is done.  There were some corruptions that resulted from
+# the power outages, and I need create a scalpel to remove those
+# CDM records and importantly also update the cdm/map.json file
+# to reflect the removal.  Then running the PIPPA ingest would get
+# those corrupted ones freshly added back (and only those due to
+# the content addressing for PIPPA) and then a full run should
+# try and cover them up.
+# Status after stop:
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16832
+# INFO: Healthy Records:         16741 (99.46%)
+# INFO: Defective Records:       91
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-characters
+# INFO:  ✅ PASSED              : 16810/16832 (99.87%)
+# INFO:     annotation          : 16810/16832 (99.87%)
+# INFO:     bot detail          : 16823/16832 (99.95%)
+# INFO:     user info           : 16810/16832 (99.87%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-safety-dials
+# INFO:  ✅ PASSED              : 16823/16832 (99.95%)
+# INFO:     annotation          : 16823/16832 (99.95%)
+# INFO:     sexual axis         : 16823/16832 (99.95%)
+# INFO:     violence axis       : 16823/16832 (99.95%)
+# INFO:     toxicity axis       : 16823/16832 (99.95%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-genre-theme
+# INFO:  ✅ PASSED              : 16824/16832 (99.95%)
+# INFO:     annotation          : 16824/16832 (99.95%)
+# INFO:     primary genre       : 16824/16832 (99.95%)
+# INFO:     themes              : 16824/16832 (99.95%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-grammar
+# INFO:  ✅ PASSED              : 16756/16832 (99.55%)
+# INFO:     annotation          : 16824/16832 (99.95%)
+# INFO:     prose               : 16756/16832 (99.55%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 793687
+# INFO:     Turns Converted         : 793542 (99.98%)
+# INFO:     Turns Remaining         : 145
+# INFO:     Estimated Local Compute : 0.2 hours (@5s/turn)
 # INFO: ============================================================
