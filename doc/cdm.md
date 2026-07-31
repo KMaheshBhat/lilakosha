@@ -43,7 +43,7 @@ Document (kind: "document")
     └── SequenceItem
 ```
 
-The `items` collection is intentionally maintained as a flat chronological structure rather than a nested hierarchy. This simplifies traversal, enrichment, serialization, and future distributed processing.
+The `items` collection is intentionally maintained as a flat chronological structure rather than a nested hierarchy. This simplifies traversal, enrichment, serialization, and future distributed processing.  Unstructured document items may contain multiple content variants representing different versions, transformations, or working forms of the same underlying content. These variants are represented through the shared `ContentVariant` structure. Structured items such as `CategorizationItem` and `SequenceItem` retain their explicit schemas and do not use content variants.
 
 ## Identity Registry
 
@@ -132,6 +132,36 @@ Typical metrics include:
 
 Every entry in the `items` collection must declare a valid `kind` discriminator.
 
+### ContentVariant
+
+`ContentVariant` represents one named version, transformation, or working form of unstructured item content.
+
+Each variant contains:
+
+| Field        | Description |
+| ------------ | ----------- |
+| `name`       | Label describing the role or origin of the variant, such as `original`, `normalized`, or `generated`. |
+| `text`       | The textual content represented by this variant. |
+| `annotation` | Optional working notes associated with the variant. May contain human- or system-generated context and is not restricted to model reasoning. |
+
+The following unstructured item types use `List[ContentVariant]` for their `content` field:
+
+* `WorldItem`
+* `CharacterItem`
+* `SummaryItem`
+* `NarrativeItem`
+* `TurnItem`
+
+A variant may represent original source material, a normalized form, a generated revision, or another intermediate representation. Variants may be retained during enrichment and subsequently pruned when producing a flattened generation or publication form.
+
+```json
+{
+  "name": "original",
+  "text": "We should leave before nightfall.",
+  "annotation": "Source text preserved from ingestion, revision, or any transformation."
+}
+```
+
 ### WorldItem
 
 Represents environmental, spatial, setting, or lore information.
@@ -140,7 +170,12 @@ Represents environmental, spatial, setting, or lore information.
 {
   "id": "world-000001",
   "kind": "world",
-  "content": "The city is protected by a magical barrier."
+  "content": [
+    {
+      "name": "original",
+      "text": "The city is protected by a magical barrier."
+    }
+  ]
 }
 ```
 
@@ -153,7 +188,12 @@ Represents extracted character knowledge, behavioral observations, or evolving s
   "id": "character-000001",
   "kind": "character",
   "entity_id": "bot_001",
-  "content": "The character distrusts authority figures."
+  "content": [
+    {
+      "name": "original",
+      "text": "The character distrusts authority figures."
+    }
+  ]
 }
 ```
 
@@ -165,13 +205,18 @@ Represents synthesized recap material or compressed context.
 {
   "id": "summary-000001",
   "kind": "summary",
-  "content": "The protagonists escaped the fortress."
+  "content": [
+    {
+      "name": "original",
+      "text": "The protagonists escaped the fortress."
+    }
+  ]
 }
 ```
 
 ### NarrativeItem
 
-Represents generic long-form prose content.
+Represents generic long-form prose content. Multiple content variants may preserve original, transformed, or generated forms of the prose.
 
 This type enables storage of literary, narrative, or non-conversational datasets without forcing dialogue semantics.
 
@@ -179,7 +224,12 @@ This type enables storage of literary, narrative, or non-conversational datasets
 {
   "id": "narrative-000001",
   "kind": "narrative",
-  "prose": "The storm arrived shortly after sunset."
+  "content": [
+    {
+      "name": "original",
+      "text": "The storm arrived shortly after sunset."
+    }
+  ]
 }
 ```
 
@@ -192,18 +242,19 @@ A specialization of `NarrativeItem` representing actor-attributed conversational
   "id": "turn-000001",
   "kind": "turn",
   "actor_id": "user",
-  "thought": "",
-  "prose": "We should leave before nightfall."
+  "content": [
+    {
+      "name": "original",
+      "text": "We should leave before nightfall."
+    },
+    {
+      "name": "derived",
+      "text": "We should leave before nightfall.",
+      "annotation": "Normalized form produced during refinement."
+    }
+  ]
 }
 ```
-
-Additional fields support grammar refinement lineage tracking:
-
-| Field                     | Purpose                                    |
-| ------------------------- | ------------------------------------------ |
-| `original_prose`          | Original source text                       |
-| `prose_revision_comments` | Revision rationale                         |
-| `thought`                 | Internal reasoning or side-channel content |
 
 ### CategorizationItem
 
@@ -304,18 +355,33 @@ This provides lightweight structural grouping without introducing complex graph 
     {
       "id": "world-000001",
       "kind": "world",
-      "content": "The Yashiro Commission controls regional governance."
+      "content": [
+        {
+          "name": "original",
+          "text": "The Yashiro Commission controls regional governance."
+        }
+      ]
     },
     {
       "id": "character-000001",
       "kind": "character",
       "entity_id": "bot_akane",
-      "content": "Akane seeks to preserve her stolen identity."
+      "content": [
+        {
+          "name": "original",
+          "text": "Akane seeks to preserve her stolen identity."
+        }
+      ]
     },
     {
       "id": "summary-000001",
       "kind": "summary",
-      "content": "Akane has successfully displaced her former mistress."
+      "content": [
+        {
+          "name": "original",
+          "text": "Akane has successfully displaced her former mistress."
+        }
+      ]
     },
     {
       "id": "categorization-000001",
@@ -336,15 +402,28 @@ This provides lightweight structural grouping without introducing complex graph 
       "id": "turn-000001",
       "kind": "turn",
       "actor_id": "user",
-      "thought": "",
-      "prose": "What happens if the truth comes out?"
+      "content": [
+        {
+          "name": "original",
+          "text": "What happens if the truth comes out?"
+        }
+      ]
     },
     {
       "id": "turn-000002",
       "kind": "turn",
       "actor_id": "bot_akane",
-      "thought": "The user still believes restitution is possible.",
-      "prose": "Then everyone loses."
+      "content": [
+        {
+          "name": "original",
+          "text": "Then everyone loses."
+        },
+        {
+          "name": "working-note",
+          "text": "The user still believes restitution is possible.",
+          "annotation": "Internal working context retained during refinement."
+        }
+      ]
     },
     {
       "id": "sequence-000001",
@@ -372,5 +451,6 @@ Major milestones include:
 * Introduction of `SequenceItem`
 * Materialized document statistics
 * Identity-registry-based actor modeling
+* Introduction of `ContentVariant` for versioned unstructured content
 
 The current architecture intentionally favors extensibility and operational simplicity over deeply nested object hierarchies, enabling efficient enrichment pipelines, large-scale dataset maintenance, and future training workflows.
