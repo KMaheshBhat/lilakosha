@@ -1,6 +1,7 @@
 # LilaKosha-MK1: Scalpel Blueprints
 pipeline:
-    - "scalpel-grammar"
+    - "scalpel-pippa-characters"
+    - "scalpel-pippa-grammar"
 
 project:
     name: "LilaKosha"

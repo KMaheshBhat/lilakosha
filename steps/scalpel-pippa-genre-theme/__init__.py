@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Clear Genre & Themes.
+    LilaKosha Scalpel Pass: Clear Genre & Themes (PIPPA).
     Iterates through standalone Common Document Model (CDM) records, purging
     computed narrative genres and thematic tags alongside related history annotations
     and timeline categorization items.
@@ -41,7 +41,7 @@ def run(config: dict) -> None:
     # Format localized diagnostic headers for clear Operator Experience (OX)
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (Genre/Theme):\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Genre/Theme):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -96,12 +96,12 @@ def run(config: dict) -> None:
 
                 # 3. Filter out historical refinement annotations to
                 #    maintain track integrity
-                remove_annotation(document, "refine-genre-theme")
+                remove_annotation(document, "refine-pippa-genre-theme")
 
                 # 4. Append a surgical tracking trace token
                 add_annotation(
                     document,
-                    kind="scalpel-genre-theme",
+                    kind="scalpel-pippa-genre-theme",
                     content=(
                         "cleared narrative genre classifications and thematic tags "
                         "from metadata caches and timeline items via scalpel range"

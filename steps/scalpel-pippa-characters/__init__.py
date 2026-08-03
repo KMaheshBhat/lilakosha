@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Clear Character Synthesis.
+    LilaKosha Scalpel Pass: Clear Character Synthesis (PIPPA).
     Iterates through standalone Common Document Model (CDM) records, purging synthesized
     character profiles from the timeline, resetting core identities inside the
     authoritative registry back to base tracking defaults, and cleaning historical
@@ -49,7 +49,7 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (Character Synthesis):\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Character Synthesis):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -109,7 +109,7 @@ def run(config: dict) -> None:
             )
 
             has_refine_annotations = any(
-                anno.kind == "refine-characters"
+                anno.kind == "refine-pippa-characters"
                 for anno in (document.meta.annotations or [])
             )
 
@@ -126,12 +126,12 @@ def run(config: dict) -> None:
                     document.meta.resolved.identities = []
 
                 # C. Remove refinement annotation
-                remove_annotation(document, "refine-characters")
+                remove_annotation(document, "refine-pippa-characters")
 
                 # D. Append audit trace
                 add_annotation(
                     document,
-                    kind="scalpel-characters",
+                    kind="scalpel-pippa-characters",
                     content=(
                         "cleared synthesized character timeline profiles and reset "
                         "identity registries via scalpel range"

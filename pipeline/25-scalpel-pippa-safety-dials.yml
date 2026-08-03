@@ -1,6 +1,6 @@
 # LilaKosha-MK1: Scalpel Blueprints
 pipeline:
-    - "scalpel-genre-theme"
+    - "scalpel-pippa-safety-dials"
 
 project:
     name: "LilaKosha"

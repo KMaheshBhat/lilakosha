@@ -46,26 +46,26 @@ def run(config: dict) -> None:
 
     # Telemetry aggregation frameworks mapped by stage and checks
     stage_breakdown = {
-        "refine-characters": {
+        "refine-pippa-characters": {
             "passed": 0,
             "annotation": 0,
             "bot detail": 0,
             "user info": 0,
         },
-        "refine-safety-dials": {
+        "refine-pippa-safety-dials": {
             "passed": 0,
             "annotation": 0,
             "sexual axis": 0,
             "violence axis": 0,
             "toxicity axis": 0,
         },
-        "refine-genre-theme": {
+        "refine-pippa-genre-theme": {
             "passed": 0,
             "annotation": 0,
             "primary genre": 0,
             "themes": 0,
         },
-        "refine-grammar": {"passed": 0, "annotation": 0, "prose": 0},
+        "refine-pippa-grammar": {"passed": 0, "annotation": 0, "prose": 0},
     }
 
     total_turns = 0
@@ -180,5 +180,5 @@ def run(config: dict) -> None:
             for uuid, faults in failure_registry.items():
                 logger.info(f"   ↳ UUID: {uuid}")
                 for fault in faults:
-                    logger.info(f"       - {fault}")
+                    logger.info(f"        - {fault}")
             logger.info("=" * 60)

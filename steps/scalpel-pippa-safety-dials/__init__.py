@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Clear Safety Dials.
+    LilaKosha Scalpel Pass: Clear Safety Dials (PIPPA).
     Iterates through standalone Common Document Model (CDM) records, purging
     computed safety metrics from the items timeline and tracking annotations
     to allow clean evaluations. Supports optional runtime range filtering
@@ -40,7 +40,7 @@ def run(config: dict) -> None:
     # Format localized diagnostic headers for clear Operator Experience (OX)
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated:\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Safety Dials):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -92,12 +92,12 @@ def run(config: dict) -> None:
                 ]
 
                 # 2. Purge stale lineage tracking details to clean up metrics
-                remove_annotation(document, "refine-safety-dials")
+                remove_annotation(document, "refine-pippa-safety-dials")
 
                 # 3. Inject explicit scalpel audit token
                 add_annotation(
                     document,
-                    kind="scalpel-safety-dials",
+                    kind="scalpel-pippa-safety-dials",
                     content=(
                         "cleared safety dial metrics and annotations via scalpel range"
                     ),

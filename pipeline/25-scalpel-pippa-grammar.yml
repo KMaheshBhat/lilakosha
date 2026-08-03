@@ -1,6 +1,6 @@
 # LilaKosha-MK1: Scalpel Blueprints
 pipeline:
-    - "scalpel-safety-dials"
+    - "scalpel-pippa-grammar"
 
 project:
     name: "LilaKosha"

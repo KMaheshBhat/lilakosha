@@ -25,7 +25,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
     """Loads raw templates from the package directory."""
     try:
         result = {}
-        ref = importlib.resources.files("steps.refine-characters.templates")
+        ref = importlib.resources.files("steps.refine-pippa-characters.templates")
         for template in templates:
             template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
             result[template] = template_str.strip()
@@ -37,7 +37,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Refinement Pass: Character Synthesis.
+    LilaKosha Refinement Pass: Character Synthesis (PIPPA).
     Operates incrementally over discrete CDM Document records using an inline
     idempotency check, resolving pronouns and updating the sealed identity registry.
     """
@@ -69,7 +69,7 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (Characters):\n"
+            f"🎯 Targeted Refinement Scope Activated (PIPPA Characters):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -81,7 +81,7 @@ def run(config: dict) -> None:
     logger.info(f"Inspecting {len(record_files)} records for Character Synthesis...")
 
     skipped_range_count = 0
-    binding = config["bindings"]["refine-characters"]
+    binding = config["bindings"]["refine-pippa-characters"]
     service = config["services"][binding["service"]]
     temperature = binding.get("temperature", 0.1)
     max_tokens = binding.get("max_tokens", 4096)
@@ -216,7 +216,7 @@ def run(config: dict) -> None:
                 entity_id=bot_id,
                 content=[
                     ContentVariant(
-                        name="character-refined",
+                        name="refine-pippa-character",
                         text=bot_character_content.strip(),
                     )
                 ],
@@ -227,7 +227,7 @@ def run(config: dict) -> None:
                 entity_id="user",
                 content=[
                     ContentVariant(
-                        name="character-refined",
+                        name="refine-pippa-character",
                         text=user_character_content.strip(),
                     )
                 ],
@@ -240,7 +240,7 @@ def run(config: dict) -> None:
             # Append annotation tracking
             add_annotation(
                 document,
-                kind="refine-characters",
+                kind="refine-pippa-character",
                 content=(
                     "refined bot character details and user character info "
                     "inside registry and timeline"

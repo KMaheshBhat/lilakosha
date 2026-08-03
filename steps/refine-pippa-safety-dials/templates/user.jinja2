@@ -1,5 +1,5 @@
 ### TASK
-Analyze the provided multi-turn chat history and classify the primary genre and extract thematic tags.
+Analyze the provided multi-turn chat history and classify the content across three safety axes.
 
 ### CHAT EVIDENCE
 {% set source = session.meta.source or {} %}
@@ -15,7 +15,7 @@ Analyze the provided multi-turn chat history and classify the primary genre and 
                 {%- set role.name = identity.name -%}
             {%- endif -%}
         {%- endfor -%}
-        {%- set variant = (item.content | selectattr("name", "equalto", "grammar-refined") | first) or (item.content | selectattr("name", "equalto", "original") | first) or (item.content | first) -%}
+        {%- set variant = (item.content | selectattr("name", "equalto", "refine-pippa-grammar") | first) or (item.content | selectattr("name", "equalto", "original") | first) or (item.content | first) -%}
         {%- if variant and variant.text -%}
 {{ role.name }}: {{ variant.text }}
         {%- endif -%}

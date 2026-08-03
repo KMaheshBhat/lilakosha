@@ -1,10 +1,10 @@
 # LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
 
 pipeline:
-    - "refine-characters"
-    - "refine-safety-dials"
-    - "refine-genre-theme"
-    - "refine-grammar"
+    - "refine-pippa-characters"
+    - "refine-pippa-safety-dials"
+    - "refine-pippa-genre-theme"
+    - "refine-pippa-grammar"
 
 project:
     name: "LilaKosha"
@@ -67,22 +67,22 @@ services:
         request_per_minute: 35
 
 bindings:
-    refine-characters:
+    refine-pippa-characters:
         service: local
         temperature: 0.1
         max_tokens: 4096
 
-    refine-safety-dials:
+    refine-pippa-safety-dials:
         service: local
         temperature: 0.1
         max_tokens: 2048
 
-    refine-genre-theme:
+    refine-pippa-genre-theme:
         service: local
         temperature: 0.1
         max_tokens: 2048
 
-    refine-grammar:
+    refine-pippa-grammar:
         service: local
         temperature: 0.0
         max_tokens: 2048

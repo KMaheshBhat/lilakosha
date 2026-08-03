@@ -76,89 +76,149 @@ def calculate_resolved(document: Document) -> ResolvedMeta:
 
 def calculate_health(document: Document) -> dict[str, Any]:
     """
-    Evaluates specific metrics across all 4 rule groups and returns explicit tracking
-    flags for granular telemetry breakdown reporting.
+    Evaluates specific refinement metrics across PIPPA rule groups and returns
+    explicit tracking flags for granular telemetry breakdown reporting.
+
+    Evaluates PIPPA-specific refinement health rules if
+    meta.source.source_identity == 'PygmalionAI/PIPPA'.
     """
     meta = document.meta
     resolved = meta.resolved or ResolvedMeta()
     items = document.items or []
     annotations = meta.annotations or []
+    source = meta.source or {}
 
     annotation_kinds = {anno.kind for anno in annotations if hasattr(anno, "kind")}
     issues = []
+    breakdown = {}
 
-    # --- Rule Group 1: refine-characters ---
-    has_char_anno = "refine-characters" in annotation_kinds
-    has_bot_detail = any(
-        item.kind == "character" and getattr(item, "entity_id", None) != "user"
-        for item in items
-    )
-    has_user_info = any(
-        item.kind == "character" and getattr(item, "entity_id", None) == "user"
-        for item in items
-    )
+    source_identity = source.get("source_identity", "")
+    is_pippa_source = source_identity == "PygmalionAI/PIPPA"
 
-    if not has_char_anno:
-        issues.append("Missing 'refine-characters' annotation")
-    if not has_bot_detail:
-        issues.append("Missing bot character profile (character item, entity_id!=user)")
-    if not has_user_info:
-        issues.append("Missing user character profile (character item, entity_id=user)")
+    if is_pippa_source:
+        # --- Rule Group 1: refine-pippa-character ---
+        has_char_anno = "refine-pippa-character" in annotation_kinds
+        has_bot_detail = any(
+            item.kind == "character" and getattr(item, "entity_id", None) != "user"
+            for item in items
+        )
+        has_user_info = any(
+            item.kind == "character" and getattr(item, "entity_id", None) == "user"
+            for item in items
+        )
 
-    # --- Rule Group 2: refine-safety-dials ---
-    has_safety_anno = "refine-safety-dials" in annotation_kinds
-    has_sexual = resolved.sexuality is not None
-    has_violence = resolved.violence is not None
-    has_toxicity = resolved.toxicity is not None
+        if not has_char_anno:
+            issues.append(
+                "Missing 'refine-pippa-character' annotation"
+            )
+        if not has_bot_detail:
+            issues.append(
+                "Missing bot character profile (character item, entity_id!=user)"
+            )
+        if not has_user_info:
+            issues.append(
+                "Missing user character profile (character item, entity_id=user)"
+            )
 
-    if not has_safety_anno:
-        issues.append("Missing 'refine-safety-dials' annotation")
-    if not has_sexual:
-        issues.append("Unset sexuality categorization")
-    if not has_violence:
-        issues.append("Unset violence categorization")
-    if not has_toxicity:
-        issues.append("Unset toxicity categorization")
+        breakdown["refine-pippa-character"] = {
+            "passed": has_char_anno and has_bot_detail and has_user_info,
+            "annotation": has_char_anno,
+            "bot detail": has_bot_detail,
+            "user info": has_user_info,
+        }
 
-    # --- Rule Group 3: refine-genre-theme ---
-    has_genre_anno = "refine-genre-theme" in annotation_kinds
-    has_primary_genre = resolved.genre is not None
-    has_themes = bool(resolved.themes)
+        # --- Rule Group 2: refine-pippa-safety-dials ---
+        has_safety_anno = "refine-pippa-safety-dials" in annotation_kinds
+        has_sexual = resolved.sexuality is not None
+        has_violence = resolved.violence is not None
+        has_toxicity = resolved.toxicity is not None
 
-    if not has_genre_anno:
-        issues.append("Missing 'refine-genre-theme' annotation")
-    if not has_primary_genre:
-        issues.append("Unset genre categorization")
-    if not has_themes:
-        issues.append("Unset thematic categorization")
+        if not has_safety_anno:
+            issues.append("Missing 'refine-pippa-safety-dials' annotation")
+        if not has_sexual:
+            issues.append("Unset sexuality categorization")
+        if not has_violence:
+            issues.append("Unset violence categorization")
+        if not has_toxicity:
+            issues.append("Unset toxicity categorization")
 
-    # --- Rule Group 4: refine-grammar ---
-    has_grammar_anno = "refine-grammar" in annotation_kinds
+        breakdown["refine-pippa-safety-dials"] = {
+            "passed": (
+                has_safety_anno and has_sexual and has_violence and has_toxicity
+            ),
+            "annotation": has_safety_anno,
+            "sexual axis": has_sexual,
+            "violence axis": has_violence,
+            "toxicity axis": has_toxicity,
+        }
+
+        # --- Rule Group 3: refine-pippa-genre-theme ---
+        has_genre_anno = "refine-pippa-genre-theme" in annotation_kinds
+        has_primary_genre = resolved.genre is not None
+        has_themes = bool(resolved.themes)
+
+        if not has_genre_anno:
+            issues.append("Missing 'refine-pippa-genre-theme' annotation")
+        if not has_primary_genre:
+            issues.append("Unset genre categorization")
+        if not has_themes:
+            issues.append("Unset thematic categorization")
+
+        breakdown["refine-pippa-genre-theme"] = {
+            "passed": has_genre_anno and has_primary_genre and has_themes,
+            "annotation": has_genre_anno,
+            "primary genre": has_primary_genre,
+            "themes": has_themes,
+        }
+
+        # --- Rule Group 4: refine-pippa-grammar ---
+        has_grammar_anno = "refine-pippa-grammar" in annotation_kinds
+
+        turn_items = [item for item in items if item.kind == "turn"]
+        total_turns = len(turn_items)
+
+        def is_turn_grammar_refined(item: Any) -> bool:
+            """
+            Verifies turn item contains both original and
+            refine-pippa-grammar content variants.
+            """
+            content = getattr(item, "content", [])
+            if not isinstance(content, list):
+                return False
+            variant_names = {v.name for v in content if hasattr(v, "name")}
+            return (
+                "original" in variant_names
+                and "refine-pippa-grammar" in variant_names
+            )
+
+        converted_turns = sum(
+            1 for item in turn_items if is_turn_grammar_refined(item)
+        )
+        has_prose_lineage = (total_turns > 0) and (total_turns == converted_turns)
+
+        if not has_grammar_anno:
+            issues.append("Missing 'refine-pippa-grammar' annotation")
+        if total_turns > converted_turns:
+            issues.append(
+                f"Grammar tracking defect: {total_turns - converted_turns} turn items "
+                "are missing 'refine-pippa-grammar' variant"
+            )
+
+        breakdown["refine-pippa-grammar"] = {
+            "passed": has_grammar_anno and has_prose_lineage,
+            "annotation": has_grammar_anno,
+            "prose": has_prose_lineage,
+        }
 
     turn_items = [item for item in items if item.kind == "turn"]
     total_turns = len(turn_items)
-
-    def is_turn_grammar_refined(item: Any) -> bool:
-        """
-        Verifies turn item contains both original and
-        grammar-refined content variants.
-        """
-        content = getattr(item, "content", [])
-        if not isinstance(content, list):
-            return False
-        variant_names = {v.name for v in content if hasattr(v, "name")}
-        return "original" in variant_names and "grammar-refined" in variant_names
-
-    converted_turns = sum(1 for item in turn_items if is_turn_grammar_refined(item))
-    has_prose_lineage = total_turns == converted_turns
-
-    if not has_grammar_anno:
-        issues.append("Missing 'refine-grammar' annotation")
-    if total_turns > converted_turns:
-        issues.append(
-            f"Grammar tracking defect: {total_turns - converted_turns} turn items "
-            "are missing 'grammar-refined' variant"
-        )
+    converted_turns = sum(
+        1
+        for item in turn_items
+        if "refine-pippa-grammar" in {
+            v.name for v in getattr(item, "content", []) if hasattr(v, "name")
+        }
+    )
 
     return {
         "is_healthy": len(issues) == 0,
@@ -167,35 +227,7 @@ def calculate_health(document: Document) -> dict[str, Any]:
             "total_turns": total_turns,
             "converted_turns": converted_turns,
         },
-        "breakdown": {
-            "refine-characters": {
-                "passed": has_char_anno and has_bot_detail and has_user_info,
-                "annotation": has_char_anno,
-                "bot detail": has_bot_detail,
-                "user info": has_user_info,
-            },
-            "refine-safety-dials": {
-                "passed": has_safety_anno
-                and has_sexual
-                and has_violence
-                and has_toxicity,
-                "annotation": has_safety_anno,
-                "sexual axis": has_sexual,
-                "violence axis": has_violence,
-                "toxicity axis": has_toxicity,
-            },
-            "refine-genre-theme": {
-                "passed": has_genre_anno and has_primary_genre and has_themes,
-                "annotation": has_genre_anno,
-                "primary genre": has_primary_genre,
-                "themes": has_themes,
-            },
-            "refine-grammar": {
-                "passed": has_grammar_anno and has_prose_lineage,
-                "annotation": has_grammar_anno,
-                "prose": has_prose_lineage,
-            },
-        },
+        "breakdown": breakdown,
     }
 
 

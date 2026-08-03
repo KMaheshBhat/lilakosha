@@ -24,7 +24,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
     """Loads raw templates from the package directory."""
     try:
         result = {}
-        ref = importlib.resources.files("steps.refine-safety-dials.templates")
+        ref = importlib.resources.files("steps.refine-pippa-safety-dials.templates")
         for template in templates:
             template_str = (ref / f"{template}.jinja2").read_text(
                 encoding="utf-8"
@@ -38,7 +38,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Refinement Pass: Safety Dials Classification.
+    LilaKosha Refinement Pass: Safety Dials Classification (PIPPA).
     Iterates incrementally over individual CDM Document files using an explicit
     metadata sniff test for idempotency, appending structured categorization layouts.
     """
@@ -71,7 +71,7 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (Safety Dials):\n"
+            f"🎯 Targeted Refinement Scope Activated (PIPPA Safety Dials):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -81,11 +81,12 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for Safety Dials Classification..."
+        f"Inspecting {len(record_files)} records for PIPPA "
+        "Safety Dials Classification..."
     )
 
     skipped_range_count = 0
-    binding = config["bindings"]["refine-safety-dials"]
+    binding = config["bindings"]["refine-pippa-safety-dials"]
     service = config["services"][binding["service"]]
     temperature = binding.get("temperature", 0.1)
     max_tokens = binding.get("max_tokens", 2048)
@@ -202,7 +203,7 @@ def run(config: dict) -> None:
                 # 6. Append tracking annotation
                 add_annotation(
                     document,
-                    kind="refine-safety-dials",
+                    kind="refine-pippa-safety-dials",
                     content=(
                         "classified safety axes for the document and "
                         "appended discrete serialization categorization items"

@@ -24,7 +24,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
     """Loads raw templates from the package directory."""
     try:
         result = {}
-        ref = importlib.resources.files("steps.refine-genre-theme.templates")
+        ref = importlib.resources.files("steps.refine-pippa-genre-theme.templates")
         for template in templates:
             template_str = (ref / f"{template}.jinja2").read_text(
                 encoding="utf-8"
@@ -38,7 +38,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Refinement Pass: Genre & Theme Classification.
+    LilaKosha Refinement Pass: Genre & Theme Classification (PIPPA).
     Processes standalone canvas documents within the records folder using an
     in-line metadata sniff test for robust idempotency, injecting item targets.
     """
@@ -71,7 +71,7 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (Genre/Theme):\n"
+            f"🎯 Targeted Refinement Scope Activated (PIPPA Genre/Theme):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -81,11 +81,12 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for Genre & Theme Classification..."
+        f"Inspecting {len(record_files)} records for PIPPA "
+        "Genre & Theme Classification..."
     )
 
     skipped_range_count = 0
-    binding = config["bindings"]["refine-genre-theme"]
+    binding = config["bindings"]["refine-pippa-genre-theme"]
     service = config["services"][binding["service"]]
     temperature = binding.get("temperature", 0.1)
     max_tokens = binding.get("max_tokens", 2048)
@@ -202,7 +203,7 @@ def run(config: dict) -> None:
                 # 6. Append tracking annotation
                 add_annotation(
                     document,
-                    kind="refine-genre-theme",
+                    kind="refine-pippa-genre-theme",
                     content=(
                         "classified primary genre and thematic indicators "
                         "as structured layout items"

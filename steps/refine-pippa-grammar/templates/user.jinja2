@@ -35,7 +35,7 @@ Use this context solely for establishing continuity, tracking gender consistency
             {%- set hist.name = identity.name -%}
         {%- endif -%}
     {%- endfor -%}
-    {%- set past_variant = (past_item.content | selectattr("name", "equalto", "grammar-refined") | first) or (past_item.content | selectattr("name", "equalto", "original") | first) or (past_item.content | first) -%}
+    {%- set past_variant = (past_item.content | selectattr("name", "equalto", "refine-pippa-grammar") | first) or (past_item.content | selectattr("name", "equalto", "original") | first) or (past_item.content | first) -%}
     {%- if past_variant and past_variant.text -%}
 * {{ hist.name }}: {{ past_variant.text }}
     {%- endif -%}

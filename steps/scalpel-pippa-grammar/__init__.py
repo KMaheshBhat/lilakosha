@@ -24,9 +24,9 @@ def _check_user_info_health(health: Any) -> bool:
         return False
 
     refine_char = (
-        breakdown.get("refine-characters", {})
+        breakdown.get("refine-pippa-characters", {})
         if isinstance(breakdown, dict)
-        else getattr(breakdown, "refine_characters", {})
+        else getattr(breakdown, "refine_pippa_characters", {})
     )
     if not refine_char:
         return False
@@ -39,7 +39,7 @@ def _check_user_info_health(health: Any) -> bool:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Restore Original Prose.
+    LilaKosha Scalpel Pass: Restore Original Prose (PIPPA).
     Iterates through standalone Common Document Model (CDM) records, reverting
     third-person narrative mutations back to their original first-person chat strings
     by trimming refined ContentVariants from TurnItem instances.
@@ -69,7 +69,7 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (Grammar/Prose):\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Grammar/Prose):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -133,12 +133,12 @@ def run(config: dict) -> None:
 
             if modified_file:
                 # Filter out legacy grammar annotations
-                remove_annotation(document, "refine-grammar")
+                remove_annotation(document, "refine-pippa-grammar")
 
                 # Append surgical track annotation
                 add_annotation(
                     document,
-                    kind="scalpel-grammar",
+                    kind="scalpel-pippa-grammar",
                     content=(
                         "roll-back of grammar mutations to original prose state "
                         "via scalpel range"

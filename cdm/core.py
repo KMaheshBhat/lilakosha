@@ -86,7 +86,7 @@ class ContentVariant(BaseModel):
     name: str = Field(
         description=(
             "Label describing the role or origin of the variant, "
-            "e.g., 'original', 'grammar-refined', 'character-refined'."
+            "e.g., 'original', 'refine-pippa-grammar', 'refine-pippa-character'."
         )
     )
     text: str = Field(description="The textual content represented by this variant.")

@@ -24,7 +24,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
     """Loads raw templates from the package directory."""
     try:
         result = {}
-        ref = importlib.resources.files("steps.refine-grammar.templates")
+        ref = importlib.resources.files("steps.refine-pippa-grammar.templates")
         for template in templates:
             template_str = (ref / f"{template}.jinja2").read_text(
                 encoding="utf-8"
@@ -46,7 +46,7 @@ def get_variant_text(item: TurnItem, variant_name: str) -> str | None:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Refinement Pass: Single-Turn Grammar Revision.
+    LilaKosha Refinement Pass: Single-Turn Grammar Revision (PIPPA).
     Iterates through standalone canvas documents, evaluating and rewriting unrefined
     turns one-by-one into a third-person, past-tense novelistic prose format.
     """
@@ -76,7 +76,7 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (Grammar):\n"
+            f"🎯 Targeted Refinement Scope Activated (PIPPA Grammar):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -86,13 +86,13 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for grammar processing..."
+        f"Inspecting {len(record_files)} records for PIPPA grammar processing..."
     )
 
     CONTEXT_WINDOW_SIZE = 5
 
     skipped_range_count = 0
-    binding = config["bindings"]["refine-grammar"]
+    binding = config["bindings"]["refine-pippa-grammar"]
     service = config["services"][binding["service"]]
     temperature = binding.get("temperature", 0.3)
     inference = OpenAIInference.from_service(service)
@@ -252,10 +252,10 @@ def run(config: dict) -> None:
                             )
 
                         # Append tracking step annotation if not present
-                        if not has_annotation(document, "refine-grammar"):
+                        if not has_annotation(document, "refine-pippa-grammar"):
                             add_annotation(
                                 document,
-                                kind="refine-grammar",
+                                kind="refine-pippa-grammar",
                                 content="step-by-step single-turn third-person",
                                 reasoning=reasoning,
                             )
