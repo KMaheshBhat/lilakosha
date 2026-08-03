@@ -68,7 +68,7 @@ def run(config: dict) -> None:
     skipped_name_count = 0
 
     for file_path in tqdm(record_files, desc="Purging Character Profiles"):
-        record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
+        record_uuid = file_path.stem  # Extract tracking UUIDv7 token string
 
         # Enforce floor constraint boundary
         if start_uuid and record_uuid < str(start_uuid):
@@ -141,9 +141,11 @@ def run(config: dict) -> None:
                 # E. Re-materialize metadata
                 update_meta(document)
 
-                # F. Commit updates
+                # F. Commit updates with by_alias=True
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(document.model_dump_json(indent=2))
+                    f.write(
+                        document.model_dump_json(indent=2, by_alias=True)
+                    )
 
                 purged_count += 1
 

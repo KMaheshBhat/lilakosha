@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import Counter
 from pathlib import Path
@@ -10,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """LilaKosha Telemetry Step: Aggregate and report corpus statistics,
-
     including breakdowns by safety dials, primary genres, and thematic
     distributions.
     """
@@ -21,7 +19,7 @@ def run(config: dict) -> None:
         logger.error(f"Records directory not found at {records_dir}")
         return
 
-    canvas_files = list(records_dir.glob("*.json"))
+    canvas_files = sorted(records_dir.glob("*.json"))
     total_records = len(canvas_files)
 
     if total_records == 0:
@@ -43,26 +41,26 @@ def run(config: dict) -> None:
     for file_path in canvas_files:
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            document = Document.model_validate(data)
+                document = Document.model_validate_json(f.read())
 
             stats = document.meta.stats or {}
 
-            # Update aggregators using the returned dictionary values
-            sexual_counts[stats["sexual_axis"]] += 1
-            violence_counts[stats["violence_axis"]] += 1
-            toxicity_counts[stats["toxicity_axis"]] += 1
-            genre_counts[stats["primary_genre"]] += 1
+            # Update aggregators using safe dictionary lookups
+            sexual_counts[stats.get("sexual_axis", "Unset")] += 1
+            violence_counts[stats.get("violence_axis", "Unset")] += 1
+            toxicity_counts[stats.get("toxicity_axis", "Unset")] += 1
+            genre_counts[stats.get("primary_genre", "Unset")] += 1
 
-            for theme in stats["themes"]:
+            for theme in stats.get("themes", []):
                 theme_counts[theme] += 1
 
-            turn_counts.append(stats["turn_count"])
+            if "turn_count" in stats:
+                turn_counts.append(stats["turn_count"])
 
-        except Exception:
-            # Skip unparseable files during stats aggregation to avoid
-            # crashing the telemetry loop
+        except Exception as e:
+            # Log failure at debug level and skip unparseable files during stats
+            # aggregation to avoid crashing the telemetry loop
+            logger.debug(f"Skipping record {file_path.name} during stats run: {e}")
             continue
 
     # --- Render Statistical Breakdown Report ---
@@ -113,12 +111,12 @@ def run(config: dict) -> None:
         total_turns = sum(turn_counts)
         min_turns = sorted_turns[0]
         max_turns = sorted_turns[-1]
-        avg_turns = sum(turn_counts) / len(turn_counts)
+        avg_turns = total_turns / len(turn_counts)
         median_turns = sorted_turns[len(sorted_turns) // 2]
 
         logger.info("-" * 60)
         logger.info("💬 CONVERSATION TURN DISTRIBUTION")
-        logger.info(f"  Records Analyzed      : {total_records}")
+        logger.info(f"  Records Analyzed      : {len(turn_counts)}")
         logger.info(f"  Total Turns           : {total_turns}")
         logger.info(f"  Minimum Turns         : {min_turns}")
         logger.info(f"  Maximum Turns         : {max_turns}")

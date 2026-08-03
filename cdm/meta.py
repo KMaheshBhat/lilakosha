@@ -25,15 +25,13 @@ def calculate_resolved(document: Document) -> ResolvedMeta:
     document.items while safely retaining pre-existing properties
     like character identities.
     """
-    # 1. Start with values from the existing metadata to retain identities
-    #    and protect any pre-existing cached attributes.
     sexuality = None
     violence = None
     toxicity = None
     primary_genre = None
     themes = []
 
-    # 2. Sweep the document items timeline matrix for new categorization blocks
+    # Sweep document items for categorization blocks
     for item in document.items:
         if item.kind != "categorization":
             continue
@@ -56,16 +54,16 @@ def calculate_resolved(document: Document) -> ResolvedMeta:
                 elif isinstance(value, str):
                     themes.append(value)
         except ValueError:
-            # Shield pass from minor formatting variations or loose casings
+            # Shield pass against minor formatting variations or casing mismatch
             continue
 
-    # 3. Construct the updated payload while retaining the historical context
     source = document.meta.source or {}
     identities = (
         document.meta.resolved.identities
         if document.meta.resolved
         else source.get("identities", [])
     )
+
     return ResolvedMeta(
         identities=identities,
         sexuality=sexuality,
@@ -86,10 +84,7 @@ def calculate_health(document: Document) -> dict[str, Any]:
     items = document.items or []
     annotations = meta.annotations or []
 
-    # Safe extraction of processed annotation kinds
     annotation_kinds = {anno.kind for anno in annotations if hasattr(anno, "kind")}
-
-    # Tracking list for descriptive text logs
     issues = []
 
     # --- Rule Group 1: refine-characters ---
@@ -142,10 +137,19 @@ def calculate_health(document: Document) -> dict[str, Any]:
 
     turn_items = [item for item in items if item.kind == "turn"]
     total_turns = len(turn_items)
-    converted_turns = sum(
-        1 for item in turn_items if getattr(item, "original_prose", None) is not None
-    )
 
+    def is_turn_grammar_refined(item: Any) -> bool:
+        """
+        Verifies turn item contains both original and
+        grammar-refined content variants.
+        """
+        content = getattr(item, "content", [])
+        if not isinstance(content, list):
+            return False
+        variant_names = {v.name for v in content if hasattr(v, "name")}
+        return "original" in variant_names and "grammar-refined" in variant_names
+
+    converted_turns = sum(1 for item in turn_items if is_turn_grammar_refined(item))
     has_prose_lineage = total_turns == converted_turns
 
     if not has_grammar_anno:
@@ -153,7 +157,7 @@ def calculate_health(document: Document) -> dict[str, Any]:
     if total_turns > converted_turns:
         issues.append(
             f"Grammar tracking defect: {total_turns - converted_turns} turn items "
-            "are missing 'original_prose'"
+            "are missing 'grammar-refined' variant"
         )
 
     return {
@@ -163,7 +167,6 @@ def calculate_health(document: Document) -> dict[str, Any]:
             "total_turns": total_turns,
             "converted_turns": converted_turns,
         },
-        # Granular tracking matrix to reconstruct your breakdown
         "breakdown": {
             "refine-characters": {
                 "passed": has_char_anno and has_bot_detail and has_user_info,
@@ -212,26 +215,30 @@ def calculate_stats(document: Document) -> dict[str, Any]:
     # 1. Structural Numerical Counts
     turn_count = sum(1 for item in document.items if item.kind == "turn")
     item_count = len(document.items)
-
-    # Safely guard identities calculation in case it's missing or None
     character_count = len(resolved.identities) if resolved.identities else 0
 
-    # 2. Extract Safety Axes (handle Enums safely via .value)
+    # 2. Word Count across variants
+    total_word_count = 0
+    for item in document.items:
+        content = getattr(item, "content", None)
+        if isinstance(content, list):
+            for variant in content:
+                text = getattr(variant, "text", "")
+                if text:
+                    total_word_count += len(text.split())
+
+    # 3. Safety Axes & Classifications
     sexual_axis = resolved.sexuality.value if resolved.sexuality else "Unset"
     violence_axis = resolved.violence.value if resolved.violence else "Unset"
     toxicity_axis = resolved.toxicity.value if resolved.toxicity else "Unset"
-
-    # 3. Extract Primary Genre Mix
     primary_genre = resolved.genre.value if resolved.genre else "Unset"
-
-    # 4. Extract Thematic Tags List
-    # Returns a list of themes or a fallback list to match your original counter logic
     themes = list(resolved.themes) if resolved.themes else ["[No Themes Assigned]"]
 
     return {
         "turn_count": turn_count,
         "item_count": item_count,
         "character_count": character_count,
+        "word_count": total_word_count,
         "sexual_axis": sexual_axis,
         "violence_axis": violence_axis,
         "toxicity_axis": toxicity_axis,
@@ -242,10 +249,10 @@ def calculate_stats(document: Document) -> dict[str, Any]:
 
 def update_meta(document: Document) -> None:
     """
-    Update document.meta.stats with calculated values.
+    Update document.meta.resolved, health, and stats with calculated values.
 
     Args:
-        document: The CDM Document to update stats for.
+        document: The CDM Document to update.
     """
     document.meta.resolved = calculate_resolved(document)
     document.meta.health = calculate_health(document)
@@ -260,8 +267,6 @@ def add_annotation(
 ) -> None:
     """
     Add an annotation to the document's meta.annotations list.
-
-    Initializes the annotations list if it is None.
 
     Args:
         document: The CDM Document to add annotation to.

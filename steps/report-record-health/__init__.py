@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import defaultdict
 from pathlib import Path
@@ -24,7 +23,7 @@ def run(config: dict) -> None:
         logger.error(f"Records directory not found at {records_dir}")
         return
 
-    canvas_files = list(records_dir.glob("*.json"))
+    canvas_files = sorted(records_dir.glob("*.json"))
     total_records = len(canvas_files)
 
     if total_records == 0:
@@ -82,22 +81,20 @@ def run(config: dict) -> None:
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            # Authoritative validation against cdm.core.Document
-            document = Document.model_validate(data)
+                # Direct validation via Pydantic model
+                document = Document.model_validate_json(f.read())
 
             health = document.meta.health or {}
 
             # Track turn conversion metrics
-            turns_metrics = health.get("turns_metrics", {})
+            turns_metrics = health.get("turns_metrics") or {}
             total_turns += turns_metrics.get("total_turns", 0)
             converted_turns += turns_metrics.get("converted_turns", 0)
 
             # Aggregate breakdown counts
-            breakdown_data = health.get("breakdown", {})
+            breakdown_data = health.get("breakdown") or {}
             for stage, checks in breakdown_data.items():
-                if stage in stage_breakdown:
+                if stage in stage_breakdown and isinstance(checks, dict):
                     for check_key, passed_check in checks.items():
                         if check_key in stage_breakdown[stage] and passed_check:
                             stage_breakdown[stage][check_key] += 1
@@ -131,7 +128,6 @@ def run(config: dict) -> None:
         logger.info("📈 PIPELINE STAGE BREAKDOWN")
         logger.info("=" * 60)
 
-        # Iteration mirrors the layout requested in the telemetry definition
         for stage, checks in stage_breakdown.items():
             logger.info(f"{stage}")
 

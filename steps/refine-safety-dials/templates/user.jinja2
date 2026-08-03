@@ -4,10 +4,20 @@ Analyze the provided multi-turn chat history and classify the content across thr
 ### CHAT EVIDENCE
 {% set source = session.meta.source or {} %}
 {% set bot_name = source.get("bot_name") or "the character" %}
+{% set resolved = session.meta.resolved %}
+{% set identities = resolved.identities if resolved and resolved.identities else [] %}
 
 {% for item in session.items if item.kind == 'turn' -%}
     {% if loop.index0 < 100 -%}
-        {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
-        {{ role }}: {{ item.prose }}
+        {%- set role = namespace(name=bot_name) -%}
+        {%- for identity in identities -%}
+            {%- if identity.entity_id == item.actor_id -%}
+                {%- set role.name = identity.name -%}
+            {%- endif -%}
+        {%- endfor -%}
+        {%- set variant = (item.content | selectattr("name", "equalto", "grammar-refined") | first) or (item.content | selectattr("name", "equalto", "original") | first) or (item.content | first) -%}
+        {%- if variant and variant.text -%}
+{{ role.name }}: {{ variant.text }}
+        {%- endif -%}
     {% endif %}
 {%- endfor %}

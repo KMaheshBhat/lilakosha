@@ -5,12 +5,12 @@ Analyze the provided multi-turn chat history. Synthesize the roles, names, and p
 {% set source = session.meta.source or {} %}
 {% set bot_name = source.get("bot_name") or "the character" %}
 
-For the user character name, identify if there are any actions in user's turn where they interact with the character.
-
 {% for item in session.items if item.kind == 'turn' -%}
-    {# Grab the top 50 turns using Jinja's slice filter #}
     {% if loop.index0 < 100 -%}
         {%- set role = "USER" if item.actor_id == "user" else bot_name -%}
-        {{ role }}: {{ item.prose }}
+        {%- set variant = (item.content | selectattr("name", "equalto", "original") | first) or (item.content | first) -%}
+        {%- if variant and variant.text -%}
+{{ role }}: {{ variant.text }}
+        {%- endif -%}
     {% endif %}
 {%- endfor %}

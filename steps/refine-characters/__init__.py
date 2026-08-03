@@ -9,6 +9,7 @@ from tqdm import tqdm
 from cdm.core import (
     CharacterIdentity,
     CharacterItem,
+    ContentVariant,
     Document,
     PronounSet,
     ResolvedMeta,
@@ -109,10 +110,10 @@ def run(config: dict) -> None:
             resolved = document.meta.resolved or ResolvedMeta()
             source = document.meta.source or {}
 
-            # Idempotency Check
-            # Check if a character description for the user has already been injected
+            # Idempotency Check:
+            # Skip if a character profile item for the user already exists
             already_refined = any(
-                item.kind == "character" and item.entity_id == "user"
+                item.kind == "character" and getattr(item, "entity_id", None) == "user"
                 for item in document.items
             )
             if already_refined:
@@ -127,7 +128,7 @@ def run(config: dict) -> None:
                 if now < next_request_time:
                     time.sleep(next_request_time - now)
 
-            try :
+            try:
                 result = inference.generate(
                     messages=[
                         Message.system(system_prompt),
@@ -193,10 +194,11 @@ def run(config: dict) -> None:
                         objective=extracted_data.bot_character.pronouns.objective,
                         possessive=extracted_data.bot_character.pronouns.possessive,
                     )
+
             resolved.identities = identities
             document.meta.resolved = resolved
 
-            # 6. Render deep-lore narrative line items
+            # Render character descriptions
             user_character_content = character_detail_tmpl.render(
                 extracted_data.user_character
             )
@@ -204,7 +206,6 @@ def run(config: dict) -> None:
                 extracted_data.bot_character
             )
 
-            # Calculate deterministic unique sequence IDs for new character items
             existing_char_count = sum(
                 1 for item in document.items if item.kind == "character"
             )
@@ -213,21 +214,30 @@ def run(config: dict) -> None:
                 id=f"character-{existing_char_count + 1:06d}",
                 kind="character",
                 entity_id=bot_id,
-                content=bot_character_content,
+                content=[
+                    ContentVariant(
+                        name="character-refined",
+                        text=bot_character_content.strip(),
+                    )
+                ],
             )
             user_character_info = CharacterItem(
                 id=f"character-{existing_char_count + 2:06d}",
                 kind="character",
                 entity_id="user",
-                content=user_character_content,
+                content=[
+                    ContentVariant(
+                        name="character-refined",
+                        text=user_character_content.strip(),
+                    )
+                ],
             )
 
-            # Prepend the newly generated character deep-lore snapshots
-            # to the transactional timeline
+            # Insert character profiles at the start of the item list
             document.items.insert(0, bot_character_detail)
             document.items.insert(1, user_character_info)
 
-            # 7. Append tracking annotation
+            # Append annotation tracking
             add_annotation(
                 document,
                 kind="refine-characters",
@@ -238,12 +248,12 @@ def run(config: dict) -> None:
                 reasoning=reasoning,
             )
 
-            # 8. Re-materialize Document runtime stats
+            # Update document stats and metadata
             update_meta(document)
 
-            # 9. Commit changes back to disk
+            # Commit changes back to disk
             with open(file_path, "w", encoding="utf-8") as f:
-                f.write(document.model_dump_json(indent=2))
+                f.write(document.model_dump_json(indent=2, by_alias=True))
 
         except Exception as e:
             logger.error(

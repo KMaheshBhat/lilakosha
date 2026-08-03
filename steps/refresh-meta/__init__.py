@@ -84,7 +84,7 @@ def run(config: dict) -> None:
 
             # 4. Commit changes back to disk
             with open(file_path, "w", encoding="utf-8") as f:
-                f.write(document.model_dump_json(indent=2))
+                f.write(document.model_dump_json(indent=2, by_alias=True))
 
             refreshed_count += 1
 

@@ -75,8 +75,30 @@ class CharacterIdentity(BaseModel):
 
 
 # ==========================================
-# Base Item Layer (Addressability)
+# Base Item Layer & Content Variants
 # ==========================================
+class ContentVariant(BaseModel):
+    """
+    Represents one named version, transformation, or working form
+    of unstructured item content.
+    """
+
+    name: str = Field(
+        description=(
+            "Label describing the role or origin of the variant, "
+            "e.g., 'original', 'grammar-refined', 'character-refined'."
+        )
+    )
+    text: str = Field(description="The textual content represented by this variant.")
+    annotation: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional working notes, comments, or thoughts associated with "
+            "the variant. Not restricted to model reasoning."
+        ),
+    )
+
+
 class BaseDocumentItem(BaseModel):
     """
     Root class establishing deterministic local addressability across all items.
@@ -95,25 +117,31 @@ class WorldItem(BaseDocumentItem):
     """Static spatial, environmental, or narrative setup descriptors."""
 
     kind: Literal["world"] = "world"
-    content: str
+    content: List[ContentVariant] = Field(
+        default_factory=list,
+        description="List of content variants representing environmental setup.",
+    )
 
 
 class CharacterItem(BaseDocumentItem):
-    """Chronological, local deep lore extraction or behavioral
-    snapshot without restrictive subkind enums."""
+    """Chronological, local deep lore extraction or behavioral snapshot."""
 
     kind: Literal["character"] = "character"
     entity_id: str = Field(description="Maps back to CharacterIdentity.entity_id")
-    content: str
-    reasoning: Optional[str] = None
+    content: List[ContentVariant] = Field(
+        default_factory=list,
+        description="List of content variants representing extracted character state.",
+    )
 
 
 class SummaryItem(BaseDocumentItem):
-    """Chronological or event-horizon summaries (replaces
-    previous multi-pre/post fields)."""
+    """Chronological or event-horizon summaries."""
 
     kind: Literal["summary"] = "summary"
-    content: str
+    content: List[ContentVariant] = Field(
+        default_factory=list,
+        description="List of content variants representing summary prose.",
+    )
 
 
 class CategorizationItem(BaseDocumentItem):
@@ -144,23 +172,20 @@ class NarrativeItem(BaseDocumentItem):
     """
 
     kind: Literal["narrative"] = "narrative"
-    prose: str
-    prose_revision_comments: Optional[str] = None
-    original_prose: Optional[str] = None
+    content: List[ContentVariant] = Field(
+        default_factory=list,
+        description="List of content variants representing long-form prose.",
+    )
 
 
 class TurnItem(NarrativeItem):
     """
-    Specialization of NarrativeItem mapping explicitly back to dialogue
-    actors (e.g., PIPPA traces).
+    Specialization of NarrativeItem mapping explicitly back to dialogue actors.
     """
 
     kind: Literal["turn"] = "turn"
     actor_id: str = Field(
         description="Maps directly back to CharacterIdentity.entity_id"
-    )
-    thought: Optional[str] = Field(
-        default="", description="Internal thoughts/reasoning tags or system channels."
     )
 
 
@@ -198,7 +223,7 @@ DiscriminatedDocumentItem = Annotated[DocumentItemUnion, Field(discriminator="ki
 class ResolvedMeta(BaseModel):
     identities: List[CharacterIdentity] = Field(
         default_factory=list,
-        description="The of all characters present within this trace.",
+        description="The list of all characters present within this trace.",
     )
     sexuality: Optional[SexualScale] = None
     violence: Optional[ViolenceScale] = None

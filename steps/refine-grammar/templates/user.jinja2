@@ -35,7 +35,10 @@ Use this context solely for establishing continuity, tracking gender consistency
             {%- set hist.name = identity.name -%}
         {%- endif -%}
     {%- endfor -%}
-* {{ hist.name }}: {{ past_item.prose }}
+    {%- set past_variant = (past_item.content | selectattr("name", "equalto", "grammar-refined") | first) or (past_item.content | selectattr("name", "equalto", "original") | first) or (past_item.content | first) -%}
+    {%- if past_variant and past_variant.text -%}
+* {{ hist.name }}: {{ past_variant.text }}
+    {%- endif -%}
 {%- endfor %}
 
 ### REWRITE RULES
@@ -46,4 +49,5 @@ Use this context solely for establishing continuity, tracking gender consistency
 
 ### ─── TARGET TURN TO REWRITE ───
 Actor ID: {{ target_turn.actor_id }}
-Raw Prose: {{ target_turn.prose }}
+{%- set target_variant = (target_turn.content | selectattr("name", "equalto", "original") | first) or (target_turn.content | first) -%}
+Raw Prose: {{ target_variant.text if target_variant else '' }}

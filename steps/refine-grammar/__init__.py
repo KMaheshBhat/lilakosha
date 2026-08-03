@@ -6,7 +6,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
-from cdm.core import Document, TurnItem
+from cdm.core import ContentVariant, Document, TurnItem
 from cdm.meta import add_annotation, has_annotation, update_meta
 from cdm.refine import SingleTurnGrammarResponse
 from inference import Message, OpenAIInference
@@ -26,12 +26,22 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
         result = {}
         ref = importlib.resources.files("steps.refine-grammar.templates")
         for template in templates:
-            template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
+            template_str = (ref / f"{template}.jinja2").read_text(
+                encoding="utf-8"
+            )
             result[template] = template_str.strip()
         return result
     except Exception as e:
         logger.error(f"Failed to load external grammar prompt templates: {e}")
         raise
+
+
+def get_variant_text(item: TurnItem, variant_name: str) -> str | None:
+    """Helper to extract variant text by name from a TurnItem."""
+    for variant in item.content:
+        if variant.name == variant_name:
+            return variant.text
+    return None
 
 
 def run(config: dict) -> None:
@@ -72,11 +82,11 @@ def run(config: dict) -> None:
         )
     else:
         logger.info(
-            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+            "🔬 Refinement Scope: Global Sweep (No parameters provided)"
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for granular grammar processing..."
+        f"Inspecting {len(record_files)} records for grammar processing..."
     )
 
     CONTEXT_WINDOW_SIZE = 5
@@ -114,13 +124,20 @@ def run(config: dict) -> None:
                 history_turns = []
 
                 # Iterate through tracking transaction items
+                progress_desc = f" → {file_path.name[:12]}..."
                 for item in tqdm(
-                    document.items, desc=f" → {file_path.name[:12]}...", leave=False
+                    document.items, desc=progress_desc, leave=False
                 ):
                     if not isinstance(item, TurnItem):
                         continue
 
-                    if item.original_prose is not None:
+                    # Idempotency / state check using ContentVariants
+                    has_orig = any(v.name == "original" for v in item.content)
+                    has_ref = any(
+                        v.name == "grammar-refined" for v in item.content
+                    )
+
+                    if has_orig and has_ref:
                         history_turns.append(item)
                         continue
 
@@ -132,9 +149,11 @@ def run(config: dict) -> None:
                         ):
                             raise InferenceBudgetExhausted()
 
-                        history_context = history_turns[-CONTEXT_WINDOW_SIZE:]
+                        history_context = history_turns[
+                            -CONTEXT_WINDOW_SIZE:
+                        ]
 
-                        # Render context parameters passing document layout to templates
+                        # Render context parameters passing layout to templates
                         user_prompt = user_tmpl.render(
                             session=document,
                             target_turn=item,
@@ -142,26 +161,43 @@ def run(config: dict) -> None:
                         )
                         system_prompt = system_tmpl.render(session=document)
 
-                        # Calculate raw token overhead (roughly 1 word ≈ 1.3 tokens)
-                        estimated_input_tokens = int(len(item.prose.split()) * 1.3)
-
-                        # Establish a massive baseline floor of 8192 tokens to protect
-                        # target engine's reasoning budget
-                        unbound_max_tokens = max(
-                            8192, int(estimated_input_tokens * 3.0)
+                        # Extract target text for token estimation
+                        current_text = (
+                            get_variant_text(item, "grammar-refined")
+                            or get_variant_text(item, "original")
+                            or (
+                                item.content[0].text if item.content else ""
+                            )
                         )
 
-                        if requests_per_minute and next_request_time is not None:
+                        # Estimate raw token overhead (1 word ≈ 1.3 tokens)
+                        est_input_tokens = int(
+                            len(current_text.split()) * 1.3
+                        )
+
+                        # Establish a baseline floor of 8192 tokens
+                        unbound_max_tokens = max(
+                            8192, int(est_input_tokens * 3.0)
+                        )
+
+                        if (
+                            requests_per_minute
+                            and next_request_time is not None
+                        ):
                             now = time.monotonic()
                             if now < next_request_time:
                                 time.sleep(next_request_time - now)
 
                         extra_body_payload = (
-                            {"thinking_budget_tokens": 0} if allows_extra_body else {}
+                            {"thinking_budget_tokens": 0}
+                            if allows_extra_body
+                            else {}
                         )
-                        reasoning_effort = "none" if allows_think_control else None
+                        reasoning_effort = (
+                            "none" if allows_think_control else None
+                        )
 
-                        try :
+                        try:
                             result = inference.generate(
                                 messages=[
                                     Message.system(system_prompt),
@@ -177,17 +213,43 @@ def run(config: dict) -> None:
                             # 2. Increment Inference Allocation
                             inference_counter += 1
                             if requests_per_minute:
-                                next_request_time = time.monotonic() + (
-                                    60.0 / requests_per_minute
-                                )
+                                interval = 60.0 / requests_per_minute
+                                next_request_time = time.monotonic() + interval
 
                         extracted_data = result.value
                         reasoning = result.reasoning
                         logger.debug(f"extracted_data: {extracted_data}")
 
-                        # Update turn state inline
-                        item.original_prose = item.prose
-                        item.prose = extracted_data.rewritten_prose
+                        # Update turn state inline using ContentVariant lineage
+                        if not has_orig:
+                            initial_text = (
+                                item.content[0].text if item.content else ""
+                            )
+                            item.content.append(
+                                ContentVariant(
+                                    name="original", text=initial_text
+                                )
+                            )
+
+                        # Update or insert grammar-refined variant
+                        refined_variant = next(
+                            (
+                                v
+                                for v in item.content
+                                if v.name == "grammar-refined"
+                            ),
+                            None,
+                        )
+                        rewritten = extracted_data.rewritten_prose
+                        if refined_variant:
+                            refined_variant.text = rewritten
+                        else:
+                            item.content.append(
+                                ContentVariant(
+                                    name="grammar-refined",
+                                    text=rewritten,
+                                )
+                            )
 
                         # Append tracking step annotation if not present
                         if not has_annotation(document, "refine-grammar"):
@@ -201,9 +263,13 @@ def run(config: dict) -> None:
                         # Re-materialize layout metric statistics post-mutation
                         update_meta(document)
 
-                        # Flush state to flat file immediately after single turn success
+                        # Flush state to flat file post-mutation
                         with open(file_path, "w", encoding="utf-8") as f:
-                            f.write(document.model_dump_json(indent=2))
+                            f.write(
+                                document.model_dump_json(
+                                    indent=2, by_alias=True
+                                )
+                            )
 
                     except InferenceBudgetExhausted:
                         raise

@@ -13,12 +13,13 @@ from cdm.core import (
     Annotation,
     CharacterIdentity,
     CharacterItem,
+    ContentVariant,
     Document,
     DocumentMeta,
     PronounSet,
     TurnItem,
 )
-from cdm.meta import calculate_health, calculate_stats
+from cdm.meta import update_meta
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def run(config: dict) -> None:
     records_dir = cdm_root / "records"
     records_dir.mkdir(parents=True, exist_ok=True)
 
-    # 2. Instantiate our Cross-Source Master Index
+    # 2. Instantiate Cross-Source Master Index
     mapping_file = cdm_root / "mapping.jsonl"
     ledger_index = LedgerIndex(mapping_file)
 
@@ -83,25 +84,25 @@ def run(config: dict) -> None:
             )
             continue
 
-        # 5. Formulate the pure content-addressed SHA-256 native key
+        # 5. Formulate pure content-addressed SHA-256 native key
         content_hash = compute_content_address(raw_record)
 
-        # 6. Evaluate index state using the pure SHA-256 hash
+        # 6. Evaluate index state using pure SHA-256 hash
         target_uuid = ledger_index.get_uuid("pippa", content_hash)
 
         if target_uuid:
             target_file = records_dir / f"{target_uuid}.json"
-            # Idempotency Skip condition check: If it exists on disk, we are done
+            # Idempotency check: If record exists on disk, skip processing
             if target_file.exists():
                 continue
         else:
-            # Package source-specific markers inside an isolated dict tracking envelope
+            # Package source-specific markers inside metadata payload
             metadata_payload: Dict[str, Any] = {
                 "bot_id": str(bot_id),
                 "submission_timestamp": str(sub_ts),
             }
 
-            # Register it cleanly into the ledger
+            # Register record in mapping index
             target_uuid = ledger_index.register_record(
                 source="pippa",
                 native_id=content_hash,
@@ -109,8 +110,7 @@ def run(config: dict) -> None:
             )
             target_file = records_dir / f"{target_uuid}.json"
 
-        # 7. Pre-seed Identity Registry placeholders to establish data topology
-        # Typo correction: Pydantic base model core uses possessive
+        # 7. Establish Identity Registry placeholders
         default_pronouns = PronounSet(
             subjective="they", objective="them", possessive="their"
         )
@@ -132,7 +132,7 @@ def run(config: dict) -> None:
             ),
         ]
 
-        # 8. Construct CDM Document Envelope using structural Models
+        # 8. Construct CDM Document Envelope
         meta_obj = DocumentMeta(
             source={
                 "source_identity": "PygmalionAI/PIPPA",
@@ -149,12 +149,11 @@ def run(config: dict) -> None:
 
         document = Document(id=target_uuid, kind="document", meta=meta_obj, items=[])
 
-        # Track internal counters for local deterministic unique identifiers
+        # Counters for item identifiers
         character_item_counter = 0
         turn_item_counter = 0
 
-        # 9. Map Primary Character Initial Persona (character Line Item)
-        # Note: subkind parameter has been removed entirely per CDM specifications
+        # 9. Map Initial Character Persona
         raw_desc = raw_record.get("bot_description") or ""
         if raw_desc.strip():
             character_item_counter += 1
@@ -162,11 +161,16 @@ def run(config: dict) -> None:
                 id=f"character-{character_item_counter:06d}",
                 kind="character",
                 entity_id=str(bot_id),
-                content=str(raw_desc.strip()),
+                content=[
+                    ContentVariant(
+                        name="original",
+                        text=str(raw_desc.strip()),
+                    )
+                ],
             )
             document.items.append(character_info)
 
-        # 10. Map Conversational Turns (Linguistic Evidence Line Items)
+        # 10. Map Conversational Turns
         for turn in raw_record.get("conversation", []) or []:
             actor_id = "user" if turn.get("is_human") else str(bot_id)
             raw_message = turn.get("message") or ""
@@ -176,11 +180,16 @@ def run(config: dict) -> None:
                 id=f"turn-{turn_item_counter:06d}",
                 kind="turn",
                 actor_id=actor_id,
-                prose=str(raw_message.strip()),
+                content=[
+                    ContentVariant(
+                        name="original",
+                        text=str(raw_message.strip()),
+                    )
+                ],
             )
             document.items.append(turn_obj)
 
-        # 11. Append the basic lineage trace token to meta annotations
+        # 11. Append lineage annotation
         if document.meta.annotations is None:
             document.meta.annotations = []
         document.meta.annotations.append(
@@ -190,13 +199,12 @@ def run(config: dict) -> None:
             )
         )
 
-        # 12. Materialize basic document (only health and stats)
-        document.meta.health = calculate_health(document)
-        document.meta.stats = calculate_stats(document)
+        # 12. Update meta state (health, stats, resolved properties)
+        update_meta(document)
 
-        # 13. Write the singular living canvas artifact directly to its slot
+        # 13. Write JSON artifact to target path
         with open(target_file, "w", encoding="utf-8") as f:
-            f.write(document.model_dump_json(indent=2))
+            f.write(document.model_dump_json(indent=2, by_alias=True))
 
     logger.info(
         f"✅ Ingestion cycle tracking updated. "

@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any
 
 from tqdm import tqdm
 
@@ -9,11 +10,39 @@ from cdm.meta import add_annotation, remove_annotation, update_meta
 logger = logging.getLogger(__name__)
 
 
+def _check_user_info_health(health: Any) -> bool:
+    """Helper to safely extract 'user info' health flag across dict/model variants."""
+    if not health:
+        return False
+
+    breakdown = (
+        health.get("breakdown", {})
+        if isinstance(health, dict)
+        else getattr(health, "breakdown", {})
+    )
+    if not breakdown:
+        return False
+
+    refine_char = (
+        breakdown.get("refine-characters", {})
+        if isinstance(breakdown, dict)
+        else getattr(breakdown, "refine_characters", {})
+    )
+    if not refine_char:
+        return False
+
+    if isinstance(refine_char, dict):
+        return bool(refine_char.get("user info", False))
+
+    return bool(getattr(refine_char, "user_info", False))
+
+
 def run(config: dict) -> None:
     """
     LilaKosha Scalpel Pass: Restore Original Prose.
     Iterates through standalone Common Document Model (CDM) records, reverting
-    third-person narrative mutations back to their original first-person chat strings.
+    third-person narrative mutations back to their original first-person chat strings
+    by trimming refined ContentVariants from TurnItem instances.
     Supports optional runtime range filtering via 'start_uuid' and
     'stop_uuid' parameters.
     """
@@ -36,11 +65,8 @@ def run(config: dict) -> None:
     params = config.get("parameters", {})
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
-    # When enabled, only restore prose for documents whose player identity
-    # has been reset by the character scalpel.
     character_reset_sentinel = params.get("character_reset_sentinel", False)
 
-    # Format localized diagnostic headers for clear Operator Experience (OX)
     if start_uuid or stop_uuid:
         logger.info(
             f"🎯 Targeted Scalpel Scope Activated (Grammar/Prose):\n"
@@ -77,38 +103,39 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
-            # Optional safety guard: only restore prose if the player identity
-            # has been reset to the default tracking placeholder.
             if character_reset_sentinel:
-                health = document.meta.health or {}
-                has_user_info = (
-                    health.get("breakdown", {})
-                    .get("refine-characters", {})
-                    .get("user info", False)
-                )
-                if not has_user_info:
+                if not _check_user_info_health(document.meta.health):
                     continue
 
             modified_file = False
 
-            # Traverse the transactional ledger items using unified type-checking
+            # Traverse TurnItems and revert content variants back to 'original'
             for item in document.items:
                 if not isinstance(item, TurnItem):
                     continue
 
-                # Inverted Idempotency check: Only target turns that have been modified
-                if item.original_prose is not None:
-                    # Restore the raw snapshot back to the main prose track
-                    item.prose = item.original_prose
-                    item.original_prose = None
-                    item.prose_revision_comments = None
-                    modified_file = True
+                # Check if non-original variants exist (e.g., 'grammar-refined')
+                has_refined_variants = any(
+                    variant.name != "original" for variant in item.content
+                )
+
+                if has_refined_variants:
+                    # Keep only the 'original' variant
+                    original_variants = [
+                        variant
+                        for variant in item.content
+                        if variant.name == "original"
+                    ]
+
+                    if original_variants:
+                        item.content = original_variants
+                        modified_file = True
 
             if modified_file:
-                # Filter out legacy grammar annotations to prevent pipeline confusion
+                # Filter out legacy grammar annotations
                 remove_annotation(document, "refine-grammar")
 
-                # Append a surgical track annotation for trace lineage
+                # Append surgical track annotation
                 add_annotation(
                     document,
                     kind="scalpel-grammar",
@@ -121,9 +148,11 @@ def run(config: dict) -> None:
                 # Re-materialize layout metric statistics post-mutation
                 update_meta(document)
 
-                # Commit updates smoothly back to disk
+                # Commit updates back to disk with alias alignment
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(document.model_dump_json(indent=2))
+                    f.write(
+                        document.model_dump_json(indent=2, by_alias=True)
+                    )
 
                 restored_count += 1
 
