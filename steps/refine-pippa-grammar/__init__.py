@@ -134,7 +134,7 @@ def run(config: dict) -> None:
                     # Idempotency / state check using ContentVariants
                     has_orig = any(v.name == "original" for v in item.content)
                     has_ref = any(
-                        v.name == "grammar-refined" for v in item.content
+                        v.name == "refine-pippa-grammar" for v in item.content
                     )
 
                     if has_orig and has_ref:
@@ -163,7 +163,7 @@ def run(config: dict) -> None:
 
                         # Extract target text for token estimation
                         current_text = (
-                            get_variant_text(item, "grammar-refined")
+                            get_variant_text(item, "refine-pippa-grammar")
                             or get_variant_text(item, "original")
                             or (
                                 item.content[0].text if item.content else ""
@@ -231,12 +231,12 @@ def run(config: dict) -> None:
                                 )
                             )
 
-                        # Update or insert grammar-refined variant
+                        # Update or insert refine-pippa-grammar variant
                         refined_variant = next(
                             (
                                 v
                                 for v in item.content
-                                if v.name == "grammar-refined"
+                                if v.name == "refine-pippa-grammar"
                             ),
                             None,
                         )
@@ -246,7 +246,7 @@ def run(config: dict) -> None:
                         else:
                             item.content.append(
                                 ContentVariant(
-                                    name="grammar-refined",
+                                    name="refine-pippa-grammar",
                                     text=rewritten,
                                 )
                             )

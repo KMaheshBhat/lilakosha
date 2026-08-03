@@ -1,0 +1,427 @@
+# LilaKosha-MK1: Smoke Test Blueprint
+pipeline:
+    - "init"
+    - "ingest-pippa"
+    - "report-cdm-records"
+    - "refine-pippa-characters"
+    - "refine-pippa-safety-dials"
+    - "refine-pippa-genre-theme"
+    - "refine-pippa-grammar"
+    - "report-record-health"
+    - "report-record-stats"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}" # Unified landing zone
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}" # Recap-augmented output
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "openai/gpt-oss-120b"
+        requests_per_minute: 3
+    google-gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
+        requests_per_minute: 12
+        allows_think_control: false
+        allows_extra_body: false
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+        retry_on_rate_limit: true
+        allows_extra_body: false
+    nvidia:
+        provider: openai-compatible
+        base_url: https://integrate.api.nvidia.com/v1
+        api_key: "${NVIDIA_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        # model: "nvidia/nemotron-3-super-120b-a12b"
+        allows_extra_body: false
+        requests_per_minute: 31
+        retry_on_rate_limit: true
+
+bindings:
+    refine-pippa-characters:
+        service: local
+        temperature: 0.1
+        max_tokens: 4096
+
+    refine-pippa-safety-dials:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
+
+    refine-pippa-genre-theme:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
+
+    refine-pippa-grammar:
+        service: local
+        temperature: 0.0
+        max_tokens: 2048
+
+parameters:
+    limit: 5 # used to test for major refactors
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# All annotation, pipelines, steps, variant names have been properly updated
+# with the *-pippa-* prefix/suffix.  While the health reports on existing CDM
+# records look good, running a fresh smoke test to verify the pipeline works
+# as expected.
+# There were bugs and issues that needed fixing.  Final run did allow for the
+# scalpel to be tested as well.
+# ❯ ./run.sh pipeline/20260803201000-pippa-migrate-test.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['init', 'ingest-pippa', 'report-cdm-records', 'refine-pippa-characters', 'refine-pippa-safety-dials', 'refine-pippa-genre-theme', 'refine-pippa-grammar', 'report-record-health', 'report-record-stats']
+# INFO: Active Parameters: {'limit': 5}
+# INFO: --- Executing Step: INIT ---
+# INFO:
+# =================================================================
+# 🛠️  LILAKOSHA MK1: INFRASTRUCTURE STAGING
+# =================================================================
+# ...
+# =================================================================
+# ✅ Infrastructure is staged for LilaKosha-G1.
+# =================================================================
+# INFO: --- Executing Step: INGEST-PIPPA ---
+# INFO: Connecting to Hugging Face Dataset: PygmalionAI/PIPPA
+# INFO: Processing up to 5 records against data layer target: /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:02<00:00,  1.97it/s]
+# INFO: ✅ Ingestion cycle tracking updated. Canvas objects written out to /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# INFO: --- Executing Step: REPORT-CDM-RECORDS ---
+# INFO: ============================================================
+# INFO: 📊 CDM RECORDS REPORT
+# INFO: ============================================================
+# INFO: Total number of records: 5
+# INFO: Start UUID: 019fc841-2ad5-7f91-8515-89e5cf74aa25
+# INFO: ------------------------------------------------------------
+# INFO: ------------------------------------------------------------
+# INFO: Stop UUID: 019fc841-2b19-7b03-85d8-4ff976d5da6d
+# INFO: ============================================================
+# INFO: --- Executing Step: REFINE-PIPPA-CHARACTERS ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 5 records for Character Synthesis...
+# Refining Canvas Character Profiles:  20%|████████████████████████████████▊                                                                                                                                   | 1/5 [00:45<03:03, 45.88s/it]================================================================================
+# MODEL RETURNED INVALID JSON
+# ================================================================================
+# Provider : http://localhost:8033
+# Model    : local
+# --------------------------------------------------------------------------------
+# ================================================================================
+# ================================================================================
+# INFERENCE REQUEST FAILED
+# ================================================================================
+# Provider : http://localhost:8033
+# Model    : local
+# ================================================================================
+# ERROR: Failed character extraction pass for canvas document 019fc841-2ae4-7b31-ae2f-c89a367d9290.json: Expecting value: line 1 column 1 (char 0)
+# Refining Canvas Character Profiles: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [04:40<00:00, 56.19s/it]
+# INFO: ✅ Character refinement script pass finished. Skipped out-of-range: 0 records.
+# INFO: --- Executing Step: REFINE-PIPPA-SAFETY-DIALS ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 5 records for PIPPA Safety Dials Classification...
+# Evaluating Canvas Safety Dials: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:17<00:00,  3.50s/it]
+# INFO: ✅ Safety dials refinement script pass finished. Skipped out-of-range: 0 records. Total calls executed: 5.
+# INFO: --- Executing Step: REFINE-PIPPA-GENRE-THEME ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 5 records for PIPPA Genre & Theme Classification...
+# Classifying Canvas Genre & Themes: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:18<00:00,  3.68s/it]
+# INFO: ✅ Genre & theme refinement script pass finished. Skipped out-of-range: 0 records. Total calls executed: 5.
+# INFO: --- Executing Step: REFINE-PIPPA-GRAMMAR ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No parameters provided)
+# INFO: Inspecting 5 records for PIPPA grammar processing...
+# Processing Canvas Files: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [13:44<00:00, 164.81s/it]
+# INFO: ✅ Step-by-step grammar refinement script pass finished. Skipped out-of-range: 0 records. Total calls executed: 275.
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 5 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 5
+# INFO: Healthy Records:         4 (80.00%)
+# INFO: Defective Records:       1
+# INFO: ============================================================
+# INFO: ❌ DETECTED ANOMALY REGISTRY BY RECORD ID:
+# INFO:    ↳ UUID: 019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO:         - Missing 'refine-pippa-characters' annotation
+# INFO:         - Missing user character profile (character item, entity_id=user)
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-RECORD-STATS ---
+# INFO: Computing aggregate profile statistics across 5 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 5 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Suggestive      :    3 (60.0%)
+# INFO:     - Clean           :    1 (20.0%)
+# INFO:     - Explicit        :    1 (20.0%)
+# INFO:   [Violence Axis]
+# INFO:     - None            :    5 (100.0%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Safe            :    5 (100.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Fantasy                :    4 (80.0%)
+# INFO:   - Romance                :    1 (20.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - power-dynamics             :    2 (40.0%)
+# INFO:   - vore                       :    2 (40.0%)
+# INFO:   - predation                  :    2 (40.0%)
+# INFO:   - supernatural               :    2 (40.0%)
+# INFO:   - mythology                  :    2 (40.0%)
+# INFO:   - magic-supernatural         :    1 (20.0%)
+# INFO:   - identity-transformation    :    1 (20.0%)
+# INFO:   - romance                    :    1 (20.0%)
+# INFO:   - master-servant-trope       :    1 (20.0%)
+# INFO:   - hidden-identity            :    1 (20.0%)
+# INFO:   - gratitude-kindness         :    1 (20.0%)
+# INFO:   - survival                   :    1 (20.0%)
+# INFO:   - mystery                    :    1 (20.0%)
+# INFO:   - magic                      :    1 (20.0%)
+# INFO:   - exploration                :    1 (20.0%)
+# INFO:   - shapeshifting              :    1 (20.0%)
+# INFO:   - transformation             :    1 (20.0%)
+# INFO:   - size-difference            :    1 (20.0%)
+# INFO:   - rebirth                    :    1 (20.0%)
+# INFO:   - surrealism                 :    1 (20.0%)
+# INFO:   - body-horror                :    1 (20.0%)
+# INFO:   - enemies-to-lovers          :    1 (20.0%)
+# INFO:   - forced-proximity           :    1 (20.0%)
+# INFO:   - fate-supernatural-curse    :    1 (20.0%)
+# INFO:   - mutual-respect             :    1 (20.0%)
+# INFO:   ... and 4 other unique themes.
+# INFO: ------------------------------------------------------------
+# INFO: 💬 CONVERSATION TURN DISTRIBUTION
+# INFO:   Records Analyzed      : 5
+# INFO:   Total Turns           : 275
+# INFO:   Minimum Turns         : 3
+# INFO:   Maximum Turns         : 131
+# INFO:   Average Turns         : 55.0
+# INFO:   Median Turns          : 47
+# INFO:   Turn Count Buckets
+# INFO:     1–10               :    2 (40.0%)
+# INFO:     11–25              :    0 (0.0%)
+# INFO:     26–50              :    1 (20.0%)
+# INFO:     51–100             :    1 (20.0%)
+# INFO:     101–250            :    1 (20.0%)
+# INFO:     251–500            :    0 (0.0%)
+# INFO:     501+               :    0 (0.0%)
+# INFO: ============================================================
+# ❯ ./run.sh pipeline/25-scalpel-pippa-characters.yml --start_uuid 019fc841-2ae4-7b31-ae2f-c89a367d9290 --stop_uuid 019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Applying runtime overrides: {'start_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290', 'stop_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290'}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['scalpel-pippa-characters', 'scalpel-pippa-grammar']
+# INFO: Active Parameters: {'start_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290', 'stop_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290'}
+# INFO: --- Executing Step: SCALPEL-PIPPA-CHARACTERS ---
+# INFO: 🎯 Targeted Scalpel Scope Activated (PIPPA Character Synthesis):
+#     - Start Boundary: 019fc841-2ae4-7b31-ae2f-c89a367d9290
+#     - Stop Boundary:  019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Inspecting 5 records for synthesized character entities...
+# Purging Character Profiles: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 403.78it/s]
+# INFO: ✅ Scalpel character clearance pass complete.
+# INFO:   Purged: 1 records.
+# INFO:   Skipped by UUID range: 4 records.
+# INFO:   Skipped by player-name filter: 0 records.
+# INFO: --- Executing Step: SCALPEL-PIPPA-GRAMMAR ---
+# INFO: 🎯 Targeted Scalpel Scope Activated (PIPPA Grammar/Prose):
+#     - Start Boundary: 019fc841-2ae4-7b31-ae2f-c89a367d9290
+#     - Stop Boundary:  019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Inspecting 5 records for original prose restoration...
+# Restoring Original Prose: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 422.17it/s]
+# INFO: ✅ Scalpel original prose restoration complete.
+# INFO:   Restored: 1 records.
+# INFO:   Skipped out-of-range: 4 records.
+# ❯ ./run.sh pipeline/25-scalpel-pippa-safety-dials.yml --start_uuid 019fc841-2ae4-7b31-ae2f-c89a367d9290 --stop_uuid 019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Applying runtime overrides: {'start_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290', 'stop_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290'}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['scalpel-pippa-safety-dials']
+# INFO: Active Parameters: {'start_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290', 'stop_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290'}
+# INFO: --- Executing Step: SCALPEL-PIPPA-SAFETY-DIALS ---
+# INFO: 🎯 Targeted Scalpel Scope Activated (PIPPA Safety Dials):
+#     - Start Boundary: 019fc841-2ae4-7b31-ae2f-c89a367d9290
+#     - Stop Boundary:  019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Inspecting 5 files for safety metrics clearance...
+# Processing Scalpel Operation: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 305.11it/s]
+# INFO: ✅ Scalpel pass completed.
+# INFO:   Purged: 1 records.
+# INFO:   Skipped out-of-range: 4 records.
+# ❯ ./run.sh pipeline/25-scalpel-pippa-genre-theme.yml --start_uuid 019fc841-2ae4-7b31-ae2f-c89a367d9290 --stop_uuid 019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Applying runtime overrides: {'start_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290', 'stop_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290'}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['scalpel-pippa-genre-theme']
+# INFO: Active Parameters: {'start_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290', 'stop_uuid': '019fc841-2ae4-7b31-ae2f-c89a367d9290'}
+# INFO: --- Executing Step: SCALPEL-PIPPA-GENRE-THEME ---
+# INFO: 🎯 Targeted Scalpel Scope Activated (PIPPA Genre/Theme):
+#     - Start Boundary: 019fc841-2ae4-7b31-ae2f-c89a367d9290
+#     - Stop Boundary:  019fc841-2ae4-7b31-ae2f-c89a367d9290
+# INFO: Inspecting 5 records for genre and theme metadata...
+# Purging Genre & Themes: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 392.61it/s]
+# INFO: ✅ Scalpel genre & theme clearance pass complete.
+# INFO:   Purged: 1 records.
+# INFO:   Skipped out-of-range: 4 records.
+#❯ ./run.sh pipeline/20260803201000-pippa-migrate-test.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['init', 'ingest-pippa', 'report-cdm-records', 'refine-pippa-characters', 'refine-pippa-safety-dials', 'refine-pippa-genre-theme', 'refine-pippa-grammar', 'report-record-health', 'report-record-stats']
+# INFO: Active Parameters: {'limit': 5}
+# INFO: --- Executing Step: INIT ---
+# INFO:
+# =================================================================
+# 🛠️  LILAKOSHA MK1: INFRASTRUCTURE STAGING
+# =================================================================
+# ...
+# =================================================================
+# ✅ Infrastructure is staged for LilaKosha-G1.
+# =================================================================
+# INFO: --- Executing Step: INGEST-PIPPA ---
+# INFO: Connecting to Hugging Face Dataset: PygmalionAI/PIPPA
+# INFO: Processing up to 5 records against data layer target: /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:02<00:00,  2.09it/s]
+# INFO: ✅ Ingestion cycle tracking updated. Canvas objects written out to /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# INFO: --- Executing Step: REPORT-CDM-RECORDS ---
+# INFO: ============================================================
+# INFO: 📊 CDM RECORDS REPORT
+# INFO: ============================================================
+# INFO: Total number of records: 5
+# INFO: Start UUID: 019fc841-2ad5-7f91-8515-89e5cf74aa25
+# INFO: ------------------------------------------------------------
+# INFO: ------------------------------------------------------------
+# INFO: Stop UUID: 019fc841-2b19-7b03-85d8-4ff976d5da6d
+# INFO: ============================================================
+# INFO: --- Executing Step: REFINE-PIPPA-CHARACTERS ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 5 records for Character Synthesis...
+# Refining Canvas Character Profiles: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:54<00:00, 10.87s/it]
+# INFO: ✅ Character refinement script pass finished. Skipped out-of-range: 0 records.
+# INFO: --- Executing Step: REFINE-PIPPA-SAFETY-DIALS ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 5 records for PIPPA Safety Dials Classification...
+# Evaluating Canvas Safety Dials: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:02<00:00,  1.87it/s]
+# INFO: ✅ Safety dials refinement script pass finished. Skipped out-of-range: 0 records. Total calls executed: 1.
+# INFO: --- Executing Step: REFINE-PIPPA-GENRE-THEME ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 5 records for PIPPA Genre & Theme Classification...
+# Classifying Canvas Genre & Themes: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:02<00:00,  2.05it/s]
+# INFO: ✅ Genre & theme refinement script pass finished. Skipped out-of-range: 0 records. Total calls executed: 1.
+# INFO: --- Executing Step: REFINE-PIPPA-GRAMMAR ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No parameters provided)
+# INFO: Inspecting 5 records for PIPPA grammar processing...
+# Processing Canvas Files: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:15<00:00,  3.19s/it]
+# INFO: ✅ Step-by-step grammar refinement script pass finished. Skipped out-of-range: 0 records. Total calls executed: 5.
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 5 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 5
+# INFO: Healthy Records:         5 (100.00%)
+# INFO: Defective Records:       0
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-RECORD-STATS ---
+# INFO: Computing aggregate profile statistics across 5 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 5 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Suggestive      :    3 (60.0%)
+# INFO:     - Clean           :    1 (20.0%)
+# INFO:     - Explicit        :    1 (20.0%)
+# INFO:   [Violence Axis]
+# INFO:     - None            :    4 (80.0%)
+# INFO:     - Graphic         :    1 (20.0%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Safe            :    5 (100.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Fantasy                :    4 (80.0%)
+# INFO:   - Romance                :    1 (20.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - power-dynamics             :    2 (40.0%)
+# INFO:   - predation                  :    2 (40.0%)
+# INFO:   - supernatural               :    2 (40.0%)
+# INFO:   - vore                       :    2 (40.0%)
+# INFO:   - mythology                  :    2 (40.0%)
+# INFO:   - magic-supernatural         :    1 (20.0%)
+# INFO:   - identity-transformation    :    1 (20.0%)
+# INFO:   - romance                    :    1 (20.0%)
+# INFO:   - master-servant-trope       :    1 (20.0%)
+# INFO:   - hidden-identity            :    1 (20.0%)
+# INFO:   - gratitude-kindness         :    1 (20.0%)
+# INFO:   - survival                   :    1 (20.0%)
+# INFO:   - mystery                    :    1 (20.0%)
+# INFO:   - magic                      :    1 (20.0%)
+# INFO:   - exploration                :    1 (20.0%)
+# INFO:   - shapeshifting              :    1 (20.0%)
+# INFO:   - transformation             :    1 (20.0%)
+# INFO:   - size-difference            :    1 (20.0%)
+# INFO:   - rebirth                    :    1 (20.0%)
+# INFO:   - surrealism                 :    1 (20.0%)
+# INFO:   - body-horror                :    1 (20.0%)
+# INFO:   - enemies-to-lovers          :    1 (20.0%)
+# INFO:   - forced-proximity           :    1 (20.0%)
+# INFO:   - fate-supernatural-curse    :    1 (20.0%)
+# INFO:   - mutual-respect             :    1 (20.0%)
+# INFO:   ... and 4 other unique themes.
+# INFO: ------------------------------------------------------------
+# INFO: 💬 CONVERSATION TURN DISTRIBUTION
+# INFO:   Records Analyzed      : 5
+# INFO:   Total Turns           : 275
+# INFO:   Minimum Turns         : 3
+# INFO:   Maximum Turns         : 131
+# INFO:   Average Turns         : 55.0
+# INFO:   Median Turns          : 47
+# INFO:   Turn Count Buckets
+# INFO:     1–10               :    2 (40.0%)
+# INFO:     11–25              :    0 (0.0%)
+# INFO:     26–50              :    1 (20.0%)
+# INFO:     51–100             :    1 (20.0%)
+# INFO:     101–250            :    1 (20.0%)
+# INFO:     251–500            :    0 (0.0%)
+# INFO:     501+               :    0 (0.0%)
+# INFO: ============================================================

@@ -216,7 +216,7 @@ def run(config: dict) -> None:
                 entity_id=bot_id,
                 content=[
                     ContentVariant(
-                        name="refine-pippa-character",
+                        name="refine-pippa-characters",
                         text=bot_character_content.strip(),
                     )
                 ],
@@ -227,7 +227,7 @@ def run(config: dict) -> None:
                 entity_id="user",
                 content=[
                     ContentVariant(
-                        name="refine-pippa-character",
+                        name="refine-pippa-characters",
                         text=user_character_content.strip(),
                     )
                 ],
@@ -240,7 +240,7 @@ def run(config: dict) -> None:
             # Append annotation tracking
             add_annotation(
                 document,
-                kind="refine-pippa-character",
+                kind="refine-pippa-characters",
                 content=(
                     "refined bot character details and user character info "
                     "inside registry and timeline"

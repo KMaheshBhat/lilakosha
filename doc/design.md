@@ -16,16 +16,16 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         pipeline/*.yml                              │
 │                                                                     │
-│ 10-init.yml              Workspace initialization                   │
-│ 15-restore.yml           Restore published CDM dataset              │
-│ 20-ingest-*.yml          Raw dataset ingestion                      │
-│ 25-scalpel-*.yml         Operator correction workflows              │
-│ 30-refine.yml            Automated enrichment pipeline              │
-│ 35-report-*.yml          Dataset telemetry & validation             │
-│ 40-package.yml           Package CDM as JSONL                       │
-│ 45-publish.yml           Publish packaged dataset                   │
-│ 5x-prepare-*.yml         Training dataset projections               │
-│ 6x-train-*.yml           Model training workflows                   │
+│ 10-init.yml             Workspace initialization                    │
+│ 15-restore.yml          Restore published CDM dataset               │
+│ 20-ingest-*.yml         Raw dataset ingestion                       │
+│ 25-scalpel-*.yml        Operator correction workflows               │
+│ 30-refine-*.yml         Automated enrichment pipeline               │
+│ 35-report-*.yml         Dataset telemetry & validation              │
+│ 40-package.yml          Package CDM as JSONL                        │
+│ 45-publish.yml          Publish packaged dataset                    │
+│ 5x-prepare-*.yml        Training dataset projections                │
+│ 6x-train-*.yml          Model training workflows                    │
 └─────────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼

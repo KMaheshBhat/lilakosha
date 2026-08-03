@@ -96,8 +96,8 @@ def calculate_health(document: Document) -> dict[str, Any]:
     is_pippa_source = source_identity == "PygmalionAI/PIPPA"
 
     if is_pippa_source:
-        # --- Rule Group 1: refine-pippa-character ---
-        has_char_anno = "refine-pippa-character" in annotation_kinds
+        # --- Rule Group 1: refine-pippa-characters ---
+        has_char_anno = "refine-pippa-characters" in annotation_kinds
         has_bot_detail = any(
             item.kind == "character" and getattr(item, "entity_id", None) != "user"
             for item in items
@@ -109,7 +109,7 @@ def calculate_health(document: Document) -> dict[str, Any]:
 
         if not has_char_anno:
             issues.append(
-                "Missing 'refine-pippa-character' annotation"
+                "Missing 'refine-pippa-characters' annotation"
             )
         if not has_bot_detail:
             issues.append(
@@ -120,7 +120,7 @@ def calculate_health(document: Document) -> dict[str, Any]:
                 "Missing user character profile (character item, entity_id=user)"
             )
 
-        breakdown["refine-pippa-character"] = {
+        breakdown["refine-pippa-characters"] = {
             "passed": has_char_anno and has_bot_detail and has_user_info,
             "annotation": has_char_anno,
             "bot detail": has_bot_detail,

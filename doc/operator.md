@@ -64,16 +64,25 @@ Maps out local storage volumes, builds out structural internal folder depths, an
 
 #### 2. Ingest and Normalize Corpus Tracks
 
+Execute the ingestion manifest corresponding to your specific raw source format. Note that `pippa` is just one supported ingestion source; other raw sources follow the same `20-ingest-<source>.yml` naming pattern (e.g., `20-ingest-gutenberg-62.yml`, `20-ingest-gutenberg-1000.yml`, etc.).
+
 ```bash
-./run.sh pipeline/20-ingest.yml
+# Example 1: Ingesting conversational PIPPA records
+./run.sh pipeline/20-ingest-pippa.yml
+
+# Example 2: Ingesting literary Gutenberg records
+./run.sh pipeline/20-ingest-gutenberg-62.yml
 ```
 
 Pipes, splits, and maps incoming unstructured text files into standardized, standalone `{UUIDv7}.json` tracking assets compliant with the shared Common Data Model (CDM) ledger.
 
 #### 3. Run Refinement and Synthetics (Idempotent Sweep)
 
+Execute target refinement stages as needed across the ingested CDM workspace:
+
 ```bash
-./run.sh pipeline/30-refine.yml
+./run.sh pipeline/30-refine-characters.yml
+./run.sh pipeline/30-refine-grammar.yml
 ```
 
 Executes character profile extraction, safety dial scoring, genre grouping, and formatting normalizations.
@@ -126,11 +135,14 @@ If anomalous or corrupted records are isolated, the pipeline provides `25-scalpe
 ./run.sh pipeline/25-scalpel-safety-dials.yml --start_uuid 019ed0a1-3d92-7123-a70f-72d1e9093b01
 ```
 
-*Once corrections are introduced, re-run `./run.sh pipeline/30-refine.yml` to automatically re-enrich only the reset files. You need to reset the health tags first using `./run.sh pipeline/35-report-records.yml --reset_health true`.*
+*Once corrections are introduced, re-run `./run.sh pipeline/30-refine-*.yml` to automatically re-enrich only the reset files. You need to reset the health tags first using `./run.sh pipeline/35-report-records.yml --reset_health true`.*
 
-#### 6. Execute SFT Model Training & Weight Export
+#### 6. Execute Dataset Preparation, Training & Weight Export
 
 ```bash
+# Project CDM into training datasets
+./run.sh pipeline/50-prepare-sft.yml
+
 # Target, merge, and bake the General Variant GGUF
 ./run.sh pipeline/60-train-general.yml
 
@@ -141,14 +153,18 @@ If anomalous or corrupted records are isolated, the pipeline provides `25-scalpe
 ## Complete Pipeline Component Inventory
 
 * `pipeline/10-init.yml` – Local volume allocation, partition verification, and base structural setup.
-* `pipeline/20-ingest.yml` – Multi-source corpus parsing engine into matching CDM standard file trees.
+* `pipeline/15-restore.yml` – Restores a previously published dataset into the CDM workspace.
+* `pipeline/20-ingest-*.yml` – Multi-source corpus parsing engines (e.g., `20-ingest-pippa.yml`, `20-ingest-gutenberg-62.yml`, `20-ingest-gutenberg-1000.yml`) into standardized CDM session records.
 * `pipeline/25-scalpel-characters.yml` – Purges character metadata mappings and identity entries.
 * `pipeline/25-scalpel-safety-dials.yml` – Clears sexual, violent, and toxic alignment metrics.
 * `pipeline/25-scalpel-genre-theme.yml` – Resets primary categorizations and theme arrays.
 * `pipeline/25-scalpel-grammar.yml` – Resets model-transformed text runs back to their original raw source blocks.
-* `pipeline/30-refine.yml` – Multi-stage contextual processing loop deploying localized inference.
+* `pipeline/30-refine-*.yml` – Multi-stage contextual processing loop deploying localized inference (e.g., `30-refine-characters.yml`, `30-refine-grammar.yml`).
 * `pipeline/35-report-records.yml` – Operational telemetry suite verifying data schemas and statistical weights.
-* `pipeline/60-train-general.yml` – Supervised Fine-Tuning execution, 16-bit parameter fusion, and distribution quantification for the General flavor.
+* `pipeline/40-package.yml` – Packages the canonical CDM repository into portable JSONL.
+* `pipeline/45-publish.yml` – Publishes packaged datasets to external repositories.
+* `pipeline/5x-prepare-*.yml` – Training dataset preparation and task projections (e.g., `50-prepare-sft.yml`).
+* `pipeline/60-train-general.yml` – Supervised Fine-Tuning execution, 16-bit parameter fusion, and distribution quantization for the General flavor.
 * `pipeline/61-train-unbound.yml` – SFT optimization, weight fusion, and quantization for the abliterated Unbound flavor.
 
 ## Operation Methodology
@@ -157,26 +173,30 @@ LilaKosha is designed around an iterative, operator-driven refinement workflow r
 
 ### Phase 1 — Initialize
 
-Initialize the workspace and ingest the source corpus only once for a new dataset.
+Initialize the workspace and ingest the target source corpus only once for a new dataset run.
 
 ```bash
 ./run.sh pipeline/10-init.yml
-./run.sh pipeline/20-ingest.yml
+
+# Choose the appropriate ingestion source manifest
+./run.sh pipeline/20-ingest-pippa.yml
+# OR
+./run.sh pipeline/20-ingest-gutenberg-62.yml
 ```
 
-This establishes the Common Data Model (CDM) records that become the authoritative working set for all subsequent operations. Adjust the `limit` parameter in `20-ingest.yml` as the corpus grows. Incremental ingestion keeps refinement campaigns bounded and allows new records to enter the workflow without reprocessing the existing corpus.
+This establishes the Common Data Model (CDM) records that become the authoritative working set for all subsequent operations. Adjust the `limit` parameter in your `20-ingest-*.yml` file as the corpus grows. Incremental ingestion keeps refinement campaigns bounded and allows new records to enter the workflow without reprocessing the existing corpus.
 
 ### Phase 2 — Execute a Refinement Campaign
 
 Refinement campaigns are executed using a dedicated pipeline manifest.
 
-For routine work, use the current refinement pipeline:
+For routine work, execute the desired target refinement pipeline:
 
 ```bash
-./run.sh pipeline/30-refine.yml
+./run.sh pipeline/30-refine-characters.yml
 ```
 
-IMPORTANT: create a timestamped copy of the pipeline (for example `20260701103000-refine.yml`), document the intent within the manifest, and execute that specific pipeline instead.
+IMPORTANT: For production campaigns, create a timestamped copy of the pipeline (for example `20260701103000-refine-characters.yml`), document the intent within the manifest, and execute that specific pipeline instead.
 
 Timestamped pipeline manifests provide a reproducible operational history of dataset evolution and should generally be treated as immutable after execution.
 
@@ -219,16 +239,16 @@ When defects are isolated to a specific refinement stage, execute the appropriat
 
 Examples include:
 
-* Character extraction
-* Grammar normalization
-* Genre and theme classification
-* Safety dial annotation
+* Character extraction (`25-scalpel-characters.yml`)
+* Grammar normalization (`25-scalpel-grammar.yml`)
+* Genre and theme classification (`25-scalpel-genre-theme.yml`)
+* Safety dial annotation (`25-scalpel-safety-dials.yml`)
 
 Scalpel operations intentionally preserve all unrelated refinements, minimizing unnecessary recomputation.
 
 ### Phase 6 — Re-run the Refinement Campaign
 
-After a Scalpel intervention, Re-execute the same pipeline manifest that originally performed the refinement. This preserves the exact prompts, models, parameters, and operator notes associated with that refinement campaign.
+After a Scalpel intervention, re-execute the same pipeline manifest that originally performed the refinement. This preserves the exact prompts, models, parameters, and operator notes associated with that refinement campaign.
 
 The refinement engine automatically skips completed work and regenerates only the cleared sections, allowing iterative correction with minimal processing overhead.
 
@@ -243,7 +263,7 @@ Only datasets that satisfy the desired quality criteria should proceed to prepar
 After the dataset has been validated, execute the preparation and training pipelines.
 
 ```bash
-./run.sh pipeline/40-prepare.yml
+./run.sh pipeline/50-prepare-sft.yml
 
 ./run.sh pipeline/60-train-general.yml
 # or

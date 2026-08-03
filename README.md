@@ -35,7 +35,7 @@ The name combines **Lila** (Play/Imaginative Sport) and **Kosha** (Treasury/Repo
                          ┌────────────────────────────────┼─────────────────────────────────┐
                          │                                │                                 │
                          ▼                                ▼                                 ▼
-                    25-scalpel-*                      30-refine                       35-report-*
+                    25-scalpel-*                     30-refine-*                      35-report-*
                   (manual operator)                     ▲ │                           (telemetry)
                          │                              │ │
                          └──────────────────────────────┘ │
