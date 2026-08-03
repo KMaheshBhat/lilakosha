@@ -1,0 +1,55 @@
+# LilaKosha-MK1: Migrator Blueprints
+pipeline:
+    # - "migrate-turnitem" # 2026-08-02 23:00:00 IST
+    # - "migrate-characteritem" # 2026-08-03 10:30:00 IST
+    # - "report-documentitems" # 2026-08-03 11:00:00 IST
+    - "report-documentitems" # 2026-08-03 11:10:00 IST
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+# Execution log
+# 2026-08-02 23:00:00 IST - Ran a temporary migrate-turnitem step to convert all TurnItems to
+# the new CDM format.
+# 2026-08-03 10:30:00 IST - Ran a temporary migrate-characteritem step to convert all
+# CharacterItems to the new CDM format.
+# 2026-08-03 11:10:00 IST - Run a temporary report-documentitems step to inspect
+# document items.
+# INFO: ============================================================
+# INFO: 📊 CDM DOCUMENT ITEMS SUMMARY
+# INFO: ============================================================
+# INFO: Total Documents Inspected : 16832
+# INFO: Total Items Counted       : 933614
+# INFO: ------------------------------------------------------------
+# INFO: ITEM KIND                 | COUNT      | VARIANTS BREAKDOWN
+# INFO: ------------------------------------------------------------
+# INFO: turn                      | 798675     | original: 798675, grammar-refined: 798502
+# INFO: categorization            | 85160      | (legacy / structured string)
+# INFO: character                 | 49779      | character-refined: 35561, original: 14218
+# INFO: ============================================================
+# Enhanced the report-documentitems step to inspect document items.
+# 2026-08-03 11:10:00 IST - Re-run the temporary report-documentitems step
+# to inspect document items.
+# INFO: ========================================================================
+# INFO:  📊 CDM DOCUMENT ITEMS SUMMARY
+# INFO: ========================================================================
+# INFO: Total Documents Inspected : 16832
+# INFO: Total Items Counted       : 933614
+# INFO: Malformed Items Detected  : 0
+# INFO: ------------------------------------------------------------------------
+# INFO: ITEM KIND                 | COUNT    | CONTENT SHAPE
+# INFO: ------------------------------------------------------------------------
+# INFO: turn                      | 798675   | variants=798675
+# INFO:                           |          |   └─ original: 798675
+# INFO:                           |          |   └─ grammar-refined: 798502
+# INFO: categorization            | 85160    | structured
+# INFO: character                 | 49779    | variants=49779
+# INFO:                           |          |   └─ character-refined: 35561
+# INFO:                           |          |   └─ original: 14218
+# INFO: ========================================================================
