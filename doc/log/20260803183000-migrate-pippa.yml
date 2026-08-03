@@ -1,0 +1,22 @@
+# LilaKosha-MK1: Migrator Blueprints
+pipeline:
+    - "migrate-pippa"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+# Execution log
+# ❯ ./run.sh pipeline/20260803183000-migrate-pippa.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['migrate-pippa']
+# INFO: Active Parameters: {}
+# INFO: --- Executing Step: MIGRATE-PIPPA ---
+# INFO: Inspecting 16832 JSON records for CDM schema migration...
+# Migrating CDM JSON Records: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████| 16832/16832 [08:10<00:00, 34.31it/s]
+# INFO: ✅ CDM migration complete. Modified 16832 records.
