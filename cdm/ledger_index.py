@@ -126,3 +126,23 @@ class LedgerIndex:
                 "from ledger index."
             )
             return True
+
+    def get_records(self) -> list[Dict[str, Any]]:
+            """
+            Reads and returns all entries currently recorded in the mapping file.
+            """
+            records: list[Dict[str, Any]] = []
+            if not self.mapping_path.exists():
+                return records
+
+            with open(self.mapping_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line_str = line.strip()
+                    if not line_str:
+                        continue
+                    try:
+                        entry = json.loads(line_str)
+                        records.append(entry)
+                    except json.JSONDecodeError:
+                        continue
+            return records

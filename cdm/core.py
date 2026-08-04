@@ -202,6 +202,10 @@ class SequenceItem(BaseDocumentItem):
             "or slice (e.g. ['turn-000001', 'turn-000002'])."
         )
     )
+    data: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Extensible sequence-level properties, hints, and annotations.",
+    )
 
 
 # ==========================================

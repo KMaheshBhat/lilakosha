@@ -1,4 +1,4 @@
-# LilaKosha-MK1: Introspection & Recap-Augmentation Blueprint
+# LilaKosha-MK1: Ingest PIPPA Blueprint
 pipeline:
     - "ingest-pippa"
     - "report-cdm-records"

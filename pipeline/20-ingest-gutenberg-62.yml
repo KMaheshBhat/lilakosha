@@ -1,0 +1,13 @@
+# LilaKosha-MK1: Ingest Gutenberg 62 Blueprint
+pipeline:
+    - "ingest-gutenberg-62"
+    - "report-cdm-records"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
