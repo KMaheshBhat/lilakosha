@@ -1,0 +1,50 @@
+# LilaKosha-MK1: Migrator Blueprints
+pipeline:
+    # 2026-08-05 11:30:00 IST
+    - "migrate-pippa-sequence"
+    - "report-documentitems"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260805113000-migrate.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['migrate-pippa-sequence', 'report-documentitems']
+# INFO: Active Parameters: {}
+# INFO: --- Executing Step: MIGRATE-PIPPA-SEQUENCE ---
+# INFO: Inspecting 16833 JSON records for PIPPA sequence migration...
+# Iigrating PIPPA Sequences: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 16833/16833 [07:25<00:00, 37.79it/s]
+# INFO: ✅ PIPPA SequenceItem migration complete. Updated 16832 records.
+# INFO: --- Executing Step: REPORT-DOCUMENTITEMS ---
+# INFO: Inspecting 16833 JSON records for item kinds and ContentVariant distributions...
+# Ieviewing CDM Items: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 16833/16833 [02:00<00:00, 139.20it/s]
+# INFO: ========================================================================
+# INFO:  📊 CDM DOCUMENT ITEMS SUMMARY
+# INFO: ========================================================================
+# INFO: Total Documents Inspected : 16833
+# INFO: Total Items Counted       : 951528
+# INFO: Malformed Items Detected  : 0
+# INFO: ------------------------------------------------------------------------
+# INFO: ITEM KIND                 | COUNT    | CONTENT SHAPE
+# INFO: ------------------------------------------------------------------------
+# INFO: turn                      | 798675   | variants=798675
+# INFO:                           |          |   └─ original: 798675
+# INFO:                           |          |   └─ refine-pippa-grammar: 798502
+# INFO: categorization            | 85160    | structured
+# INFO: character                 | 49779    | variants=49779
+# INFO:                           |          |   └─ refine-pippa-characters: 35561
+# INFO:                           |          |   └─ original: 14218
+# INFO: sequence                  | 16862    | structured
+# INFO: narrative                 | 1052     | variants=1052
+# INFO:                           |          |   └─ original: 1052
+# INFO: ========================================================================
+# INFO: ✅ Document item review complete. Inspected 16833 documents, 951528 items, 0 malformed variant-bearing items.

@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from datasets import load_dataset
 from tqdm import tqdm
@@ -17,6 +17,7 @@ from cdm.core import (
     Document,
     DocumentMeta,
     PronounSet,
+    SequenceItem,
     TurnItem,
 )
 from cdm.meta import update_meta
@@ -171,13 +172,15 @@ def run(config: dict) -> None:
             document.items.append(character_info)
 
         # 10. Map Conversational Turns
+        turn_item_ids: List[str] = []
         for turn in raw_record.get("conversation", []) or []:
             actor_id = "user" if turn.get("is_human") else str(bot_id)
             raw_message = turn.get("message") or ""
 
             turn_item_counter += 1
+            turn_id = f"turn-{turn_item_counter:06d}"
             turn_obj = TurnItem(
-                id=f"turn-{turn_item_counter:06d}",
+                id=turn_id,
                 kind="turn",
                 actor_id=actor_id,
                 content=[
@@ -188,8 +191,22 @@ def run(config: dict) -> None:
                 ],
             )
             document.items.append(turn_obj)
+            turn_item_ids.append(turn_id)
 
-        # 11. Append lineage annotation
+        # 11. Append SequenceItem for ordered conversation timeline
+        if turn_item_ids:
+            conversation_sequence = SequenceItem(
+                id="seq-conversation-000001",
+                kind="sequence",
+                item_ids=turn_item_ids,
+                data={
+                    "title": f"Conversation with {raw_record.get('bot_name') or 'bot'}",
+                    "sequence_for": "session",
+                },
+            )
+            document.items.append(conversation_sequence)
+
+        # 12. Append lineage annotation
         if document.meta.annotations is None:
             document.meta.annotations = []
         document.meta.annotations.append(
@@ -199,10 +216,10 @@ def run(config: dict) -> None:
             )
         )
 
-        # 12. Update meta state (health, stats, resolved properties)
+        # 13. Update meta state (health, stats, resolved properties)
         update_meta(document)
 
-        # 13. Write JSON artifact to target path
+        # 14. Write JSON artifact to target path
         with open(target_file, "w", encoding="utf-8") as f:
             f.write(document.model_dump_json(indent=2, by_alias=True))
 
