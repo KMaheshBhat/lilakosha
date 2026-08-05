@@ -80,8 +80,10 @@ class CharacterIdentity(BaseModel):
 class ContentVariant(BaseModel):
     """
     Represents one named version, transformation, or working form
-    of unstructured item content.
+    of unstructured item content. Allows extra dynamic attributes.
     """
+
+    model_config = ConfigDict(extra="allow")
 
     name: str = Field(
         description=(
