@@ -1,0 +1,30 @@
+# LilaKosha-MK1: Migrator Blueprints
+pipeline:
+    - "migrate-pippa"
+    - "refresh-meta"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260806161000-migrate-pippa-annotation.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['migrate-pippa', 'refresh-meta']
+# INFO: Active Parameters: {}
+# INFO: --- Executing Step: MIGRATE-PIPPA ---
+# INFO: Inspecting 16833 JSON records for CDM schema migration...
+# Migrating CDM JSON Records: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 16833/16833 [10:35<00:00, 26.47it/s]
+# INFO: ✅ CDM migration complete. Modified 16832 records.
+# INFO: --- Executing Step: REFRESH-META ---
+# INFO: 🔬 Refresh Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 16833 records for metadata refresh...
+# Refreshing Metadata: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 16833/16833 [11:14<00:00, 24.94it/s]
+# INFO: ✅ Metadata refresh pass complete. Refreshed: 16833 records. Skipped out-of-range: 0 records.

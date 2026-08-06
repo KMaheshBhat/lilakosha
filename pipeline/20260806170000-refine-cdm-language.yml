@@ -1,0 +1,205 @@
+# LilaKosha-MK1: Introspection & Refinement Blueprint
+
+pipeline:
+    - "refine-cdm-language"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    min_language_confidence: 0.05
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260806170000-refine-cdm-language.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['refine-cdm-language']
+# INFO: Active Parameters: {'min_language_confidence': 0.05}
+# INFO: --- Executing Step: REFINE-CDM-LANGUAGE ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Processing 16833 records for language categorization...
+# Refining CDM Languages: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 16833/16833 [33:35<00:00,  8.35it/s]
+# INFO: ✅ Language refinement pass complete. Processed 16833 records.
+# ❯ ./run.sh pipeline/35-report-records.yml --hide_anomaly_details true --report_breakdown true
+# INFO: Applying runtime overrides: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['report-record-health', 'report-record-stats']
+# INFO: Active Parameters: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 16833 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 16833
+# INFO: Healthy Records:         16746 (99.48%)
+# INFO: Defective Records:       87
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-cdm-language
+# INFO:  ✅ PASSED              : 16833/16833 (100.00%)
+# INFO:     annotation          : 16833/16833 (100.00%)
+# INFO:     categorization_item : 16833/16833 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-characters
+# INFO:  ✅ PASSED              : 16814/16833 (99.89%)
+# INFO:     annotation          : 16814/16833 (99.89%)
+# INFO:     bot detail          : 16831/16833 (99.99%)
+# INFO:     user info           : 16814/16833 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-safety-dials
+# INFO:  ✅ PASSED              : 16831/16833 (99.99%)
+# INFO:     annotation          : 16831/16833 (99.99%)
+# INFO:     sexual axis         : 16831/16833 (99.99%)
+# INFO:     violence axis       : 16831/16833 (99.99%)
+# INFO:     toxicity axis       : 16831/16833 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-genre-theme
+# INFO:  ✅ PASSED              : 16832/16833 (99.99%)
+# INFO:     annotation          : 16832/16833 (99.99%)
+# INFO:     primary genre       : 16832/16833 (99.99%)
+# INFO:     themes              : 16832/16833 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-grammar
+# INFO:  ✅ PASSED              : 16763/16833 (99.58%)
+# INFO:     annotation          : 16832/16833 (99.99%)
+# INFO:     prose               : 16763/16833 (99.58%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 798675
+# INFO:     Turns Converted         : 798502 (99.98%)
+# INFO:     Turns Remaining         : 173
+# INFO:     Estimated Local Compute : 0.2 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-RECORD-STATS ---
+# INFO: Computing aggregate profile statistics across 16833 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 16833 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Explicit        : 6425 (38.2%)
+# INFO:     - Suggestive      : 6109 (36.3%)
+# INFO:     - Clean           : 4297 (25.5%)
+# INFO:     - Unset           :    2 (0.0%)
+# INFO:   [Violence Axis]
+# INFO:     - None            : 10445 (62.1%)
+# INFO:     - Graphic         : 5910 (35.1%)
+# INFO:     - Combat          :  476 (2.8%)
+# INFO:     - Unset           :    2 (0.0%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Safe            : 9042 (53.7%)
+# INFO:     - Harassment      : 7689 (45.7%)
+# INFO:     - Dangerous       :  100 (0.6%)
+# INFO:     - Unset           :    2 (0.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Fantasy                : 6072 (36.1%)
+# INFO:   - Romance                : 2347 (13.9%)
+# INFO:   - Sci-Fi                 : 2136 (12.7%)
+# INFO:   - Drama                  : 1902 (11.3%)
+# INFO:   - Slice of Life          : 1743 (10.4%)
+# INFO:   - Comedy                 : 1239 (7.4%)
+# INFO:   - Mystery & Thriller     :  750 (4.5%)
+# INFO:   - Action & Adventure     :  643 (3.8%)
+# INFO:   - Unset                  :    1 (0.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - power-dynamics             : 1583 (9.4%)
+# INFO:   - vore                       : 1495 (8.9%)
+# INFO:   - size-difference            : 1440 (8.6%)
+# INFO:   - power-imbalance            : 1152 (6.8%)
+# INFO:   - slice-of-life              : 1087 (6.5%)
+# INFO:   - body-horror                : 1012 (6.0%)
+# INFO:   - power-exchange             :  800 (4.8%)
+# INFO:   - emotional-vulnerability    :  771 (4.6%)
+# INFO:   - roleplay                   :  738 (4.4%)
+# INFO:   - digestion                  :  612 (3.6%)
+# INFO:   - humiliation                :  568 (3.4%)
+# INFO:   - identity                   :  564 (3.4%)
+# INFO:   - femdom                     :  549 (3.3%)
+# INFO:   - dark-fantasy               :  525 (3.1%)
+# INFO:   - survival                   :  517 (3.1%)
+# INFO:   - predator-prey-dynamics     :  505 (3.0%)
+# INFO:   - found-family               :  501 (3.0%)
+# INFO:   - absurdist-humor            :  487 (2.9%)
+# INFO:   - explicit-sexual-content    :  483 (2.9%)
+# INFO:   - psychological-manipulation :  482 (2.9%)
+# INFO:   - moral-ambiguity            :  462 (2.7%)
+# INFO:   - mystery                    :  451 (2.7%)
+# INFO:   - transformation             :  435 (2.6%)
+# INFO:   - monster-girl               :  421 (2.5%)
+# INFO:   - romance                    :  414 (2.5%)
+# INFO:   ... and 47610 other unique themes.
+# INFO: ------------------------------------------------------------
+# INFO: 🌐 LANGUAGE DISTRIBUTION
+# INFO:   - en                     : 16688 (99.1%)
+# INFO:   - es                     :  152 (0.9%)
+# INFO:   - tl                     :   39 (0.2%)
+# INFO:   - yo                     :   25 (0.1%)
+# INFO:   - ru                     :   22 (0.1%)
+# INFO:   - cy                     :   22 (0.1%)
+# INFO:   - ms                     :   15 (0.1%)
+# INFO:   - id                     :   12 (0.1%)
+# INFO:   - la                     :    9 (0.1%)
+# INFO:   - xh                     :    9 (0.1%)
+# INFO:   - ts                     :    8 (0.0%)
+# INFO:   - sv                     :    8 (0.0%)
+# INFO:   - da                     :    7 (0.0%)
+# INFO:   - sw                     :    7 (0.0%)
+# INFO:   - sn                     :    7 (0.0%)
+# INFO:   - lg                     :    6 (0.0%)
+# INFO:   - zh                     :    5 (0.0%)
+# INFO:   - et                     :    4 (0.0%)
+# INFO:   - de                     :    3 (0.0%)
+# INFO:   - pt                     :    3 (0.0%)
+# INFO:   - st                     :    3 (0.0%)
+# INFO:   - ja                     :    3 (0.0%)
+# INFO:   - vi                     :    3 (0.0%)
+# INFO:   - pl                     :    2 (0.0%)
+# INFO:   - nl                     :    2 (0.0%)
+# INFO:   - nn                     :    2 (0.0%)
+# INFO:   - sk                     :    2 (0.0%)
+# INFO:   - nb                     :    2 (0.0%)
+# INFO:   - mk                     :    2 (0.0%)
+# INFO:   - tn                     :    2 (0.0%)
+# INFO:   - so                     :    2 (0.0%)
+# INFO:   - ca                     :    1 (0.0%)
+# INFO:   - be                     :    1 (0.0%)
+# INFO:   - mn                     :    1 (0.0%)
+# INFO:   - bg                     :    1 (0.0%)
+# INFO:   - uk                     :    1 (0.0%)
+# INFO:   - fi                     :    1 (0.0%)
+# INFO:   - hu                     :    1 (0.0%)
+# INFO:   - zu                     :    1 (0.0%)
+# INFO:   - eo                     :    1 (0.0%)
+# INFO:   - fr                     :    1 (0.0%)
+# INFO:   - hr                     :    1 (0.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 💬 CONVERSATION TURN DISTRIBUTION
+# INFO:   Records Analyzed      : 16833
+# INFO:   Total Turns           : 798675
+# INFO:   Minimum Turns         : 0
+# INFO:   Maximum Turns         : 11491
+# INFO:   Average Turns         : 47.4
+# INFO:   Median Turns          : 11
+# INFO:   Turn Count Buckets
+# INFO:     1–10               : 8022 (47.7%)
+# INFO:     11–25              : 3046 (18.1%)
+# INFO:     26–50              : 2163 (12.8%)
+# INFO:     51–100             : 1694 (10.1%)
+# INFO:     101–250            : 1337 (7.9%)
+# INFO:     251–500            :  414 (2.5%)
+# INFO:     501+               :  156 (0.9%)
+# INFO: ============================================================

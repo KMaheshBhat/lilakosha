@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """LilaKosha Telemetry Step: Aggregate and report corpus statistics,
-    including breakdowns by safety dials, primary genres, and thematic
-    distributions.
+    including breakdowns by safety dials, primary genres, thematic
+    distributions, and detected languages.
     """
     processed_vol = Path(config["volumes"]["processed"])
     records_dir = processed_vol / "cdm" / "records"
@@ -32,6 +32,7 @@ def run(config: dict) -> None:
     toxicity_counts = Counter()
     genre_counts = Counter()
     theme_counts = Counter()
+    language_counts = Counter()
     turn_counts = []  # Track turn counts per record for distribution stats
 
     logger.info(
@@ -53,6 +54,9 @@ def run(config: dict) -> None:
 
             for theme in stats.get("themes", []):
                 theme_counts[theme] += 1
+
+            for lang in stats.get("languages", []):
+                language_counts[lang] += 1
 
             if "turn_count" in stats:
                 turn_counts.append(stats["turn_count"])
@@ -104,8 +108,15 @@ def run(config: dict) -> None:
 
     if len(theme_counts) > 25:
         logger.info(f"  ... and {len(theme_counts) - 25} other unique themes.")
+    logger.info("-" * 60)
 
-    # 4. Conversation Turn Distribution
+    # 4. Language Distribution
+    logger.info("🌐 LANGUAGE DISTRIBUTION")
+    for lang, count in language_counts.most_common():
+        pct = (count / total_records) * 100
+        logger.info(f"  - {lang:<22} : {count:>4} ({pct:.1f}%)")
+
+    # 5. Conversation Turn Distribution
     if turn_counts:
         sorted_turns = sorted(turn_counts)
         total_turns = sum(turn_counts)

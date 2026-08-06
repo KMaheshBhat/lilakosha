@@ -235,7 +235,14 @@ class ResolvedMeta(BaseModel):
     violence: Optional[ViolenceScale] = None
     toxicity: Optional[ToxicityScale] = None
     genre: Optional[MainGenre] = None
-    themes: Optional[List[str]] = Field(default_factory=list)
+    themes: Optional[List[str]] = Field(
+        default_factory=list,
+        description="List of thematic tags assigned to this trace.",
+    )
+    languages: Optional[List[str]] = Field(
+        default_factory=list,
+        description="List of detected or declared languages in this trace.",
+    )
 
 
 class Annotation(BaseModel):

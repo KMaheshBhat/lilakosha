@@ -21,23 +21,24 @@ logger = logging.getLogger(__name__)
 
 def calculate_resolved(document: Document) -> ResolvedMeta:
     """
-    Extracts safety scales, primary genre, and descriptive themes from
-    document.items while safely retaining pre-existing properties
-    like character identities.
+    Extracts safety scales, primary genre, descriptive themes, and detected languages
+    from document.items while safely retaining pre-existing properties like character
+    identities.
     """
     sexuality = None
     violence = None
     toxicity = None
     primary_genre = None
     themes = []
+    languages = []
 
     # Sweep document items for categorization blocks
     for item in document.items:
-        if item.kind != "categorization":
+        if getattr(item, "kind", None) != "categorization":
             continue
 
-        category = item.category
-        value = item.value
+        category = getattr(item, "category", None)
+        value = getattr(item, "value", None)
 
         try:
             if category == "sexuality" and isinstance(value, str):
@@ -53,6 +54,11 @@ def calculate_resolved(document: Document) -> ResolvedMeta:
                     themes.extend(value)
                 elif isinstance(value, str):
                     themes.append(value)
+            elif category == "language":
+                if isinstance(value, list):
+                    languages.extend(value)
+                elif isinstance(value, str):
+                    languages.append(value)
         except ValueError:
             # Shield pass against minor formatting variations or casing mismatch
             continue
@@ -71,16 +77,15 @@ def calculate_resolved(document: Document) -> ResolvedMeta:
         toxicity=toxicity,
         genre=primary_genre,
         themes=list(dict.fromkeys(themes)),
+        languages=list(dict.fromkeys(languages)),
     )
 
 
 def calculate_health(document: Document) -> dict[str, Any]:
     """
-    Evaluates specific refinement metrics across PIPPA rule groups and returns
-    explicit tracking flags for granular telemetry breakdown reporting.
-
-    Evaluates PIPPA-specific refinement health rules if
-    meta.source.source_identity == 'PygmalionAI/PIPPA'.
+    Evaluates refinement metrics across universal rules (e.g., language refinement)
+    and source-specific PIPPA rule groups, returning explicit tracking flags for
+    telemetry breakdown reporting.
     """
     meta = document.meta
     resolved = meta.resolved or ResolvedMeta()
@@ -92,6 +97,27 @@ def calculate_health(document: Document) -> dict[str, Any]:
     issues = []
     breakdown = {}
 
+    # --- Universal Rule: Language Refinement Pass ---
+    has_lang_anno = "refine-cdm-language" in annotation_kinds
+    has_lang_item = any(
+        getattr(item, "kind", None) == "categorization"
+        and getattr(item, "category", None) == "language"
+        and bool(getattr(item, "value", None))
+        for item in items
+    )
+
+    if not has_lang_anno:
+        issues.append("Missing 'refine-cdm-language' annotation")
+    if not has_lang_item:
+        issues.append("Unset or empty language categorization")
+
+    breakdown["refine-cdm-language"] = {
+        "passed": has_lang_anno and has_lang_item,
+        "annotation": has_lang_anno,
+        "categorization_item": has_lang_item,
+    }
+
+    # --- Source-Specific Rules: PIPPA ---
     source_identity = source.get("source_identity", "")
     is_pippa_source = source_identity == "PygmalionAI/PIPPA"
 
@@ -99,18 +125,18 @@ def calculate_health(document: Document) -> dict[str, Any]:
         # --- Rule Group 1: refine-pippa-characters ---
         has_char_anno = "refine-pippa-characters" in annotation_kinds
         has_bot_detail = any(
-            item.kind == "character" and getattr(item, "entity_id", None) != "user"
+            getattr(item, "kind", None) == "character"
+            and getattr(item, "entity_id", None) != "user"
             for item in items
         )
         has_user_info = any(
-            item.kind == "character" and getattr(item, "entity_id", None) == "user"
+            getattr(item, "kind", None) == "character"
+            and getattr(item, "entity_id", None) == "user"
             for item in items
         )
 
         if not has_char_anno:
-            issues.append(
-                "Missing 'refine-pippa-characters' annotation"
-            )
+            issues.append("Missing 'refine-pippa-characters' annotation")
         if not has_bot_detail:
             issues.append(
                 "Missing bot character profile (character item, entity_id!=user)"
@@ -174,13 +200,14 @@ def calculate_health(document: Document) -> dict[str, Any]:
         # --- Rule Group 4: refine-pippa-grammar ---
         has_grammar_anno = "refine-pippa-grammar" in annotation_kinds
 
-        turn_items = [item for item in items if item.kind == "turn"]
+        turn_items = [
+            item for item in items if getattr(item, "kind", None) == "turn"
+        ]
         total_turns = len(turn_items)
 
         def is_turn_grammar_refined(item: Any) -> bool:
             """
-            Verifies turn item contains both original and
-            refine-pippa-grammar content variants.
+            Verifies turn item contains both original and refine-pippa-grammar variants.
             """
             content = getattr(item, "content", [])
             if not isinstance(content, list):
@@ -210,14 +237,15 @@ def calculate_health(document: Document) -> dict[str, Any]:
             "prose": has_prose_lineage,
         }
 
-    turn_items = [item for item in items if item.kind == "turn"]
+    turn_items = [
+        item for item in items if getattr(item, "kind", None) == "turn"
+    ]
     total_turns = len(turn_items)
     converted_turns = sum(
         1
         for item in turn_items
-        if "refine-pippa-grammar" in {
-            v.name for v in getattr(item, "content", []) if hasattr(v, "name")
-        }
+        if "refine-pippa-grammar"
+        in {v.name for v in getattr(item, "content", []) if hasattr(v, "name")}
     )
 
     return {
@@ -245,7 +273,9 @@ def calculate_stats(document: Document) -> dict[str, Any]:
     resolved = meta.resolved or ResolvedMeta()
 
     # 1. Structural Numerical Counts
-    turn_count = sum(1 for item in document.items if item.kind == "turn")
+    turn_count = sum(
+        1 for item in document.items if getattr(item, "kind", None) == "turn"
+    )
     item_count = len(document.items)
     character_count = len(resolved.identities) if resolved.identities else 0
 
@@ -265,6 +295,25 @@ def calculate_stats(document: Document) -> dict[str, Any]:
     toxicity_axis = resolved.toxicity.value if resolved.toxicity else "Unset"
     primary_genre = resolved.genre.value if resolved.genre else "Unset"
     themes = list(resolved.themes) if resolved.themes else ["[No Themes Assigned]"]
+    languages = (
+            getattr(resolved, "languages", None)
+            or [
+                getattr(item, "value", None)
+                for item in document.items
+                if getattr(item, "kind", None) == "categorization"
+                and getattr(item, "category", None) == "language"
+                and getattr(item, "value", None) is not None
+            ]
+            or ["[No Languages Assigned]"]
+        )
+
+    # Normalize list if nested
+    flat_languages = []
+    for lang in languages:
+        if isinstance(lang, list):
+            flat_languages.extend(lang)
+        else:
+            flat_languages.append(lang)
 
     return {
         "turn_count": turn_count,
@@ -276,6 +325,7 @@ def calculate_stats(document: Document) -> dict[str, Any]:
         "toxicity_axis": toxicity_axis,
         "primary_genre": primary_genre,
         "themes": themes,
+        "languages": list(dict.fromkeys(flat_languages)),
     }
 
 

@@ -1,0 +1,12 @@
+# LilaKosha-MK1: Scalpel Blueprints
+pipeline:
+    - "scalpel-cdm-language"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"

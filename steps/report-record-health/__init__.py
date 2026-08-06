@@ -46,6 +46,11 @@ def run(config: dict) -> None:
 
     # Telemetry aggregation frameworks mapped by stage and checks
     stage_breakdown = {
+        "refine-cdm-language": {
+            "passed": 0,
+            "annotation": 0,
+            "categorization_item": 0,
+        },
         "refine-pippa-characters": {
             "passed": 0,
             "annotation": 0,
@@ -65,7 +70,11 @@ def run(config: dict) -> None:
             "primary genre": 0,
             "themes": 0,
         },
-        "refine-pippa-grammar": {"passed": 0, "annotation": 0, "prose": 0},
+        "refine-pippa-grammar": {
+            "passed": 0,
+            "annotation": 0,
+            "prose": 0,
+        },
     }
 
     total_turns = 0
@@ -94,9 +103,12 @@ def run(config: dict) -> None:
             # Aggregate breakdown counts
             breakdown_data = health.get("breakdown") or {}
             for stage, checks in breakdown_data.items():
-                if stage in stage_breakdown and isinstance(checks, dict):
+                if isinstance(checks, dict):
+                    if stage not in stage_breakdown:
+                        stage_breakdown[stage] = defaultdict(int)
+
                     for check_key, passed_check in checks.items():
-                        if check_key in stage_breakdown[stage] and passed_check:
+                        if passed_check:
                             stage_breakdown[stage][check_key] += 1
 
             if health.get("is_healthy", False):
@@ -131,7 +143,7 @@ def run(config: dict) -> None:
         for stage, checks in stage_breakdown.items():
             logger.info(f"{stage}")
 
-            passed_count = checks["passed"]
+            passed_count = checks.get("passed", 0)
             passed_pct = (
                 (passed_count / total_records * 100) if total_records > 0 else 0
             )
