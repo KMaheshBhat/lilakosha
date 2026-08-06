@@ -1,0 +1,10 @@
+# LilaKosha-MK1: Model Acquisition Blueprint
+pipeline:
+  - "acquire"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+
+volumes:
+    models: "${LILAKOSHA_VOLUME_MODELS}"

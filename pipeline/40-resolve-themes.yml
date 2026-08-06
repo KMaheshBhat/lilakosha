@@ -1,0 +1,13 @@
+# LilaKosha-MK1: Package CDM Dataset for Publish
+pipeline:
+    # - "resolve-theme-extract"
+    - "resolve-theme-cluster"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
