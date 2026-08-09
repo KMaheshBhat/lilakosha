@@ -2,101 +2,91 @@ import logging
 import urllib.request
 from pathlib import Path
 
-from huggingface_hub import hf_hub_download, snapshot_download
+from huggingface_hub import hf_hub_download
 
 logger = logging.getLogger(__name__)
 
-GUTENBERG_62_URL = "https://www.gutenberg.org/cache/epub/62/pg62.txt"
-EMBEDDING_REPO = "BAAI/bge-small-en-v1.5"
-PIPPA_REPO = "PygmalionAI/PIPPA"
-PIPPA_FILENAME = "pippa_deduped.jsonl"
 
-
-def acquire_gutenberg_62(raw_vol: Path) -> None:
+def acquire_gutenberg_62(config: dict) -> None:
+    """
+    Download Gutenberg eBook #62 raw text file if not already present.
+    """
+    raw_vol = Path(config["volumes"]["raw"])
     target_dir = raw_vol / "raw" / "gutenberg" / "62"
     target_dir.mkdir(parents=True, exist_ok=True)
     target_file = target_dir / "pg62.txt"
 
-    if target_file.exists() and target_file.stat().st_size > 0:
-        logger.info(f"Gutenberg #62 raw text already acquired at: {target_file}")
+    if target_file.exists():
+        logger.info(f"Gutenberg 62 raw file already exists: {target_file}")
         return
 
-    logger.info(
-        f"Downloading Gutenberg #62 from {GUTENBERG_62_URL} to {target_file}..."
-    )
-
-    try:
-        req = urllib.request.Request(
-            GUTENBERG_62_URL, headers={"User-Agent": "LilaKosha-Acquisition/1.0"}
-        )
-        with urllib.request.urlopen(req) as response:
-            content = response.read().decode("utf-8")
-
-        with open(target_file, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        logger.info(f"✅ Successfully acquired Gutenberg #62 raw text at {target_file}")
-    except Exception as e:
-        logger.error(f"Failed to download Gutenberg #62 from {GUTENBERG_62_URL}: {e}")
+    url = "https://www.gutenberg.org/cache/epub/62/pg62.txt"
+    logger.info(f"Downloading Gutenberg 62 from {url}...")
+    urllib.request.urlretrieve(url, target_file)
+    logger.info(f"Successfully downloaded Gutenberg 62 to {target_file}")
 
 
-def acquire_embeddings(models_vol: Path) -> None:
-    target_dir = models_vol / "embeddings" / "bge-small-en-v1.5"
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    config_file = target_dir / "config.json"
-    model_file = target_dir / "model.safetensors"
-
-    if config_file.exists() and model_file.exists():
-        logger.info(f"Embedding model already acquired at: {target_dir}")
-        return
-
-    logger.info(
-        f"Acquiring open embedding model '{EMBEDDING_REPO}' into {target_dir}..."
-    )
-
-    try:
-        snapshot_download(
-            repo_id=EMBEDDING_REPO,
-            local_dir=str(target_dir),
-        )
-        logger.info(f"✅ Successfully acquired {EMBEDDING_REPO}")
-    except Exception as e:
-        logger.error(
-            f"Failed to download embedding model {EMBEDDING_REPO}: {e}"
-        )
-
-
-def acquire_pippa(raw_vol: Path) -> None:
+def acquire_pippa(config: dict) -> None:
+    """
+    Download PIPPA deduped dataset from Hugging Face Hub (PygmalionAI/PIPPA).
+    """
+    raw_vol = Path(config["volumes"]["raw"])
     target_dir = raw_vol / "raw" / "PygmalionAI" / "PIPPA"
     target_dir.mkdir(parents=True, exist_ok=True)
-    target_file = target_dir / PIPPA_FILENAME
+    target_file = target_dir / "pippa_deduped.jsonl"
 
-    if target_file.exists() and target_file.stat().st_size > 0:
-        logger.info(f"PIPPA raw dataset already acquired at: {target_file}")
+    if target_file.exists():
+        logger.info(f"PIPPA raw dataset already exists: {target_file}")
         return
 
-    logger.info(
-        f"Acquiring PIPPA dataset '{PIPPA_REPO}/{PIPPA_FILENAME}' into {target_dir}..."
+    logger.info("Downloading pippa_deduped.jsonl from Hugging Face...")
+    downloaded_path = hf_hub_download(
+        repo_id="PygmalionAI/PIPPA",
+        filename="pippa_deduped.jsonl",
+        repo_type="dataset",
+        local_dir=target_dir,
     )
+    logger.info(f"Successfully downloaded PIPPA dataset to {downloaded_path}")
 
-    try:
-        hf_hub_download(
-            repo_id=PIPPA_REPO,
-            filename=PIPPA_FILENAME,
+
+def acquire_rpgnet(config: dict) -> None:
+    """
+    Download RPGnet source Parquet files from
+    Hugging Face Hub (lemonilia/roleplaying-forums-raw).
+    """
+    raw_vol = Path(config["volumes"]["raw"])
+    target_dir = raw_vol / "raw" / "lemonilia" / "roleplaying-forums-raw"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    repo_id = "lemonilia/roleplaying-forums-raw"
+    parquet_files = [
+        "RPGnet--roleplay-by-post-play-forum--part1.parquet",
+        "RPGnet--roleplay-by-post-play-forum--part2.parquet",
+    ]
+
+    for filename in parquet_files:
+        target_file = target_dir / filename
+        if target_file.exists():
+            logger.info(f"RPGnet source file already exists: {target_file}")
+            continue
+
+        logger.info(f"Downloading {filename} from Hugging Face repo '{repo_id}'...")
+        downloaded_path = hf_hub_download(
+            repo_id=repo_id,
+            filename=filename,
             repo_type="dataset",
-            local_dir=str(target_dir),
+            local_dir=target_dir,
         )
-        logger.info(f"✅ Successfully acquired PIPPA raw dataset at {target_file}")
-    except Exception as e:
-        logger.error(f"Failed to download PIPPA dataset from Hugging Face: {e}")
+        logger.info(f"Successfully downloaded {filename} to {downloaded_path}")
 
 
 def run(config: dict) -> None:
-    """LilaKosha Pipeline Step: Acquire open model weights and raw source datasets."""
-    raw_vol = Path(config["volumes"]["raw"])
-    models_vol = Path(config["volumes"]["models"])
-
-    acquire_gutenberg_62(raw_vol)
-    acquire_embeddings(models_vol)
-    acquire_pippa(raw_vol)
+    """
+    LilaKosha Data Acquisition Step.
+    Executes raw data download subroutines.
+    """
+    logger.info("Starting LilaKosha raw data acquisition pipeline...")
+    acquire_gutenberg_62(config)
+    acquire_pippa(config)
+    acquire_rpgnet(config)
+    logger.info("LilaKosha raw data acquisition completed successfully.")
