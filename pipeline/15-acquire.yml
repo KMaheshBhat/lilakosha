@@ -7,4 +7,5 @@ project:
     mark: "MK1"
 
 volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}" # Unified landing zone
     models: "${LILAKOSHA_VOLUME_MODELS}"

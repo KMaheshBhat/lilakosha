@@ -1,6 +1,5 @@
 import logging
 import re
-import urllib.request
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -18,18 +17,19 @@ from cdm.meta import update_meta
 
 logger = logging.getLogger(__name__)
 
-GUTENBERG_62_URL = "https://www.gutenberg.org/cache/epub/62/pg62.txt"
 SOURCE_NATIVE_ID = "gutenberg:62"
 
 
-def fetch_source_text(url: str) -> str:
-    """Downloads raw Gutenberg text file."""
-    logger.info(f"Fetching raw Gutenberg text from {url}")
-    req = urllib.request.Request(
-        url, headers={"User-Agent": "LilaKosha-Ingestion/1.0"}
-    )
-    with urllib.request.urlopen(req) as response:
-        return response.read().decode("utf-8")
+def read_source_text(file_path: Path) -> str:
+    """Reads raw Gutenberg text file from local staging area."""
+    logger.info(f"Reading raw Gutenberg text from {file_path}")
+    if not file_path.exists():
+        raise FileNotFoundError(
+            f"Raw file for Gutenberg #62 not found at {file_path}. "
+            "Ensure the 'acquire' step has executed successfully."
+        )
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
 
 
 def normalize_paragraph_text(raw_block: str) -> str:
@@ -108,6 +108,7 @@ def parse_chapter_blocks(book_text: str) -> List[Tuple[str, List[str]]]:
 
     return sections
 
+
 def extract_footnote_if_present(raw_p: str) -> Tuple[str, Optional[str]]:
     """
     Extracts standalone footnote blocks starting with '[1]', '[2]', etc.
@@ -126,6 +127,9 @@ def run(config: dict) -> None:
     LilaKosha Stage 1: Gutenberg #62 Ingestion.
     Transforms raw Gutenberg eBook into hierarchical CDM Sequence and Narrative Items.
     """
+    raw_vol = Path(config["volumes"]["raw"])
+    raw_file = raw_vol / "raw" / "gutenberg" / "62" / "pg62.txt"
+
     processed_vol = Path(config["volumes"]["processed"])
     cdm_root = processed_vol / "cdm"
     records_dir = cdm_root / "records"
@@ -149,7 +153,7 @@ def run(config: dict) -> None:
             "book_id": "62",
             "title": "A Princess of Mars",
             "author": "Edgar Rice Burroughs",
-            "source_url": GUTENBERG_62_URL,
+            "source_url": "https://www.gutenberg.org/cache/epub/62/pg62.txt",
         }
         target_uuid = ledger_index.register_record(
             source="gutenberg",
@@ -158,7 +162,7 @@ def run(config: dict) -> None:
         )
         target_file = records_dir / f"{target_uuid}.json"
 
-    raw_text = fetch_source_text(GUTENBERG_62_URL)
+    raw_text = read_source_text(raw_file)
 
     meta_obj = DocumentMeta(
         source={
@@ -166,7 +170,7 @@ def run(config: dict) -> None:
             "title": "A Princess of Mars",
             "author": "Edgar Rice Burroughs",
             "ingestion_timestamp": timestamp,
-            "source_url": GUTENBERG_62_URL,
+            "source_url": "https://www.gutenberg.org/cache/epub/62/pg62.txt",
         },
         health={},
         stats={},

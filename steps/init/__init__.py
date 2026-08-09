@@ -19,7 +19,9 @@ def run(config: dict[str, Any]) -> None:
         logger.error("STAGING FAILED: No 'volumes' defined in the configuration.")
         return
 
-    logger.info(f"\n{'=' * 65}\n🛠️  LILAKOSHA MK1: INFRASTRUCTURE STAGING\n{'=' * 65}")
+    logger.info(f"{'=' * 65}")
+    logger.info("🛠️  LILAKOSHA MK1: INFRASTRUCTURE STAGING")
+    logger.info(f"{'=' * 65}")
 
     # 2. Directory Creation Tree
     for label, path in volumes.items():
@@ -61,8 +63,8 @@ def run(config: dict[str, Any]) -> None:
             )
 
     # 3. Operator Instructions for Model Acquisition
-    models_root = Path(str(volumes.get("models", "[ERROR: MODELS VOLUME MISSING]")))
     raw_root = Path(str(volumes.get("raw", "[ERROR: RAW VOLUME MISSING]")))
+    models_root = Path(str(volumes.get("models", "[ERROR: MODELS VOLUME MISSING]")))
 
     model_embedding = models_root / "embeddings" / "bge-small-en-v1.5"
     model_non_abliterated = models_root / "google" / "gemma-4-12b-it"
@@ -70,25 +72,25 @@ def run(config: dict[str, Any]) -> None:
         models_root / "OpenYourMind" / "gemma-4-12b-it-abliterated-uncensored"
     )
 
-    instruction_block = (
-        f"\n{'-' * 65}\n"
-        f"📥 MODEL ACQUISITION & PLACEMENT INSTRUCTIONS\n"
-        f"{'-' * 65}\n\n"
-        f"1. EMBEDDING MODEL (Semantic Theme Resolution):\n"
-        f"   > Download: https://huggingface.co/BAAI/bge-small-en-v1.5\n"
-        f"   > Place in: {model_embedding} (or auto-acquire via pipeline)\n\n"
-        f"2. GENERAL VARIANT (Safe/SFW Foundation):\n"
-        f"   > Download: https://huggingface.co/google/gemma-4-12b-it\n"
-        f"   > Place in: {model_non_abliterated}\n\n"
-        f"3. UNBOUND VARIANT (Abliterated/Uncensored Foundation):\n"
-        f"   > Download: https://huggingface.co/OpenYourMind/gemma-4-12b-it-abliterated-uncensored\n"
-        f"   > Place in: {model_abliterated}\n\n"
-        f"4. DATA STAGING:\n"
-        f"   > Place messy PIPPA/MUCE logs in the UNIFIED landing zone: {raw_root}\n"
-        f"   > The 'prepare' step will introspect and fork these automatically"
-    )
-    logger.info(instruction_block)
-
+    logger.info(f"{'-' * 65}")
+    logger.info("📥 MODEL ACQUISITION & PLACEMENT INSTRUCTIONS")
+    logger.info(f"{'-' * 65}")
+    logger.info("1. DATA STAGING:")
     logger.info(
-        f"\n{'=' * 65}\n✅ Infrastructure is staged for LilaKosha-G1.\n{'=' * 65}\n"
+        f"   > Place messy PIPPA/Gutenberg source into landing zone: {raw_root}"
     )
+    logger.info("   > Use 'acquire' step instead if internet access is available")
+    logger.info("   > The 'ingest' steps will introspect and fork these automatically")
+    logger.info("2. EMBEDDING MODEL (Semantic Theme Resolution):")
+    logger.info("   > Download: https://huggingface.co/BAAI/bge-small-en-v1.5")
+    logger.info(f"   > Place in: {model_embedding} (or auto-acquire via pipeline)")
+    logger.info("   > Use 'acquire' step instead if internet access is available")
+    logger.info("3. GENERAL VARIANT (Safe/SFW Foundation):")
+    logger.info("   > Download: https://huggingface.co/google/gemma-4-12b-it")
+    logger.info(f"   > Place in: {model_non_abliterated}")
+    logger.info("4. UNBOUND VARIANT (Abliterated/Uncensored Foundation):")
+    logger.info("   > Download: https://huggingface.co/OpenYourMind/gemma-4-12b-it-abliterated-uncensored")
+    logger.info(f"   > Place in: {model_abliterated}")
+    logger.info(f"{'=' * 65}")
+    logger.info("✅ Infrastructure is staged for LilaKosha-G1.")
+    logger.info(f"{'=' * 65}")
