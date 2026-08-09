@@ -1,7 +1,6 @@
-# LilaKosha-MK1: Package CDM Dataset for Publish
+# LilaKosha-MK1: Resolve Theme Proposal Blueprint
 pipeline:
-    # - "resolve-theme-extract"
-    - "resolve-theme-cluster"
+    - "resolve-theme-proposal"
 
 project:
     name: "LilaKosha"

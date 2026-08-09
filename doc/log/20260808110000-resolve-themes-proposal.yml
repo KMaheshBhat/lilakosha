@@ -1,0 +1,41 @@
+# LilaKosha-MK1: Resolve Theme Proposal Blueprint
+pipeline:
+    - "resolve-theme-proposal"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/40-resolve-themes-proposal.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['resolve-theme-proposal']
+# INFO: Active Parameters: {}
+# INFO: --- Executing Step: RESOLVE-THEME-PROPOSAL ---
+# INFO: Extracting themes across 16833 records...
+# INFO: Loaded 12157 unique terms (min_freq>=2) for clustering.
+# INFO: Loading local embedding model: /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/embeddings/bge-small-en-v1.5
+# INFO: No device provided, using cuda:0
+# INFO: Loading SentenceTransformer model from /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/embeddings/bge-small-en-v1.5.
+# Loading weights: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 199/199 [00:00<00:00, 531.64it/s]
+# INFO: Generating embeddings...
+# Batches: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 48/48 [00:05<00:00,  9.47it/s]
+# INFO: Executing agglomerative clustering...
+# INFO: ============================================================
+# INFO: 🧩 LILAKOSHA THEME PROPOSAL COMPLETE
+# INFO: ============================================================
+# INFO: Unique Terms Clustered  : 12157
+# INFO: Clusters Generated      : 945
+# INFO: Human Artifact Saved To : /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/theme_clusters.csv
+# INFO: ============================================================
+# 
+# On inspecting the with sexuality:Explicit=0,violence:Graphic=0,toxicity:Dangerous=0 - the number of
+# clusters were only 36 out of the 945, and that did mean that PIPPA data set leaned heavily on the
+# what would end up on the 'Unbound' variant and we would not have 
