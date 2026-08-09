@@ -2,12 +2,15 @@ import logging
 import urllib.request
 from pathlib import Path
 
-from huggingface_hub import snapshot_download
+from huggingface_hub import hf_hub_download, snapshot_download
 
 logger = logging.getLogger(__name__)
 
 GUTENBERG_62_URL = "https://www.gutenberg.org/cache/epub/62/pg62.txt"
 EMBEDDING_REPO = "BAAI/bge-small-en-v1.5"
+PIPPA_REPO = "PygmalionAI/PIPPA"
+PIPPA_FILENAME = "pippa_deduped.jsonl"
+
 
 def acquire_gutenberg_62(raw_vol: Path) -> None:
     target_dir = raw_vol / "raw" / "gutenberg" / "62"
@@ -64,6 +67,31 @@ def acquire_embeddings(models_vol: Path) -> None:
         )
 
 
+def acquire_pippa(raw_vol: Path) -> None:
+    target_dir = raw_vol / "raw" / "PygmalionAI" / "PIPPA"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_file = target_dir / PIPPA_FILENAME
+
+    if target_file.exists() and target_file.stat().st_size > 0:
+        logger.info(f"PIPPA raw dataset already acquired at: {target_file}")
+        return
+
+    logger.info(
+        f"Acquiring PIPPA dataset '{PIPPA_REPO}/{PIPPA_FILENAME}' into {target_dir}..."
+    )
+
+    try:
+        hf_hub_download(
+            repo_id=PIPPA_REPO,
+            filename=PIPPA_FILENAME,
+            repo_type="dataset",
+            local_dir=str(target_dir),
+        )
+        logger.info(f"✅ Successfully acquired PIPPA raw dataset at {target_file}")
+    except Exception as e:
+        logger.error(f"Failed to download PIPPA dataset from Hugging Face: {e}")
+
+
 def run(config: dict) -> None:
     """LilaKosha Pipeline Step: Acquire open model weights and raw source datasets."""
     raw_vol = Path(config["volumes"]["raw"])
@@ -71,3 +99,4 @@ def run(config: dict) -> None:
 
     acquire_gutenberg_62(raw_vol)
     acquire_embeddings(models_vol)
+    acquire_pippa(raw_vol)
