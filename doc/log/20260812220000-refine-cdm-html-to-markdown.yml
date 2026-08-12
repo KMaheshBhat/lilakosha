@@ -1,0 +1,99 @@
+# LilaKosha-MK1: Refinement Blueprint
+
+pipeline:
+    - "refine-cdm-html-to-markdown"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    # INFO: Source [lemonilia-rpgnet]: 9462 records
+    # INFO:   └─ Start UUID (pos 16834): 019ff224-c36f-7ed3-9c1a-236e94044191
+    # INFO:   └─ End UUID   (pos 26295): 019ff3da-d84c-7002-bb10-086fc0af63bb
+    start_uuid: 019ff224-c36f-7ed3-9c1a-236e94044191
+    stop_uuid: 019ff3da-d84c-7002-bb10-086fc0af63bb
+    cdm_html_to_markdown_target:
+        - kind: "narrative"
+          variants:
+              - "original"
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260812220000-refine-cdm-html-to-markdown.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['refine-cdm-html-to-markdown']
+# INFO: Active Parameters: {'start_uuid': '019ff224-c36f-7ed3-9c1a-236e94044191', 'stop_uuid': '019ff3da-d84c-7002-bb10-086fc0af63bb', 'cdm_html_to_markdown_target': [{'kind': 'narrative', 'variants': ['original']}]}
+# INFO: --- Executing Step: REFINE-CDM-HTML-TO-MARKDOWN ---
+# INFO: --- Executing Step: REFINE-CDM-HTML-TO-MARKDOWN across 26295 records ---
+# Converting HTML to Markdown: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 26295/26295 [43:22<00:00, 10.10it/s]
+# INFO: ✅ REFINE-CDM-HTML-TO-MARKDOWN complete. Updated 9462 records. Skipped 0 records due to errors.
+# ❯ ./run.sh pipeline/35-report-records.yml --hide_anomaly_details true --report_breakdown true
+# INFO: Applying runtime overrides: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['report-record-health', 'report-record-stats']
+# INFO: Active Parameters: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 26295 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 26295
+# INFO: Healthy Records:         16746 (63.69%)
+# INFO: Defective Records:       9549
+# INFO: ============================================================
+# INFO: 📦 SOURCE RECORD BREAKDOWN
+# INFO: ============================================================
+# INFO:     PygmalionAI/PIPPA               : 16832 (64.01%)
+# INFO:     lemonilia/roleplaying-forums-raw: 9462 (35.98%)
+# INFO:     gutenberg:62                    : 1 (0.00%)
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-cdm-language (Target Source: ALL)
+# INFO:  ✅ PASSED              : 16833/26295 (64.02%)
+# INFO:     annotation          : 16833/26295 (64.02%)
+# INFO:     categorization_item : 16833/26295 (64.02%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-characters (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16814/16832 (99.89%)
+# INFO:     annotation          : 16814/16832 (99.89%)
+# INFO:     bot detail          : 16831/16832 (99.99%)
+# INFO:     user info           : 16814/16832 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-safety-dials (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16831/16832 (99.99%)
+# INFO:     annotation          : 16831/16832 (99.99%)
+# INFO:     sexual axis         : 16831/16832 (99.99%)
+# INFO:     violence axis       : 16831/16832 (99.99%)
+# INFO:     toxicity axis       : 16831/16832 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-genre-theme (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16832/16832 (100.00%)
+# INFO:     annotation          : 16832/16832 (100.00%)
+# INFO:     primary genre       : 16832/16832 (100.00%)
+# INFO:     themes              : 16832/16832 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-grammar (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16763/16832 (99.59%)
+# INFO:     annotation          : 16832/16832 (100.00%)
+# INFO:     prose               : 16763/16832 (99.59%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-cdm-html-to-markdown (Target Source: lemonilia/roleplaying-forums-raw)
+# INFO:  ✅ PASSED              : 9462/9462 (100.00%)
+# INFO:     annotation          : 9462/9462 (100.00%)
+# INFO:     narrative           : 9462/9462 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 798675
+# INFO:     Turns Converted         : 798502 (99.98%)
+# INFO:     Turns Remaining         : 173
+# INFO:     Estimated Local Compute : 0.2 hours (@5s/turn)
+# INFO: ============================================================
+# <snip>

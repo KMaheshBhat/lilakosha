@@ -1,0 +1,19 @@
+# LilaKosha-MK1: Refinement Blueprint
+
+pipeline:
+    - "refine-cdm-html-to-markdown"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+  cdm_html_to_markdown_target:
+      - kind: "narrative"
+        variants:
+          - "original"
