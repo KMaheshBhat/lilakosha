@@ -1,0 +1,164 @@
+# LilaKosha-MK1: Report on Record Health and Statistics
+pipeline:
+    # - "report-cdm-records"
+    # - "refresh-meta"
+    - "report-record-health"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    hide_anomaly_details: true
+    report_breakdown: true
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260812120000-refresh-meta.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['report-cdm-records', 'refresh-meta', 'report-record-health']
+# INFO: Active Parameters: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: --- Executing Step: REPORT-CDM-RECORDS ---
+# INFO: ============================================================
+# INFO: 📊 CDM RECORDS REPORT
+# INFO: ============================================================
+# INFO: Total Physical Files: 26295
+# INFO: Total Indexed Records: 26295
+# INFO: Start UUID: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197 (Source: pippa)
+# INFO: ------------------------------------------------------------
+# INFO: UUID at position 1000: 019f1687-6559-7851-97ea-6073303a38cf
+# INFO: UUID at position 1001: 019f1907-d349-72b2-b8e7-46518f167960
+# INFO: UUID at position 2000: 019f1908-5062-79a2-9c46-5b5a77310bd4
+# INFO: UUID at position 2001: 019f20bc-8f89-7622-a8f1-b8b74ad66a3a
+# INFO: UUID at position 3000: 019f20bc-fd7a-7df0-ae78-89ac3f518304
+# INFO: UUID at position 3001: 019f285a-0f4a-76e1-bb9e-f552f2df230f
+# INFO: UUID at position 4000: 019f285a-7474-7280-8fb8-5a01df0ed18c
+# INFO: UUID at position 4001: 019f2ced-1ed1-7222-8392-55944719287f
+# INFO: UUID at position 5000: 019f2ced-a387-7703-b337-6c858cbf68ba
+# INFO: UUID at position 5001: 019f30d5-198c-7d10-9be2-3e2298b4b922
+# INFO: UUID at position 6000: 019f30d5-89fe-7021-b9bd-6eccdb8db1d4
+# INFO: UUID at position 6001: 019f3825-4c30-75f2-a197-2e72ee7b7492
+# INFO: UUID at position 7000: 019f3825-b3f6-7fd3-b998-6a354c2c9a6e
+# INFO: UUID at position 7001: 019f4021-a402-7951-8d99-ce193b3f2cbf
+# INFO: UUID at position 8000: 019f4022-7a5f-7f42-89d9-4331d8d61035
+# INFO: UUID at position 8001: 019f4a4d-ee3c-7ff3-bae5-7581bc76e122
+# INFO: UUID at position 9000: 019f4a4e-a644-7b73-907c-9890c90511df
+# INFO: UUID at position 9001: 019f4ffe-2100-7631-a857-f20d56fd7a64
+# INFO: UUID at position 10000: 019f4ffe-ccdc-7312-823f-23831934cdf2
+# INFO: UUID at position 10001: 019f5255-332b-7da1-9d29-bb9f9c54a5b9
+# INFO: UUID at position 11000: 019f5255-9c5f-7543-b10d-0fd2a17dd8ca
+# INFO: UUID at position 11001: 019f55f5-592b-73d1-878b-e4cb522061c0
+# INFO: UUID at position 12000: 019f55f5-db23-7922-80f5-8d7fd86432d3
+# INFO: UUID at position 12001: 019f5cbe-5ce1-71b1-96fb-0126624b8778
+# INFO: UUID at position 13000: 019f5f68-ea7e-73f3-a528-5f0049f28efe
+# INFO: UUID at position 13001: 019f5f68-ea8f-7230-8ff0-be26402ca169
+# INFO: UUID at position 14000: 019f6394-d9d0-7e92-af77-cab945b05b7d
+# INFO: UUID at position 14001: 019f6394-d9e3-73a3-b70c-93d61b893b5c
+# INFO: UUID at position 15000: 019f6e09-aca7-7851-aca4-092be1f16196
+# INFO: UUID at position 15001: 019f6e09-acf0-7803-8c52-a2f99b4a92e5
+# INFO: UUID at position 16000: 019f766f-1a12-7c32-b6b4-9af6d55a9c0e
+# INFO: UUID at position 16001: 019f766f-1a22-7a70-b56a-92bbf14268c2
+# INFO: UUID at position 17000: 019ff225-84d8-7ee0-83aa-4caeafedf1ac
+# INFO: UUID at position 17001: 019ff225-881c-7cf0-a166-bbb90a3ff6f5
+# INFO: UUID at position 18000: 019ff236-1644-7a93-a1e9-978f6c305b0f
+# INFO: UUID at position 18001: 019ff236-1a44-7bf0-9529-20bd05a1454c
+# INFO: UUID at position 19000: 019ff259-8e6e-71d3-8d14-060e1df487ce
+# INFO: UUID at position 19001: 019ff259-8f2c-78e0-9884-27606a3cd4ad
+# INFO: UUID at position 20000: 019ff285-c6ae-7953-b2b2-1d214ee63d70
+# INFO: UUID at position 20001: 019ff285-cded-74f1-a2da-cf54f0e6e204
+# INFO: UUID at position 21000: 019ff2a4-5cb1-78c0-9798-75dc91ab0337
+# INFO: UUID at position 21001: 019ff2a4-5dc9-7ad1-bd4b-aee53c5e90af
+# INFO: UUID at position 22000: 019ff2b9-a35f-7910-9e5f-91a9e61238d1
+# INFO: UUID at position 22001: 019ff2b9-a512-7242-aee7-9daf797d360d
+# INFO: UUID at position 23000: 019ff2d8-ba14-7cc3-ab05-df00889fc757
+# INFO: UUID at position 23001: 019ff2d8-d476-7bf1-a487-ca737323a0c7
+# INFO: UUID at position 24000: 019ff310-8d8d-7822-b74c-2b5aad0fe7a9
+# INFO: UUID at position 24001: 019ff310-8eb9-7be2-9455-189c42eec2ea
+# INFO: UUID at position 25000: 019ff376-b205-7be0-bbd7-9796f29813e2
+# INFO: UUID at position 25001: 019ff376-b267-71c1-a026-50ffcf027ddd
+# INFO: UUID at position 26000: 019ff3ba-1e6d-7431-bcea-e50a535eb112
+# INFO: UUID at position 26001: 019ff3ba-25a3-7882-b4f8-ad803e201a7a
+# INFO: ------------------------------------------------------------
+# INFO: Stop UUID: 019ff3da-d84c-7002-bb10-086fc0af63bb (Source: lemonilia-rpgnet)
+# INFO: ============================================================
+# INFO: 📍 SOURCE RANGES & BOUNDARIES
+# INFO: ============================================================
+# INFO: Source [pippa]: 16832 records
+# INFO:   └─ Start UUID (pos 1): 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
+# INFO:   └─ End UUID   (pos 16832): 019fb458-f5fe-70c2-9f5b-e1fe7f453c09
+# INFO: ----------------------------------------
+# INFO: Source [gutenberg]: 1 records
+# INFO:   └─ Start UUID (pos 16833): 019fcc23-4821-7143-93c9-0b2b58610567
+# INFO:   └─ End UUID   (pos 16833): 019fcc23-4821-7143-93c9-0b2b58610567
+# INFO: ----------------------------------------
+# INFO: Source [lemonilia-rpgnet]: 9462 records
+# INFO:   └─ Start UUID (pos 16834): 019ff224-c36f-7ed3-9c1a-236e94044191
+# INFO:   └─ End UUID   (pos 26295): 019ff3da-d84c-7002-bb10-086fc0af63bb
+# INFO: ============================================================
+# INFO: --- Executing Step: REFRESH-META ---
+# INFO: 🔬 Refresh Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 26295 records for metadata refresh...
+# Iefreshing Metadata: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 26295/26295 [08:26<00:00, 51.96it/s]
+# INFO: ✅ Metadata refresh pass complete. Refreshed: 26295 records. Skipped out-of-range: 0 records.
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 26295 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 26295
+# INFO: Healthy Records:         16746 (63.69%)
+# INFO: Defective Records:       9549
+# INFO: ============================================================
+# INFO: 📦 SOURCE RECORD BREAKDOWN
+# INFO: ============================================================
+# INFO:     PygmalionAI/PIPPA               : 16832 (64.01%)
+# INFO:     lemonilia/roleplaying-forums-raw: 9462 (35.98%)
+# INFO:     gutenberg:62                    : 1 (0.00%)
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-cdm-language (Target Source: ALL)
+# INFO:  ✅ PASSED              : 16833/26295 (64.02%)
+# INFO:     annotation          : 16833/26295 (64.02%)
+# INFO:     categorization_item : 16833/26295 (64.02%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-characters (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16814/16832 (99.89%)
+# INFO:     annotation          : 16814/16832 (99.89%)
+# INFO:     bot detail          : 16831/16832 (99.99%)
+# INFO:     user info           : 16814/16832 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-safety-dials (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16831/16832 (99.99%)
+# INFO:     annotation          : 16831/16832 (99.99%)
+# INFO:     sexual axis         : 16831/16832 (99.99%)
+# INFO:     violence axis       : 16831/16832 (99.99%)
+# INFO:     toxicity axis       : 16831/16832 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-genre-theme (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16832/16832 (100.00%)
+# INFO:     annotation          : 16832/16832 (100.00%)
+# INFO:     primary genre       : 16832/16832 (100.00%)
+# INFO:     themes              : 16832/16832 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-grammar (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16763/16832 (99.59%)
+# INFO:     annotation          : 16832/16832 (100.00%)
+# INFO:     prose               : 16763/16832 (99.59%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-cdm-html-to-markdown (Target Source: lemonilia/roleplaying-forums-raw)
+# INFO:  ✅ PASSED              : 0/9462 (0.00%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 798675
+# INFO:     Turns Converted         : 798502 (99.98%)
+# INFO:     Turns Remaining         : 173
+# INFO:     Estimated Local Compute : 0.2 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================

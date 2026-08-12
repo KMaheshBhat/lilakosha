@@ -43,6 +43,17 @@ def run(config: dict) -> None:
 
     healthy_count = 0
     failure_registry = defaultdict(list)
+    source_counts = defaultdict(int)
+
+    # Stage -> expected source identity filter mapping (None means all records)
+    stage_target_sources = {
+        "refine-cdm-language": None,
+        "refine-cdm-html-to-markdown": "lemonilia/roleplaying-forums-raw",
+        "refine-pippa-characters": "PygmalionAI/PIPPA",
+        "refine-pippa-safety-dials": "PygmalionAI/PIPPA",
+        "refine-pippa-genre-theme": "PygmalionAI/PIPPA",
+        "refine-pippa-grammar": "PygmalionAI/PIPPA",
+    }
 
     # Telemetry aggregation frameworks mapped by stage and checks
     stage_breakdown = {
@@ -95,6 +106,15 @@ def run(config: dict) -> None:
 
             health = document.meta.health or {}
 
+            # Track source breakdown denominator
+            source_info = document.meta.source or {}
+            source_identity = (
+                source_info.get("source_identity")
+                or source_info.get("source")
+                or "unknown"
+            )
+            source_counts[source_identity] += 1
+
             # Track turn conversion metrics
             turns_metrics = health.get("turns_metrics") or {}
             total_turns += turns_metrics.get("total_turns", 0)
@@ -136,28 +156,46 @@ def run(config: dict) -> None:
     logger.info(f"Defective Records:       {len(failure_registry)}")
     logger.info("=" * 60)
 
+    # --- Source Breakdown Section ---
+    logger.info("📦 SOURCE RECORD BREAKDOWN")
+    logger.info("=" * 60)
+    for src_id, count in sorted(
+        source_counts.items(),
+        key=lambda x: x[1],
+        reverse=True,
+    ):
+        src_pct = (count / total_records * 100) if total_records > 0 else 0
+        logger.info(f"    {src_id:<32}: {count} ({src_pct:.2f}%)")
+    logger.info("=" * 60)
+
     if report_breakdown:
         logger.info("📈 PIPELINE STAGE BREAKDOWN")
         logger.info("=" * 60)
 
         for stage, checks in stage_breakdown.items():
-            logger.info(f"{stage}")
+            target_source = stage_target_sources.get(stage)
+            if target_source:
+                stage_denom = source_counts.get(target_source, 0)
+            else:
+                stage_denom = total_records
+
+            logger.info(f"{stage} (Target Source: {target_source or 'ALL'})")
 
             passed_count = checks.get("passed", 0)
             passed_pct = (
-                (passed_count / total_records * 100) if total_records > 0 else 0
+                (passed_count / stage_denom * 100) if stage_denom > 0 else 0
             )
             logger.info(
                 f" ✅ PASSED              : "
-                f"{passed_count}/{total_records} ({passed_pct:.2f}%)"
+                f"{passed_count}/{stage_denom} ({passed_pct:.2f}%)"
             )
 
             for check_name, count in checks.items():
                 if check_name == "passed":
                     continue
-                check_pct = (count / total_records * 100) if total_records > 0 else 0
+                check_pct = (count / stage_denom * 100) if stage_denom > 0 else 0
                 logger.info(
-                    f"    {check_name:<20}: {count}/{total_records} ({check_pct:.2f}%)"
+                    f"    {check_name:<20}: {count}/{stage_denom} ({check_pct:.2f}%)"
                 )
 
             logger.info("-" * 60)

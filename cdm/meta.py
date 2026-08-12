@@ -84,8 +84,8 @@ def calculate_resolved(document: Document) -> ResolvedMeta:
 def calculate_health(document: Document) -> dict[str, Any]:
     """
     Evaluates refinement metrics across universal rules (e.g., language refinement)
-    and source-specific PIPPA rule groups, returning explicit tracking flags for
-    telemetry breakdown reporting.
+    and source-specific rule groups (PIPPA grammar, Forums HTML conversion),
+    returning explicit tracking flags for telemetry breakdown reporting.
     """
     meta = document.meta
     resolved = meta.resolved or ResolvedMeta()
@@ -117,8 +117,68 @@ def calculate_health(document: Document) -> dict[str, Any]:
         "categorization_item": has_lang_item,
     }
 
+    # Extract source identity for specific checks
+    source_identity = (
+        source.get("source_identity") or source.get("source") or "unknown"
+    )
+
+    # --- Source-Specific Rules: lemonilia/roleplaying-forums-raw ---
+    is_forums_source = source_identity == "lemonilia/roleplaying-forums-raw"
+
+    if is_forums_source:
+        # --- Rule Group: refine-cdm-html-to-markdown ---
+        has_html_anno = "refine-cdm-html-to-markdown" in annotation_kinds
+
+        # This check mirrors refine-pippa-grammar: 100% conversion
+        # of a specific item type.
+        narrative_items = [
+            item for item in items if getattr(item, "kind", None) == "narrative"
+        ]
+        total_narratives = len(narrative_items)
+
+        def is_narrative_html_converted(item: Any) -> bool:
+            """
+            Verifies narrative item content contains both original and
+            refine-cdm-html-to-markdown variants.
+            """
+            content = getattr(item, "content", [])
+            if not isinstance(content, list):
+                return False
+
+            variant_names = {
+                v.name: getattr(v, "mimetype", None)
+                for v in content
+                if hasattr(v, "name")
+            }
+
+            return (
+                "original" in variant_names
+                and "refine-cdm-html-to-markdown" in variant_names
+            )
+
+        converted_narratives = sum(
+            1 for item in narrative_items if is_narrative_html_converted(item)
+        )
+        has_full_lineage = (total_narratives > 0) and (
+            total_narratives == converted_narratives
+        )
+
+        if not has_html_anno:
+            issues.append("Missing 'refine-cdm-html-to-markdown' annotation")
+        if total_narratives > converted_narratives:
+            issues.append(
+                "HTML conversion lineage defect: "
+                f"{total_narratives - converted_narratives} "
+                "narrative items are missing correct HTML->Markdown variant lineage."
+            )
+
+        breakdown["refine-cdm-html-to-markdown"] = {
+            "passed": has_html_anno and has_full_lineage,
+            "annotation": has_html_anno,
+            "narrative": has_full_lineage,
+        }
+
     # --- Source-Specific Rules: PIPPA ---
-    source_identity = source.get("source_identity", "")
     is_pippa_source = source_identity == "PygmalionAI/PIPPA"
 
     if is_pippa_source:
@@ -240,8 +300,8 @@ def calculate_health(document: Document) -> dict[str, Any]:
     turn_items = [
         item for item in items if getattr(item, "kind", None) == "turn"
     ]
-    total_turns = len(turn_items)
-    converted_turns = sum(
+    total_turns_pippa = len(turn_items)
+    converted_turns_pippa = sum(
         1
         for item in turn_items
         if "refine-pippa-grammar"
@@ -251,9 +311,11 @@ def calculate_health(document: Document) -> dict[str, Any]:
     return {
         "is_healthy": len(issues) == 0,
         "issues": issues,
+        # PIPPA specific turn metrics (kept for compatibility
+        # in calculate_health response)
         "turns_metrics": {
-            "total_turns": total_turns,
-            "converted_turns": converted_turns,
+            "total_turns": total_turns_pippa,
+            "converted_turns": converted_turns_pippa,
         },
         "breakdown": breakdown,
     }
@@ -275,6 +337,9 @@ def calculate_stats(document: Document) -> dict[str, Any]:
     # 1. Structural Numerical Counts
     turn_count = sum(
         1 for item in document.items if getattr(item, "kind", None) == "turn"
+    )
+    narrative_count = sum(
+        1 for item in document.items if getattr(item, "kind", None) == "narrative"
     )
     item_count = len(document.items)
     character_count = len(resolved.identities) if resolved.identities else 0
@@ -316,6 +381,7 @@ def calculate_stats(document: Document) -> dict[str, Any]:
             flat_languages.append(lang)
 
     return {
+        "narrative_count": narrative_count,
         "turn_count": turn_count,
         "item_count": item_count,
         "character_count": character_count,
