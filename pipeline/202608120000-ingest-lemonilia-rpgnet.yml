@@ -1,0 +1,486 @@
+# LilaKosha-MK1: Ingest PIPPA Blueprint
+pipeline:
+    - "ingest-lemonilia-rpgnet"
+    - "report-cdm-records"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+# parameters:
+#     limit: 5 # used to test for major refactors (if you comment this out, comment out parameters as well)
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/202608120000-ingest-lemonilia-rpgnet.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['ingest-lemonilia-rpgnet', 'report-cdm-records']
+# INFO: Active Parameters: {}
+# INFO: --- Executing Step: INGEST-LEMONILIA-RPGNET ---
+# INFO: Processing local raw RPGnet dataset from /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/raw/lemonilia/roleplaying-forums-raw (limit: None, batch_size: 25) target: /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# Ingesting & Reconciling RPGnet: 25row [00:04,  5.44row/s]INFO: RPGnet batch complete: 25 source row(s) processed, 25 thread document(s) changed, 923 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 50row [00:09,  5.11row/s]INFO: RPGnet batch complete: 50 source row(s) processed, 25 thread document(s) changed, 779 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 75row [00:15,  4.91row/s]INFO: RPGnet batch complete: 75 source row(s) processed, 25 thread document(s) changed, 886 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 100row [00:23,  3.91row/s]INFO: RPGnet batch complete: 100 source row(s) processed, 25 thread document(s) changed, 1390 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 125row [00:31,  3.56row/s]INFO: RPGnet batch complete: 125 source row(s) processed, 25 thread document(s) changed, 1448 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 150row [00:41,  3.06row/s]INFO: RPGnet batch complete: 150 source row(s) processed, 25 thread document(s) changed, 2409 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 175row [00:53,  2.73row/s]INFO: RPGnet batch complete: 175 source row(s) processed, 25 thread document(s) changed, 2041 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 200row [01:03,  2.60row/s]INFO: RPGnet batch complete: 200 source row(s) processed, 25 thread document(s) changed, 2056 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 225row [01:09,  2.94row/s]INFO: RPGnet batch complete: 225 source row(s) processed, 25 thread document(s) changed, 1580 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 250row [01:28,  2.15row/s]INFO: RPGnet batch complete: 250 source row(s) processed, 25 thread document(s) changed, 2396 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 275row [01:36,  2.39row/s]INFO: RPGnet batch complete: 275 source row(s) processed, 25 thread document(s) changed, 1833 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 300row [01:57,  1.80row/s]INFO: RPGnet batch complete: 300 source row(s) processed, 25 thread document(s) changed, 3254 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 325row [02:04,  2.14row/s]INFO: RPGnet batch complete: 325 source row(s) processed, 25 thread document(s) changed, 1960 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 350row [02:12,  2.35row/s]INFO: RPGnet batch complete: 350 source row(s) processed, 25 thread document(s) changed, 1825 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 375row [02:33,  1.84row/s]INFO: RPGnet batch complete: 375 source row(s) processed, 25 thread document(s) changed, 2780 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 400row [02:45,  1.88row/s]INFO: RPGnet batch complete: 400 source row(s) processed, 25 thread document(s) changed, 2347 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 425row [03:02,  1.76row/s]INFO: RPGnet batch complete: 425 source row(s) processed, 25 thread document(s) changed, 3419 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 450row [03:17,  1.70row/s]INFO: RPGnet batch complete: 450 source row(s) processed, 25 thread document(s) changed, 3037 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 475row [03:41,  1.44row/s]INFO: RPGnet batch complete: 475 source row(s) processed, 25 thread document(s) changed, 4261 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 500row [03:56,  1.51row/s]INFO: RPGnet batch complete: 500 source row(s) processed, 25 thread document(s) changed, 2699 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 525row [04:12,  1.51row/s]INFO: RPGnet batch complete: 525 source row(s) processed, 25 thread document(s) changed, 2355 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 550row [04:20,  1.78row/s]INFO: RPGnet batch complete: 550 source row(s) processed, 25 thread document(s) changed, 1735 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 575row [04:31,  1.92row/s]INFO: RPGnet batch complete: 575 source row(s) processed, 25 thread document(s) changed, 2288 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 600row [04:52,  1.63row/s]INFO: RPGnet batch complete: 600 source row(s) processed, 25 thread document(s) changed, 3747 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 625row [05:00,  1.91row/s]INFO: RPGnet batch complete: 625 source row(s) processed, 25 thread document(s) changed, 1571 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 650row [05:12,  1.96row/s]INFO: RPGnet batch complete: 650 source row(s) processed, 25 thread document(s) changed, 3074 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 675row [05:42,  1.38row/s]INFO: RPGnet batch complete: 675 source row(s) processed, 25 thread document(s) changed, 5092 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 700row [05:55,  1.51row/s]INFO: RPGnet batch complete: 700 source row(s) processed, 25 thread document(s) changed, 2047 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 725row [06:27,  1.18row/s]INFO: RPGnet batch complete: 725 source row(s) processed, 25 thread document(s) changed, 4128 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 750row [06:34,  1.47row/s]INFO: RPGnet batch complete: 750 source row(s) processed, 25 thread document(s) changed, 2064 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 775row [08:20,  1.74s/row]INFO: RPGnet batch complete: 775 source row(s) processed, 25 thread document(s) changed, 5817 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 800row [08:32,  1.37s/row]INFO: RPGnet batch complete: 800 source row(s) processed, 25 thread document(s) changed, 2525 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 825row [10:00,  2.02s/row]INFO: RPGnet batch complete: 825 source row(s) processed, 25 thread document(s) changed, 6536 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 850row [10:05,  1.46s/row]INFO: RPGnet batch complete: 850 source row(s) processed, 25 thread document(s) changed, 1361 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 875row [14:31,  4.21s/row]INFO: RPGnet batch complete: 875 source row(s) processed, 25 thread document(s) changed, 7446 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 900row [14:49,  3.17s/row]INFO: RPGnet batch complete: 900 source row(s) processed, 25 thread document(s) changed, 3919 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 925row [14:54,  2.29s/row]INFO: RPGnet batch complete: 925 source row(s) processed, 25 thread document(s) changed, 1178 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 950row [15:02,  1.69s/row]INFO: RPGnet batch complete: 950 source row(s) processed, 25 thread document(s) changed, 1551 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 975row [15:11,  1.29s/row]INFO: RPGnet batch complete: 975 source row(s) processed, 25 thread document(s) changed, 2016 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1000row [15:18,  1.01row/s]INFO: RPGnet batch complete: 1000 source row(s) processed, 25 thread document(s) changed, 2039 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1025row [15:26,  1.26row/s]INFO: RPGnet batch complete: 1025 source row(s) processed, 25 thread document(s) changed, 1705 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1050row [17:19,  1.90s/row]INFO: RPGnet batch complete: 1050 source row(s) processed, 25 thread document(s) changed, 5379 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1075row [17:30,  1.47s/row]INFO: RPGnet batch complete: 1075 source row(s) processed, 25 thread document(s) changed, 2166 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1100row [17:44,  1.19s/row]INFO: RPGnet batch complete: 1100 source row(s) processed, 25 thread document(s) changed, 2925 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1125row [18:03,  1.06s/row]INFO: RPGnet batch complete: 1125 source row(s) processed, 25 thread document(s) changed, 3302 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1150row [18:44,  1.23s/row]INFO: RPGnet batch complete: 1150 source row(s) processed, 25 thread document(s) changed, 4305 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1175row [19:00,  1.06s/row]INFO: RPGnet batch complete: 1175 source row(s) processed, 25 thread document(s) changed, 3785 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1200row [19:08,  1.19row/s]INFO: RPGnet batch complete: 1200 source row(s) processed, 25 thread document(s) changed, 1823 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1225row [19:17,  1.44row/s]INFO: RPGnet batch complete: 1225 source row(s) processed, 25 thread document(s) changed, 2274 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1250row [19:45,  1.22row/s]INFO: RPGnet batch complete: 1250 source row(s) processed, 25 thread document(s) changed, 4249 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1275row [19:51,  1.53row/s]INFO: RPGnet batch complete: 1275 source row(s) processed, 25 thread document(s) changed, 1606 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1300row [20:02,  1.71row/s]INFO: RPGnet batch complete: 1300 source row(s) processed, 25 thread document(s) changed, 2403 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1325row [33:29, 10.09s/row]INFO: RPGnet batch complete: 1325 source row(s) processed, 25 thread document(s) changed, 13603 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1350row [33:46,  7.27s/row]INFO: RPGnet batch complete: 1350 source row(s) processed, 25 thread document(s) changed, 3155 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1375row [36:16,  6.89s/row]INFO: RPGnet batch complete: 1375 source row(s) processed, 25 thread document(s) changed, 7959 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1400row [36:32,  5.02s/row]INFO: RPGnet batch complete: 1400 source row(s) processed, 25 thread document(s) changed, 3452 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1425row [36:49,  3.72s/row]INFO: RPGnet batch complete: 1425 source row(s) processed, 25 thread document(s) changed, 3933 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1450row [37:06,  2.81s/row]INFO: RPGnet batch complete: 1450 source row(s) processed, 25 thread document(s) changed, 3176 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1475row [37:36,  2.32s/row]INFO: RPGnet batch complete: 1475 source row(s) processed, 25 thread document(s) changed, 5493 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1500row [37:49,  1.78s/row]INFO: RPGnet batch complete: 1500 source row(s) processed, 25 thread document(s) changed, 2939 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1525row [38:12,  1.52s/row]INFO: RPGnet batch complete: 1525 source row(s) processed, 25 thread document(s) changed, 3479 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1550row [38:24,  1.21s/row]INFO: RPGnet batch complete: 1550 source row(s) processed, 25 thread document(s) changed, 3143 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1575row [38:39,  1.03s/row]INFO: RPGnet batch complete: 1575 source row(s) processed, 25 thread document(s) changed, 2745 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1600row [39:01,  1.02row/s]INFO: RPGnet batch complete: 1600 source row(s) processed, 25 thread document(s) changed, 4217 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1625row [40:37,  1.84s/row]INFO: RPGnet batch complete: 1625 source row(s) processed, 25 thread document(s) changed, 6039 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1650row [40:58,  1.55s/row]INFO: RPGnet batch complete: 1650 source row(s) processed, 25 thread document(s) changed, 3562 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1675row [41:06,  1.18s/row]INFO: RPGnet batch complete: 1675 source row(s) processed, 25 thread document(s) changed, 1792 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1700row [41:13,  1.11row/s]INFO: RPGnet batch complete: 1700 source row(s) processed, 25 thread document(s) changed, 1437 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1725row [41:17,  1.47row/s]INFO: RPGnet batch complete: 1725 source row(s) processed, 25 thread document(s) changed, 1462 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1750row [41:42,  1.29row/s]INFO: RPGnet batch complete: 1750 source row(s) processed, 25 thread document(s) changed, 3000 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1775row [44:47,  2.77s/row]INFO: RPGnet batch complete: 1775 source row(s) processed, 25 thread document(s) changed, 5432 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1800row [45:41,  2.59s/row]INFO: RPGnet batch complete: 1800 source row(s) processed, 25 thread document(s) changed, 5029 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1825row [48:21,  3.72s/row]INFO: RPGnet batch complete: 1825 source row(s) processed, 25 thread document(s) changed, 5790 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1850row [48:28,  2.69s/row]INFO: RPGnet batch complete: 1850 source row(s) processed, 25 thread document(s) changed, 2413 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1875row [48:36,  1.98s/row]INFO: RPGnet batch complete: 1875 source row(s) processed, 25 thread document(s) changed, 1629 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1900row [48:46,  1.51s/row]INFO: RPGnet batch complete: 1900 source row(s) processed, 24 thread document(s) changed, 2738 post(s) newly added, 1 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1925row [48:55,  1.17s/row]INFO: RPGnet batch complete: 1925 source row(s) processed, 25 thread document(s) changed, 1982 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1950row [53:48,  4.33s/row]INFO: RPGnet batch complete: 1950 source row(s) processed, 25 thread document(s) changed, 6424 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 1975row [53:53,  3.09s/row]INFO: RPGnet batch complete: 1975 source row(s) processed, 25 thread document(s) changed, 1622 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2000row [54:11,  2.38s/row]INFO: RPGnet batch complete: 2000 source row(s) processed, 25 thread document(s) changed, 3064 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2025row [55:32,  2.64s/row]INFO: RPGnet batch complete: 2025 source row(s) processed, 25 thread document(s) changed, 6325 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2050row [55:54,  2.10s/row]INFO: RPGnet batch complete: 2050 source row(s) processed, 25 thread document(s) changed, 3362 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2075row [56:19,  1.78s/row]INFO: RPGnet batch complete: 2075 source row(s) processed, 25 thread document(s) changed, 3341 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2100row [56:27,  1.34s/row]INFO: RPGnet batch complete: 2100 source row(s) processed, 25 thread document(s) changed, 1704 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2125row [57:01,  1.34s/row]INFO: RPGnet batch complete: 2125 source row(s) processed, 25 thread document(s) changed, 3245 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2150row [57:32,  1.31s/row]INFO: RPGnet batch complete: 2150 source row(s) processed, 25 thread document(s) changed, 3361 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2175row [57:45,  1.08s/row]INFO: RPGnet batch complete: 2175 source row(s) processed, 25 thread document(s) changed, 2685 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2200row [57:55,  1.14row/s]INFO: RPGnet batch complete: 2200 source row(s) processed, 25 thread document(s) changed, 2705 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2225row [1:02:11,  3.68s/row]INFO: RPGnet batch complete: 2225 source row(s) processed, 25 thread document(s) changed, 7991 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2250row [1:03:50,  3.77s/row]INFO: RPGnet batch complete: 2250 source row(s) processed, 25 thread document(s) changed, 7630 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2275row [1:05:00,  3.48s/row]INFO: RPGnet batch complete: 2275 source row(s) processed, 25 thread document(s) changed, 7845 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2300row [1:05:31,  2.80s/row]INFO: RPGnet batch complete: 2300 source row(s) processed, 25 thread document(s) changed, 3823 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2325row [1:05:47,  2.16s/row]INFO: RPGnet batch complete: 2325 source row(s) processed, 25 thread document(s) changed, 3283 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2350row [1:06:02,  1.68s/row]INFO: RPGnet batch complete: 2350 source row(s) processed, 25 thread document(s) changed, 2592 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2375row [1:06:18,  1.38s/row]INFO: RPGnet batch complete: 2375 source row(s) processed, 25 thread document(s) changed, 2563 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2400row [1:06:31,  1.11s/row]INFO: RPGnet batch complete: 2400 source row(s) processed, 25 thread document(s) changed, 2605 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2425row [1:07:22,  1.40s/row]INFO: RPGnet batch complete: 2425 source row(s) processed, 25 thread document(s) changed, 3668 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2450row [1:07:56,  1.38s/row]INFO: RPGnet batch complete: 2450 source row(s) processed, 25 thread document(s) changed, 2960 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2475row [1:08:18,  1.23s/row]INFO: RPGnet batch complete: 2475 source row(s) processed, 25 thread document(s) changed, 4027 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2500row [1:10:31,  2.47s/row]INFO: RPGnet batch complete: 2500 source row(s) processed, 25 thread document(s) changed, 6344 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2525row [1:10:47,  1.91s/row]INFO: RPGnet batch complete: 2525 source row(s) processed, 25 thread document(s) changed, 2346 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2550row [1:10:56,  1.45s/row]INFO: RPGnet batch complete: 2550 source row(s) processed, 25 thread document(s) changed, 2441 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2575row [1:11:10,  1.18s/row]INFO: RPGnet batch complete: 2575 source row(s) processed, 25 thread document(s) changed, 2799 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2600row [1:11:19,  1.07row/s]INFO: RPGnet batch complete: 2600 source row(s) processed, 25 thread document(s) changed, 1911 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2625row [1:12:48,  1.73s/row]INFO: RPGnet batch complete: 2625 source row(s) processed, 25 thread document(s) changed, 5370 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2650row [1:15:05,  2.85s/row]INFO: RPGnet batch complete: 2650 source row(s) processed, 25 thread document(s) changed, 8836 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2675row [1:15:31,  2.30s/row]INFO: RPGnet batch complete: 2675 source row(s) processed, 25 thread document(s) changed, 4244 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2700row [1:17:13,  2.84s/row]INFO: RPGnet batch complete: 2700 source row(s) processed, 25 thread document(s) changed, 4350 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2725row [1:17:32,  2.21s/row]INFO: RPGnet batch complete: 2725 source row(s) processed, 25 thread document(s) changed, 3653 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2750row [1:17:54,  1.82s/row]INFO: RPGnet batch complete: 2750 source row(s) processed, 25 thread document(s) changed, 3547 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2775row [1:19:19,  2.29s/row]INFO: RPGnet batch complete: 2775 source row(s) processed, 25 thread document(s) changed, 7572 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2800row [1:19:45,  1.91s/row]INFO: RPGnet batch complete: 2800 source row(s) processed, 25 thread document(s) changed, 4651 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2825row [1:20:05,  1.59s/row]INFO: RPGnet batch complete: 2825 source row(s) processed, 25 thread document(s) changed, 4529 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2850row [1:20:51,  1.66s/row]INFO: RPGnet batch complete: 2850 source row(s) processed, 25 thread document(s) changed, 6749 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2875row [1:21:13,  1.42s/row]INFO: RPGnet batch complete: 2875 source row(s) processed, 25 thread document(s) changed, 4619 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2900row [1:21:42,  1.35s/row]INFO: RPGnet batch complete: 2900 source row(s) processed, 25 thread document(s) changed, 4776 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2925row [1:21:58,  1.14s/row]INFO: RPGnet batch complete: 2925 source row(s) processed, 25 thread document(s) changed, 3121 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2950row [1:22:11,  1.06row/s]INFO: RPGnet batch complete: 2950 source row(s) processed, 25 thread document(s) changed, 2581 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 2975row [1:25:29,  3.04s/row]INFO: RPGnet batch complete: 2975 source row(s) processed, 25 thread document(s) changed, 6844 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3000row [1:27:02,  3.24s/row]INFO: RPGnet batch complete: 3000 source row(s) processed, 25 thread document(s) changed, 6927 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3025row [1:27:22,  2.51s/row]INFO: RPGnet batch complete: 3025 source row(s) processed, 25 thread document(s) changed, 3704 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3050row [1:27:33,  1.89s/row]INFO: RPGnet batch complete: 3050 source row(s) processed, 25 thread document(s) changed, 2410 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3075row [1:29:11,  2.50s/row]INFO: RPGnet batch complete: 3075 source row(s) processed, 25 thread document(s) changed, 9370 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3100row [1:31:10,  3.17s/row]INFO: RPGnet batch complete: 3100 source row(s) processed, 25 thread document(s) changed, 7646 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3125row [1:32:05,  2.89s/row]INFO: RPGnet batch complete: 3125 source row(s) processed, 25 thread document(s) changed, 8555 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3150row [1:33:24,  2.97s/row]INFO: RPGnet batch complete: 3150 source row(s) processed, 25 thread document(s) changed, 10343 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3175row [1:50:52, 14.66s/row]INFO: RPGnet batch complete: 3175 source row(s) processed, 25 thread document(s) changed, 28127 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3200row [1:51:30, 10.71s/row]INFO: RPGnet batch complete: 3200 source row(s) processed, 25 thread document(s) changed, 6158 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3225row [1:52:33,  8.25s/row]INFO: RPGnet batch complete: 3225 source row(s) processed, 25 thread document(s) changed, 8112 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3250row [1:53:37,  6.54s/row]INFO: RPGnet batch complete: 3250 source row(s) processed, 25 thread document(s) changed, 10172 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3275row [1:54:07,  4.94s/row]INFO: RPGnet batch complete: 3275 source row(s) processed, 25 thread document(s) changed, 5452 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3300row [1:55:01,  4.11s/row]INFO: RPGnet batch complete: 3300 source row(s) processed, 25 thread document(s) changed, 7708 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3325row [1:55:44,  3.39s/row]INFO: RPGnet batch complete: 3325 source row(s) processed, 25 thread document(s) changed, 7131 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3350row [1:56:15,  2.75s/row]INFO: RPGnet batch complete: 3350 source row(s) processed, 25 thread document(s) changed, 4988 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3375row [1:56:55,  2.41s/row]INFO: RPGnet batch complete: 3375 source row(s) processed, 25 thread document(s) changed, 6277 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3400row [1:57:22,  2.01s/row]INFO: RPGnet batch complete: 3400 source row(s) processed, 25 thread document(s) changed, 4684 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3425row [1:58:04,  1.90s/row]INFO: RPGnet batch complete: 3425 source row(s) processed, 25 thread document(s) changed, 7794 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3450row [1:58:41,  1.77s/row]INFO: RPGnet batch complete: 3450 source row(s) processed, 25 thread document(s) changed, 6426 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3475row [1:59:44,  2.00s/row]INFO: RPGnet batch complete: 3475 source row(s) processed, 25 thread document(s) changed, 6506 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3500row [2:00:17,  1.79s/row]INFO: RPGnet batch complete: 3500 source row(s) processed, 25 thread document(s) changed, 6296 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3525row [2:01:07,  1.86s/row]INFO: RPGnet batch complete: 3525 source row(s) processed, 25 thread document(s) changed, 7257 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3550row [2:01:34,  1.63s/row]INFO: RPGnet batch complete: 3550 source row(s) processed, 25 thread document(s) changed, 5226 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3575row [2:02:22,  1.72s/row]INFO: RPGnet batch complete: 3575 source row(s) processed, 25 thread document(s) changed, 6723 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3600row [2:02:54,  1.59s/row]INFO: RPGnet batch complete: 3600 source row(s) processed, 25 thread document(s) changed, 5646 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3625row [2:03:38,  1.63s/row]INFO: RPGnet batch complete: 3625 source row(s) processed, 25 thread document(s) changed, 6295 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3650row [2:04:22,  1.67s/row]INFO: RPGnet batch complete: 3650 source row(s) processed, 25 thread document(s) changed, 6457 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3675row [2:05:12,  1.78s/row]INFO: RPGnet batch complete: 3675 source row(s) processed, 25 thread document(s) changed, 7716 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3700row [2:05:34,  1.51s/row]INFO: RPGnet batch complete: 3700 source row(s) processed, 25 thread document(s) changed, 4507 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3725row [2:06:04,  1.42s/row]INFO: RPGnet batch complete: 3725 source row(s) processed, 25 thread document(s) changed, 5548 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3750row [2:07:44,  2.18s/row]INFO: RPGnet batch complete: 3750 source row(s) processed, 25 thread document(s) changed, 7957 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3775row [2:08:25,  2.02s/row]INFO: RPGnet batch complete: 3775 source row(s) processed, 25 thread document(s) changed, 6651 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3800row [2:09:16,  2.03s/row]INFO: RPGnet batch complete: 3800 source row(s) processed, 25 thread document(s) changed, 7377 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3825row [2:09:35,  1.65s/row]INFO: RPGnet batch complete: 3825 source row(s) processed, 25 thread document(s) changed, 3255 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3850row [2:10:08,  1.55s/row]INFO: RPGnet batch complete: 3850 source row(s) processed, 25 thread document(s) changed, 5815 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3875row [2:10:35,  1.41s/row]INFO: RPGnet batch complete: 3875 source row(s) processed, 25 thread document(s) changed, 5197 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3900row [2:11:11,  1.42s/row]INFO: RPGnet batch complete: 3900 source row(s) processed, 25 thread document(s) changed, 5716 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3925row [2:12:00,  1.58s/row]INFO: RPGnet batch complete: 3925 source row(s) processed, 25 thread document(s) changed, 7836 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3950row [2:12:36,  1.54s/row]INFO: RPGnet batch complete: 3950 source row(s) processed, 25 thread document(s) changed, 6087 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 3975row [2:13:22,  1.62s/row]INFO: RPGnet batch complete: 3975 source row(s) processed, 25 thread document(s) changed, 6139 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4000row [2:13:51,  1.48s/row]INFO: RPGnet batch complete: 4000 source row(s) processed, 25 thread document(s) changed, 5838 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4025row [2:14:26,  1.46s/row]INFO: RPGnet batch complete: 4025 source row(s) processed, 25 thread document(s) changed, 4811 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4050row [2:15:02,  1.46s/row]INFO: RPGnet batch complete: 4050 source row(s) processed, 25 thread document(s) changed, 5391 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4075row [2:15:33,  1.39s/row]INFO: RPGnet batch complete: 4075 source row(s) processed, 25 thread document(s) changed, 5836 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4100row [2:17:50,  2.61s/row]INFO: RPGnet batch complete: 4100 source row(s) processed, 25 thread document(s) changed, 7695 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4125row [2:18:46,  2.50s/row]INFO: RPGnet batch complete: 4125 source row(s) processed, 25 thread document(s) changed, 7892 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4150row [2:19:05,  1.99s/row]INFO: RPGnet batch complete: 4150 source row(s) processed, 25 thread document(s) changed, 3520 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4175row [2:19:30,  1.69s/row]INFO: RPGnet batch complete: 4175 source row(s) processed, 25 thread document(s) changed, 4148 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4200row [2:20:34,  1.95s/row]INFO: RPGnet batch complete: 4200 source row(s) processed, 25 thread document(s) changed, 8490 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4225row [2:20:56,  1.63s/row]INFO: RPGnet batch complete: 4225 source row(s) processed, 25 thread document(s) changed, 3340 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4250row [2:21:26,  1.50s/row]INFO: RPGnet batch complete: 4250 source row(s) processed, 25 thread document(s) changed, 4991 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4275row [2:21:46,  1.29s/row]INFO: RPGnet batch complete: 4275 source row(s) processed, 25 thread document(s) changed, 3809 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4300row [2:22:14,  1.24s/row]INFO: RPGnet batch complete: 4300 source row(s) processed, 25 thread document(s) changed, 5004 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4325row [2:22:51,  1.31s/row]INFO: RPGnet batch complete: 4325 source row(s) processed, 25 thread document(s) changed, 5410 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4350row [2:23:52,  1.64s/row]INFO: RPGnet batch complete: 4350 source row(s) processed, 25 thread document(s) changed, 7442 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4375row [2:25:12,  2.11s/row]INFO: RPGnet batch complete: 4375 source row(s) processed, 25 thread document(s) changed, 3138 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4400row [2:25:43,  1.85s/row]INFO: RPGnet batch complete: 4400 source row(s) processed, 25 thread document(s) changed, 4560 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4425row [2:26:20,  1.74s/row]INFO: RPGnet batch complete: 4425 source row(s) processed, 25 thread document(s) changed, 6280 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4450row [2:26:48,  1.56s/row]INFO: RPGnet batch complete: 4450 source row(s) processed, 25 thread document(s) changed, 5612 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4475row [2:27:41,  1.72s/row]INFO: RPGnet batch complete: 4475 source row(s) processed, 25 thread document(s) changed, 6399 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4500row [2:28:43,  1.95s/row]INFO: RPGnet batch complete: 4500 source row(s) processed, 25 thread document(s) changed, 8758 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4525row [2:29:20,  1.81s/row]INFO: RPGnet batch complete: 4525 source row(s) processed, 25 thread document(s) changed, 5906 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4550row [2:29:30,  1.38s/row]INFO: RPGnet batch complete: 4550 source row(s) processed, 25 thread document(s) changed, 2503 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4575row [2:29:50,  1.22s/row]INFO: RPGnet batch complete: 4575 source row(s) processed, 25 thread document(s) changed, 3759 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4600row [2:30:23,  1.25s/row]INFO: RPGnet batch complete: 4600 source row(s) processed, 25 thread document(s) changed, 5688 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4625row [2:30:47,  1.16s/row]INFO: RPGnet batch complete: 4625 source row(s) processed, 25 thread document(s) changed, 3627 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4650row [2:31:08,  1.06s/row]INFO: RPGnet batch complete: 4650 source row(s) processed, 25 thread document(s) changed, 4016 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4675row [2:31:33,  1.05s/row]INFO: RPGnet batch complete: 4675 source row(s) processed, 25 thread document(s) changed, 5251 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4700row [2:31:57,  1.01s/row]INFO: RPGnet batch complete: 4700 source row(s) processed, 25 thread document(s) changed, 4014 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4725row [2:32:19,  1.02row/s]INFO: RPGnet batch complete: 4725 source row(s) processed, 25 thread document(s) changed, 4578 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4750row [2:32:44,  1.02row/s]INFO: RPGnet batch complete: 4750 source row(s) processed, 25 thread document(s) changed, 4985 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4775row [2:34:21,  1.85s/row]INFO: RPGnet batch complete: 4775 source row(s) processed, 25 thread document(s) changed, 5645 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4800row [2:35:07,  1.85s/row]INFO: RPGnet batch complete: 4800 source row(s) processed, 25 thread document(s) changed, 7305 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4825row [2:35:34,  1.62s/row]INFO: RPGnet batch complete: 4825 source row(s) processed, 25 thread document(s) changed, 5103 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4850row [2:36:08,  1.54s/row]INFO: RPGnet batch complete: 4850 source row(s) processed, 25 thread document(s) changed, 5386 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4875row [2:36:32,  1.37s/row]INFO: RPGnet batch complete: 4875 source row(s) processed, 25 thread document(s) changed, 4573 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4900row [2:37:21,  1.54s/row]INFO: RPGnet batch complete: 4900 source row(s) processed, 25 thread document(s) changed, 6215 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4925row [2:37:57,  1.52s/row]INFO: RPGnet batch complete: 4925 source row(s) processed, 25 thread document(s) changed, 4423 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4950row [2:38:19,  1.32s/row]INFO: RPGnet batch complete: 4950 source row(s) processed, 25 thread document(s) changed, 3513 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 4975row [2:38:55,  1.36s/row]INFO: RPGnet batch complete: 4975 source row(s) processed, 25 thread document(s) changed, 6250 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5000row [2:39:52,  1.64s/row]INFO: RPGnet batch complete: 5000 source row(s) processed, 25 thread document(s) changed, 7614 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5025row [2:40:14,  1.41s/row]INFO: RPGnet batch complete: 5025 source row(s) processed, 25 thread document(s) changed, 3616 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5050row [2:40:31,  1.19s/row]INFO: RPGnet batch complete: 5050 source row(s) processed, 25 thread document(s) changed, 3464 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5075row [2:41:08,  1.27s/row]INFO: RPGnet batch complete: 5075 source row(s) processed, 25 thread document(s) changed, 4521 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5100row [2:41:29,  1.14s/row]INFO: RPGnet batch complete: 5100 source row(s) processed, 25 thread document(s) changed, 3398 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5125row [2:42:00,  1.18s/row]INFO: RPGnet batch complete: 5125 source row(s) processed, 25 thread document(s) changed, 4738 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5150row [2:42:21,  1.08s/row]INFO: RPGnet batch complete: 5150 source row(s) processed, 25 thread document(s) changed, 3688 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5175row [2:42:45,  1.04s/row]INFO: RPGnet batch complete: 5175 source row(s) processed, 25 thread document(s) changed, 3891 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5200row [2:43:57,  1.59s/row]INFO: RPGnet batch complete: 5200 source row(s) processed, 25 thread document(s) changed, 8436 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5225row [2:45:00,  1.87s/row]INFO: RPGnet batch complete: 5225 source row(s) processed, 25 thread document(s) changed, 6820 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5250row [2:45:27,  1.64s/row]INFO: RPGnet batch complete: 5250 source row(s) processed, 25 thread document(s) changed, 5113 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5275row [2:47:33,  2.65s/row]INFO: RPGnet batch complete: 5275 source row(s) processed, 25 thread document(s) changed, 9036 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5300row [2:48:11,  2.32s/row]INFO: RPGnet batch complete: 5300 source row(s) processed, 25 thread document(s) changed, 7312 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5325row [2:48:38,  1.94s/row]INFO: RPGnet batch complete: 5325 source row(s) processed, 25 thread document(s) changed, 4198 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5350row [2:49:22,  1.89s/row]INFO: RPGnet batch complete: 5350 source row(s) processed, 25 thread document(s) changed, 6619 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5375row [2:50:03,  1.81s/row]INFO: RPGnet batch complete: 5375 source row(s) processed, 25 thread document(s) changed, 6272 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5400row [2:50:58,  1.93s/row]INFO: RPGnet batch complete: 5400 source row(s) processed, 25 thread document(s) changed, 5614 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5425row [2:51:28,  1.71s/row]INFO: RPGnet batch complete: 5425 source row(s) processed, 25 thread document(s) changed, 5566 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5450row [2:51:58,  1.56s/row]INFO: RPGnet batch complete: 5450 source row(s) processed, 25 thread document(s) changed, 4976 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5475row [2:52:41,  1.60s/row]INFO: RPGnet batch complete: 5475 source row(s) processed, 25 thread document(s) changed, 7362 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5500row [2:53:03,  1.40s/row]INFO: RPGnet batch complete: 5500 source row(s) processed, 25 thread document(s) changed, 4171 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5525row [2:53:35,  1.35s/row]INFO: RPGnet batch complete: 5525 source row(s) processed, 25 thread document(s) changed, 5265 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5550row [2:53:55,  1.20s/row]INFO: RPGnet batch complete: 5550 source row(s) processed, 25 thread document(s) changed, 3908 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5575row [2:54:23,  1.17s/row]INFO: RPGnet batch complete: 5575 source row(s) processed, 25 thread document(s) changed, 5016 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5600row [2:55:12,  1.40s/row]INFO: RPGnet batch complete: 5600 source row(s) processed, 25 thread document(s) changed, 7404 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5625row [2:56:05,  1.62s/row]INFO: RPGnet batch complete: 5625 source row(s) processed, 25 thread document(s) changed, 7680 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5650row [2:56:57,  1.76s/row]INFO: RPGnet batch complete: 5650 source row(s) processed, 25 thread document(s) changed, 6633 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5675row [2:57:16,  1.45s/row]INFO: RPGnet batch complete: 5675 source row(s) processed, 25 thread document(s) changed, 3438 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5700row [2:57:53,  1.46s/row]INFO: RPGnet batch complete: 5700 source row(s) processed, 25 thread document(s) changed, 6233 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5725row [2:58:40,  1.59s/row]INFO: RPGnet batch complete: 5725 source row(s) processed, 25 thread document(s) changed, 4865 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5750row [2:59:05,  1.42s/row]INFO: RPGnet batch complete: 5750 source row(s) processed, 25 thread document(s) changed, 4784 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5775row [3:06:35,  6.39s/row]INFO: RPGnet batch complete: 5775 source row(s) processed, 25 thread document(s) changed, 9724 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5800row [3:06:51,  4.67s/row]INFO: RPGnet batch complete: 5800 source row(s) processed, 25 thread document(s) changed, 3440 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5825row [3:07:15,  3.55s/row]INFO: RPGnet batch complete: 5825 source row(s) processed, 25 thread document(s) changed, 4403 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5850row [3:07:40,  2.78s/row]INFO: RPGnet batch complete: 5850 source row(s) processed, 25 thread document(s) changed, 4457 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5875row [3:08:10,  2.31s/row]INFO: RPGnet batch complete: 5875 source row(s) processed, 25 thread document(s) changed, 5085 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5900row [3:08:27,  1.82s/row]INFO: RPGnet batch complete: 5900 source row(s) processed, 25 thread document(s) changed, 3614 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5925row [3:08:57,  1.63s/row]INFO: RPGnet batch complete: 5925 source row(s) processed, 25 thread document(s) changed, 4585 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5950row [3:09:11,  1.32s/row]INFO: RPGnet batch complete: 5950 source row(s) processed, 25 thread document(s) changed, 3412 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 5975row [3:09:46,  1.34s/row]INFO: RPGnet batch complete: 5975 source row(s) processed, 25 thread document(s) changed, 5766 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6000row [3:10:22,  1.37s/row]INFO: RPGnet batch complete: 6000 source row(s) processed, 25 thread document(s) changed, 5607 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6025row [3:10:46,  1.24s/row]INFO: RPGnet batch complete: 6025 source row(s) processed, 25 thread document(s) changed, 4310 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6050row [3:11:21,  1.30s/row]INFO: RPGnet batch complete: 6050 source row(s) processed, 25 thread document(s) changed, 6112 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6075row [3:11:35,  1.07s/row]INFO: RPGnet batch complete: 6075 source row(s) processed, 25 thread document(s) changed, 3268 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6100row [3:12:12,  1.19s/row]INFO: RPGnet batch complete: 6100 source row(s) processed, 25 thread document(s) changed, 5446 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6125row [3:15:42,  3.36s/row]INFO: RPGnet batch complete: 6125 source row(s) processed, 25 thread document(s) changed, 14846 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6150row [3:16:20,  2.81s/row]INFO: RPGnet batch complete: 6150 source row(s) processed, 25 thread document(s) changed, 5728 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6175row [3:16:47,  2.29s/row]INFO: RPGnet batch complete: 6175 source row(s) processed, 25 thread document(s) changed, 4450 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6200row [3:18:33,  2.88s/row]INFO: RPGnet batch complete: 6200 source row(s) processed, 25 thread document(s) changed, 8972 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6225row [3:19:03,  2.37s/row]INFO: RPGnet batch complete: 6225 source row(s) processed, 25 thread document(s) changed, 5502 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6250row [3:20:10,  2.46s/row]INFO: RPGnet batch complete: 6250 source row(s) processed, 25 thread document(s) changed, 7781 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6275row [3:20:48,  2.18s/row]INFO: RPGnet batch complete: 6275 source row(s) processed, 25 thread document(s) changed, 5237 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6300row [3:21:26,  1.98s/row]INFO: RPGnet batch complete: 6300 source row(s) processed, 25 thread document(s) changed, 6369 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6325row [3:21:59,  1.79s/row]INFO: RPGnet batch complete: 6325 source row(s) processed, 25 thread document(s) changed, 5185 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6350row [3:22:44,  1.78s/row]INFO: RPGnet batch complete: 6350 source row(s) processed, 25 thread document(s) changed, 7728 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6375row [3:23:03,  1.49s/row]INFO: RPGnet batch complete: 6375 source row(s) processed, 25 thread document(s) changed, 3964 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6400row [3:24:26,  2.04s/row]INFO: RPGnet batch complete: 6400 source row(s) processed, 25 thread document(s) changed, 6541 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6425row [3:25:40,  2.30s/row]INFO: RPGnet batch complete: 6425 source row(s) processed, 25 thread document(s) changed, 5873 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6450row [3:26:13,  2.02s/row]INFO: RPGnet batch complete: 6450 source row(s) processed, 25 thread document(s) changed, 6067 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6475row [3:26:40,  1.73s/row]INFO: RPGnet batch complete: 6475 source row(s) processed, 25 thread document(s) changed, 4712 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6500row [3:28:17,  2.37s/row]INFO: RPGnet batch complete: 6500 source row(s) processed, 25 thread document(s) changed, 10755 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6525row [3:30:21,  3.15s/row]INFO: RPGnet batch complete: 6525 source row(s) processed, 25 thread document(s) changed, 9699 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6550row [3:30:52,  2.58s/row]INFO: RPGnet batch complete: 6550 source row(s) processed, 25 thread document(s) changed, 4272 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6575row [3:31:23,  2.17s/row]INFO: RPGnet batch complete: 6575 source row(s) processed, 25 thread document(s) changed, 6379 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6600row [3:31:40,  1.74s/row]INFO: RPGnet batch complete: 6600 source row(s) processed, 25 thread document(s) changed, 3911 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6625row [3:32:09,  1.56s/row]INFO: RPGnet batch complete: 6625 source row(s) processed, 25 thread document(s) changed, 4440 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6650row [3:32:27,  1.31s/row]INFO: RPGnet batch complete: 6650 source row(s) processed, 25 thread document(s) changed, 3279 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6675row [3:42:47,  8.35s/row]INFO: RPGnet batch complete: 6675 source row(s) processed, 25 thread document(s) changed, 16565 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6700row [3:45:55,  8.10s/row]INFO: RPGnet batch complete: 6700 source row(s) processed, 25 thread document(s) changed, 10845 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6725row [3:46:05,  5.79s/row]INFO: RPGnet batch complete: 6725 source row(s) processed, 25 thread document(s) changed, 2088 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6750row [3:46:47,  4.56s/row]INFO: RPGnet batch complete: 6750 source row(s) processed, 25 thread document(s) changed, 6357 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6775row [3:47:20,  3.59s/row]INFO: RPGnet batch complete: 6775 source row(s) processed, 25 thread document(s) changed, 6265 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6800row [3:48:46,  3.54s/row]INFO: RPGnet batch complete: 6800 source row(s) processed, 25 thread document(s) changed, 6676 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6825row [3:54:44,  6.78s/row]INFO: RPGnet batch complete: 6825 source row(s) processed, 25 thread document(s) changed, 11225 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6850row [3:55:13,  5.10s/row]INFO: RPGnet batch complete: 6850 source row(s) processed, 25 thread document(s) changed, 4474 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6875row [3:55:56,  4.08s/row]INFO: RPGnet batch complete: 6875 source row(s) processed, 25 thread document(s) changed, 5964 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6900row [3:58:01,  4.36s/row]INFO: RPGnet batch complete: 6900 source row(s) processed, 25 thread document(s) changed, 9733 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6925row [3:58:28,  3.38s/row]INFO: RPGnet batch complete: 6925 source row(s) processed, 25 thread document(s) changed, 4173 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6950row [3:58:56,  2.70s/row]INFO: RPGnet batch complete: 6950 source row(s) processed, 25 thread document(s) changed, 4515 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 6975row [3:59:27,  2.26s/row]INFO: RPGnet batch complete: 6975 source row(s) processed, 25 thread document(s) changed, 5295 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7000row [3:59:43,  1.77s/row]INFO: RPGnet batch complete: 7000 source row(s) processed, 25 thread document(s) changed, 2948 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7025row [4:00:06,  1.51s/row]INFO: RPGnet batch complete: 7025 source row(s) processed, 25 thread document(s) changed, 3714 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7050row [4:00:32,  1.37s/row]INFO: RPGnet batch complete: 7050 source row(s) processed, 25 thread document(s) changed, 3756 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7075row [4:15:04, 11.43s/row]INFO: RPGnet batch complete: 7075 source row(s) processed, 25 thread document(s) changed, 15859 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7100row [4:16:14,  8.84s/row]INFO: RPGnet batch complete: 7100 source row(s) processed, 25 thread document(s) changed, 6827 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7125row [4:16:42,  6.53s/row]INFO: RPGnet batch complete: 7125 source row(s) processed, 25 thread document(s) changed, 3742 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7150row [4:17:05,  4.84s/row]INFO: RPGnet batch complete: 7150 source row(s) processed, 25 thread document(s) changed, 4232 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7175row [4:18:33,  4.44s/row]INFO: RPGnet batch complete: 7175 source row(s) processed, 25 thread document(s) changed, 5494 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7200row [4:22:11,  5.72s/row]INFO: RPGnet batch complete: 7200 source row(s) processed, 25 thread document(s) changed, 10224 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7225row [4:22:51,  4.49s/row]INFO: RPGnet batch complete: 7225 source row(s) processed, 25 thread document(s) changed, 4097 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7250row [4:28:02,  6.88s/row]INFO: RPGnet batch complete: 7250 source row(s) processed, 25 thread document(s) changed, 8191 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7275row [4:32:40,  8.15s/row]INFO: RPGnet batch complete: 7275 source row(s) processed, 25 thread document(s) changed, 13731 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7300row [4:35:32,  7.77s/row]INFO: RPGnet batch complete: 7300 source row(s) processed, 25 thread document(s) changed, 8080 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7325row [4:36:57,  6.45s/row]INFO: RPGnet batch complete: 7325 source row(s) processed, 25 thread document(s) changed, 8192 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7350row [4:37:41,  5.05s/row]INFO: RPGnet batch complete: 7350 source row(s) processed, 25 thread document(s) changed, 5316 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7375row [4:38:14,  3.93s/row]INFO: RPGnet batch complete: 7375 source row(s) processed, 25 thread document(s) changed, 4478 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7400row [4:38:27,  2.91s/row]INFO: RPGnet batch complete: 7400 source row(s) processed, 25 thread document(s) changed, 2909 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7425row [4:39:06,  2.51s/row]INFO: RPGnet batch complete: 7425 source row(s) processed, 25 thread document(s) changed, 4030 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7450row [4:41:24,  3.40s/row]INFO: RPGnet batch complete: 7450 source row(s) processed, 25 thread document(s) changed, 10146 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7475row [4:41:59,  2.80s/row]INFO: RPGnet batch complete: 7475 source row(s) processed, 25 thread document(s) changed, 3950 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7500row [4:58:55, 14.15s/row]INFO: RPGnet batch complete: 7500 source row(s) processed, 25 thread document(s) changed, 14770 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7525row [5:09:48, 17.75s/row]INFO: RPGnet batch complete: 7525 source row(s) processed, 25 thread document(s) changed, 9667 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7550row [5:12:03, 14.05s/row]INFO: RPGnet batch complete: 7550 source row(s) processed, 25 thread document(s) changed, 9136 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7575row [5:13:48, 11.08s/row]INFO: RPGnet batch complete: 7575 source row(s) processed, 25 thread document(s) changed, 7842 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7600row [5:20:35, 12.65s/row]INFO: RPGnet batch complete: 7600 source row(s) processed, 25 thread document(s) changed, 12641 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7625row [5:33:20, 18.03s/row]INFO: RPGnet batch complete: 7625 source row(s) processed, 25 thread document(s) changed, 14246 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7650row [5:33:56, 13.05s/row]INFO: RPGnet batch complete: 7650 source row(s) processed, 25 thread document(s) changed, 4656 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7675row [5:34:12,  9.34s/row]INFO: RPGnet batch complete: 7675 source row(s) processed, 25 thread document(s) changed, 3196 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7700row [5:34:32,  6.77s/row]INFO: RPGnet batch complete: 7700 source row(s) processed, 25 thread document(s) changed, 3782 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7725row [5:34:48,  4.92s/row]INFO: RPGnet batch complete: 7725 source row(s) processed, 25 thread document(s) changed, 3125 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7750row [5:35:06,  3.67s/row]INFO: RPGnet batch complete: 7750 source row(s) processed, 25 thread document(s) changed, 4061 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7775row [5:36:27,  3.53s/row]INFO: RPGnet batch complete: 7775 source row(s) processed, 25 thread document(s) changed, 9060 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7800row [5:36:59,  2.86s/row]INFO: RPGnet batch complete: 7800 source row(s) processed, 25 thread document(s) changed, 5417 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7825row [5:37:30,  2.38s/row]INFO: RPGnet batch complete: 7825 source row(s) processed, 25 thread document(s) changed, 4789 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7850row [5:38:56,  2.70s/row]INFO: RPGnet batch complete: 7850 source row(s) processed, 25 thread document(s) changed, 7733 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7875row [5:39:18,  2.15s/row]INFO: RPGnet batch complete: 7875 source row(s) processed, 25 thread document(s) changed, 3966 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7900row [5:41:42,  3.23s/row]INFO: RPGnet batch complete: 7900 source row(s) processed, 25 thread document(s) changed, 11760 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7925row [5:42:41,  2.97s/row]INFO: RPGnet batch complete: 7925 source row(s) processed, 25 thread document(s) changed, 7488 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7950row [5:43:34,  2.71s/row]INFO: RPGnet batch complete: 7950 source row(s) processed, 25 thread document(s) changed, 4751 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 7975row [5:44:38,  2.67s/row]INFO: RPGnet batch complete: 7975 source row(s) processed, 25 thread document(s) changed, 9051 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8000row [5:48:12,  4.43s/row]INFO: RPGnet batch complete: 8000 source row(s) processed, 25 thread document(s) changed, 9555 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8025row [5:49:12,  3.82s/row]INFO: RPGnet batch complete: 8025 source row(s) processed, 25 thread document(s) changed, 7645 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8050row [5:49:52,  3.16s/row]INFO: RPGnet batch complete: 8050 source row(s) processed, 25 thread document(s) changed, 5745 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8075row [6:01:58, 10.92s/row]INFO: RPGnet batch complete: 8075 source row(s) processed, 25 thread document(s) changed, 19726 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8100row [6:04:16,  9.31s/row]INFO: RPGnet batch complete: 8100 source row(s) processed, 25 thread document(s) changed, 12297 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8125row [6:04:56,  6.99s/row]INFO: RPGnet batch complete: 8125 source row(s) processed, 25 thread document(s) changed, 5620 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8150row [6:06:21,  5.92s/row]INFO: RPGnet batch complete: 8150 source row(s) processed, 25 thread document(s) changed, 6799 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8175row [6:09:15,  6.23s/row]INFO: RPGnet batch complete: 8175 source row(s) processed, 25 thread document(s) changed, 8538 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8200row [6:09:43,  4.70s/row]INFO: RPGnet batch complete: 8200 source row(s) processed, 25 thread document(s) changed, 4363 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8225row [6:12:28,  5.26s/row]INFO: RPGnet batch complete: 8225 source row(s) processed, 25 thread document(s) changed, 7342 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8250row [6:13:20,  4.30s/row]INFO: RPGnet batch complete: 8250 source row(s) processed, 25 thread document(s) changed, 5307 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8275row [6:13:42,  3.28s/row]INFO: RPGnet batch complete: 8275 source row(s) processed, 25 thread document(s) changed, 4581 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8300row [6:14:01,  2.53s/row]INFO: RPGnet batch complete: 8300 source row(s) processed, 25 thread document(s) changed, 4199 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8325row [6:14:34,  2.16s/row]INFO: RPGnet batch complete: 8325 source row(s) processed, 25 thread document(s) changed, 5541 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8350row [6:15:02,  1.85s/row]INFO: RPGnet batch complete: 8350 source row(s) processed, 25 thread document(s) changed, 4603 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8375row [6:15:38,  1.72s/row]INFO: RPGnet batch complete: 8375 source row(s) processed, 25 thread document(s) changed, 4627 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8400row [6:16:12,  1.62s/row]INFO: RPGnet batch complete: 8400 source row(s) processed, 25 thread document(s) changed, 5847 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8425row [6:16:58,  1.68s/row]INFO: RPGnet batch complete: 8425 source row(s) processed, 25 thread document(s) changed, 5438 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8450row [6:17:56,  1.87s/row]INFO: RPGnet batch complete: 8450 source row(s) processed, 25 thread document(s) changed, 8266 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8475row [6:18:45,  1.90s/row]INFO: RPGnet batch complete: 8475 source row(s) processed, 25 thread document(s) changed, 6727 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8500row [6:20:58,  2.93s/row]INFO: RPGnet batch complete: 8500 source row(s) processed, 25 thread document(s) changed, 7958 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8525row [6:25:05,  5.02s/row]INFO: RPGnet batch complete: 8525 source row(s) processed, 25 thread document(s) changed, 9517 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8550row [6:26:11,  4.30s/row]INFO: RPGnet batch complete: 8550 source row(s) processed, 25 thread document(s) changed, 7559 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8575row [6:26:31,  3.25s/row]INFO: RPGnet batch complete: 8575 source row(s) processed, 25 thread document(s) changed, 4006 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8600row [6:28:11,  3.48s/row]INFO: RPGnet batch complete: 8600 source row(s) processed, 25 thread document(s) changed, 9534 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8625row [6:29:38,  3.48s/row]INFO: RPGnet batch complete: 8625 source row(s) processed, 25 thread document(s) changed, 7860 post(s) newly added, 0 source row(s) skipped
+# WARNING: Skipping RPGnet post 23867386: empty post content
+# Ingesting & Reconciling RPGnet: 8650row [6:32:52,  4.76s/row]INFO: RPGnet batch complete: 8650 source row(s) processed, 25 thread document(s) changed, 8858 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8675row [6:33:14,  3.59s/row]INFO: RPGnet batch complete: 8675 source row(s) processed, 25 thread document(s) changed, 4215 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8700row [6:35:48,  4.37s/row]INFO: RPGnet batch complete: 8700 source row(s) processed, 25 thread document(s) changed, 5458 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8725row [6:36:13,  3.35s/row]INFO: RPGnet batch complete: 8725 source row(s) processed, 25 thread document(s) changed, 5745 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8750row [6:42:06,  6.59s/row]INFO: RPGnet batch complete: 8750 source row(s) processed, 25 thread document(s) changed, 11782 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8775row [6:45:03,  6.73s/row]INFO: RPGnet batch complete: 8775 source row(s) processed, 25 thread document(s) changed, 10712 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8800row [6:45:20,  4.92s/row]INFO: RPGnet batch complete: 8800 source row(s) processed, 25 thread document(s) changed, 3415 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8825row [6:45:47,  3.77s/row]INFO: RPGnet batch complete: 8825 source row(s) processed, 25 thread document(s) changed, 5051 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8850row [6:47:36,  3.95s/row]INFO: RPGnet batch complete: 8850 source row(s) processed, 25 thread document(s) changed, 8412 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8875row [6:48:42,  3.55s/row]INFO: RPGnet batch complete: 8875 source row(s) processed, 25 thread document(s) changed, 9097 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8900row [6:49:25,  3.00s/row]INFO: RPGnet batch complete: 8900 source row(s) processed, 25 thread document(s) changed, 6123 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8925row [6:49:37,  2.25s/row]INFO: RPGnet batch complete: 8925 source row(s) processed, 25 thread document(s) changed, 2246 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8950row [6:50:27,  2.16s/row]INFO: RPGnet batch complete: 8950 source row(s) processed, 25 thread document(s) changed, 7527 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 8975row [6:51:11,  2.05s/row]INFO: RPGnet batch complete: 8975 source row(s) processed, 25 thread document(s) changed, 5464 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9000row [6:55:32,  4.56s/row]INFO: RPGnet batch complete: 9000 source row(s) processed, 25 thread document(s) changed, 11562 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9025row [6:57:13,  4.41s/row]INFO: RPGnet batch complete: 9025 source row(s) processed, 25 thread document(s) changed, 7519 post(s) newly added, 0 source row(s) skipped
+# WARNING: Skipping RPGnet post 23861310: empty post content
+# Ingesting & Reconciling RPGnet: 9050row [6:59:10,  4.49s/row]INFO: RPGnet batch complete: 9050 source row(s) processed, 25 thread document(s) changed, 8095 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9075row [7:06:30,  8.42s/row]INFO: RPGnet batch complete: 9075 source row(s) processed, 25 thread document(s) changed, 13691 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9100row [7:07:01,  6.28s/row]INFO: RPGnet batch complete: 9100 source row(s) processed, 25 thread document(s) changed, 4818 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9125row [7:12:43,  8.50s/row]INFO: RPGnet batch complete: 9125 source row(s) processed, 25 thread document(s) changed, 12457 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9150row [7:21:55, 12.57s/row]INFO: RPGnet batch complete: 9150 source row(s) processed, 25 thread document(s) changed, 13512 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9175row [7:22:59,  9.57s/row]INFO: RPGnet batch complete: 9175 source row(s) processed, 25 thread document(s) changed, 7629 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9200row [7:23:24,  6.99s/row]INFO: RPGnet batch complete: 9200 source row(s) processed, 25 thread document(s) changed, 4041 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9225row [7:23:41,  5.10s/row]INFO: RPGnet batch complete: 9225 source row(s) processed, 25 thread document(s) changed, 2797 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9250row [7:24:39,  4.26s/row]INFO: RPGnet batch complete: 9250 source row(s) processed, 25 thread document(s) changed, 7832 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9275row [7:25:40,  3.72s/row]INFO: RPGnet batch complete: 9275 source row(s) processed, 25 thread document(s) changed, 6777 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9300row [7:27:20,  3.80s/row]INFO: RPGnet batch complete: 9300 source row(s) processed, 25 thread document(s) changed, 9058 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9325row [7:28:02,  3.17s/row]INFO: RPGnet batch complete: 9325 source row(s) processed, 25 thread document(s) changed, 5964 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9350row [7:34:59,  7.23s/row]INFO: RPGnet batch complete: 9350 source row(s) processed, 25 thread document(s) changed, 14224 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9375row [7:37:11,  6.63s/row]INFO: RPGnet batch complete: 9375 source row(s) processed, 25 thread document(s) changed, 10806 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9400row [7:45:06, 10.34s/row]INFO: RPGnet batch complete: 9400 source row(s) processed, 25 thread document(s) changed, 16547 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9425row [7:49:49, 10.64s/row]INFO: RPGnet batch complete: 9425 source row(s) processed, 25 thread document(s) changed, 19835 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9450row [7:57:56, 13.29s/row]INFO: RPGnet batch complete: 9450 source row(s) processed, 25 thread document(s) changed, 25222 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9463row [7:58:30, 11.35s/row]INFO: RPGnet batch complete: 9463 source row(s) processed, 13 thread document(s) changed, 4494 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 9463row [7:58:30,  3.03s/row]
+# INFO: RPGnet ingestion & reconciliation complete: 9463 source row(s) processed, 9462 thread document(s) changed, 2160719 post(s) newly added, 1 source row(s) skipped. CDM records written to /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# INFO: --- Executing Step: REPORT-CDM-RECORDS ---
+# INFO: ============================================================
+# INFO: 📊 CDM RECORDS REPORT
+# INFO: ============================================================
+# INFO: Total Physical Files: 26295
+# INFO: Total Indexed Records: 26295
+# INFO: Start UUID: 019f0dd7-0b00-7ac0-98d4-3bbfd613d197 (Source: pippa)
+# INFO: ------------------------------------------------------------
+# INFO: UUID at position 1000: 019f1687-6559-7851-97ea-6073303a38cf
+# INFO: UUID at position 1001: 019f1907-d349-72b2-b8e7-46518f167960
+# INFO: UUID at position 2000: 019f1908-5062-79a2-9c46-5b5a77310bd4
+# INFO: UUID at position 2001: 019f20bc-8f89-7622-a8f1-b8b74ad66a3a
+# INFO: UUID at position 3000: 019f20bc-fd7a-7df0-ae78-89ac3f518304
+# INFO: UUID at position 3001: 019f285a-0f4a-76e1-bb9e-f552f2df230f
+# INFO: UUID at position 4000: 019f285a-7474-7280-8fb8-5a01df0ed18c
+# INFO: UUID at position 4001: 019f2ced-1ed1-7222-8392-55944719287f
+# INFO: UUID at position 5000: 019f2ced-a387-7703-b337-6c858cbf68ba
+# INFO: UUID at position 5001: 019f30d5-198c-7d10-9be2-3e2298b4b922
+# INFO: UUID at position 6000: 019f30d5-89fe-7021-b9bd-6eccdb8db1d4
+# INFO: UUID at position 6001: 019f3825-4c30-75f2-a197-2e72ee7b7492
+# INFO: UUID at position 7000: 019f3825-b3f6-7fd3-b998-6a354c2c9a6e
+# INFO: UUID at position 7001: 019f4021-a402-7951-8d99-ce193b3f2cbf
+# INFO: UUID at position 8000: 019f4022-7a5f-7f42-89d9-4331d8d61035
+# INFO: UUID at position 8001: 019f4a4d-ee3c-7ff3-bae5-7581bc76e122
+# INFO: UUID at position 9000: 019f4a4e-a644-7b73-907c-9890c90511df
+# INFO: UUID at position 9001: 019f4ffe-2100-7631-a857-f20d56fd7a64
+# INFO: UUID at position 10000: 019f4ffe-ccdc-7312-823f-23831934cdf2
+# INFO: UUID at position 10001: 019f5255-332b-7da1-9d29-bb9f9c54a5b9
+# INFO: UUID at position 11000: 019f5255-9c5f-7543-b10d-0fd2a17dd8ca
+# INFO: UUID at position 11001: 019f55f5-592b-73d1-878b-e4cb522061c0
+# INFO: UUID at position 12000: 019f55f5-db23-7922-80f5-8d7fd86432d3
+# INFO: UUID at position 12001: 019f5cbe-5ce1-71b1-96fb-0126624b8778
+# INFO: UUID at position 13000: 019f5f68-ea7e-73f3-a528-5f0049f28efe
+# INFO: UUID at position 13001: 019f5f68-ea8f-7230-8ff0-be26402ca169
+# INFO: UUID at position 14000: 019f6394-d9d0-7e92-af77-cab945b05b7d
+# INFO: UUID at position 14001: 019f6394-d9e3-73a3-b70c-93d61b893b5c
+# INFO: UUID at position 15000: 019f6e09-aca7-7851-aca4-092be1f16196
+# INFO: UUID at position 15001: 019f6e09-acf0-7803-8c52-a2f99b4a92e5
+# INFO: UUID at position 16000: 019f766f-1a12-7c32-b6b4-9af6d55a9c0e
+# INFO: UUID at position 16001: 019f766f-1a22-7a70-b56a-92bbf14268c2
+# INFO: UUID at position 17000: 019ff225-84d8-7ee0-83aa-4caeafedf1ac
+# INFO: UUID at position 17001: 019ff225-881c-7cf0-a166-bbb90a3ff6f5
+# INFO: UUID at position 18000: 019ff236-1644-7a93-a1e9-978f6c305b0f
+# INFO: UUID at position 18001: 019ff236-1a44-7bf0-9529-20bd05a1454c
+# INFO: UUID at position 19000: 019ff259-8e6e-71d3-8d14-060e1df487ce
+# INFO: UUID at position 19001: 019ff259-8f2c-78e0-9884-27606a3cd4ad
+# INFO: UUID at position 20000: 019ff285-c6ae-7953-b2b2-1d214ee63d70
+# INFO: UUID at position 20001: 019ff285-cded-74f1-a2da-cf54f0e6e204
+# INFO: UUID at position 21000: 019ff2a4-5cb1-78c0-9798-75dc91ab0337
+# INFO: UUID at position 21001: 019ff2a4-5dc9-7ad1-bd4b-aee53c5e90af
+# INFO: UUID at position 22000: 019ff2b9-a35f-7910-9e5f-91a9e61238d1
+# INFO: UUID at position 22001: 019ff2b9-a512-7242-aee7-9daf797d360d
+# INFO: UUID at position 23000: 019ff2d8-ba14-7cc3-ab05-df00889fc757
+# INFO: UUID at position 23001: 019ff2d8-d476-7bf1-a487-ca737323a0c7
+# INFO: UUID at position 24000: 019ff310-8d8d-7822-b74c-2b5aad0fe7a9
+# INFO: UUID at position 24001: 019ff310-8eb9-7be2-9455-189c42eec2ea
+# INFO: UUID at position 25000: 019ff376-b205-7be0-bbd7-9796f29813e2
+# INFO: UUID at position 25001: 019ff376-b267-71c1-a026-50ffcf027ddd
+# INFO: UUID at position 26000: 019ff3ba-1e6d-7431-bcea-e50a535eb112
+# INFO: UUID at position 26001: 019ff3ba-25a3-7882-b4f8-ad803e201a7a
+# INFO: ------------------------------------------------------------
+# INFO: Stop UUID: 019ff3da-d84c-7002-bb10-086fc0af63bb (Source: lemonilia-rpgnet)
+# INFO: ============================================================
+# INFO: 📍 SOURCE RANGES & BOUNDARIES
+# INFO: ============================================================
+# INFO: Source [pippa]: 16832 records
+# INFO:   └─ Start UUID (pos 1): 019f0dd7-0b00-7ac0-98d4-3bbfd613d197
+# INFO:   └─ End UUID   (pos 16832): 019fb458-f5fe-70c2-9f5b-e1fe7f453c09
+# INFO: ----------------------------------------
+# INFO: Source [gutenberg]: 1 records
+# INFO:   └─ Start UUID (pos 16833): 019fcc23-4821-7143-93c9-0b2b58610567
+# INFO:   └─ End UUID   (pos 16833): 019fcc23-4821-7143-93c9-0b2b58610567
+# INFO: ----------------------------------------
+# INFO: Source [lemonilia-rpgnet]: 9462 records
+# INFO:   └─ Start UUID (pos 16834): 019ff224-c36f-7ed3-9c1a-236e94044191
+# INFO:   └─ End UUID   (pos 26295): 019ff3da-d84c-7002-bb10-086fc0af63bb
+# INFO: ============================================================

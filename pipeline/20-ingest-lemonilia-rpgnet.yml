@@ -1,0 +1,16 @@
+# LilaKosha-MK1: Ingest PIPPA Blueprint
+pipeline:
+    - "ingest-lemonilia-rpgnet"
+    - "report-cdm-records"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    limit: 5 # used to test for major refactors (if you comment this out, comment out parameters as well)
