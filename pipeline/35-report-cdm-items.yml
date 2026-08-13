@@ -1,0 +1,11 @@
+# LilaKosha-MK1: Aggregate report on Document.items
+pipeline:
+    - "report-cdm-items"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"

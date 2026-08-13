@@ -61,6 +61,7 @@ def run(config: dict) -> None:
 
     kind_counts: Counter[str] = Counter()
     variant_counts: dict[str, Counter[str]] = defaultdict(Counter)
+    structured_counts: dict[str, Counter[str]] = defaultdict(Counter)
     content_shape_counts: dict[str, Counter[str]] = defaultdict(Counter)
 
     documents_inspected = 0
@@ -107,6 +108,25 @@ def run(config: dict) -> None:
                 # ---------------------------------------------------------
                 if kind in STRUCTURED_ITEM_KINDS:
                     content_shape_counts[kind]["structured"] += 1
+
+                    if kind == "categorization":
+                        category = item.get("category")
+                        if isinstance(category, str) and category.strip():
+                            structured_counts[kind][category] += 1
+                        else:
+                            malformed_items += 1
+
+                    elif kind == "sequence":
+                        data = item.get("data")
+                        if isinstance(data, dict):
+                            sequence_for = data.get("sequence_for")
+                            if isinstance(sequence_for, str) and sequence_for.strip():
+                                structured_counts[kind][sequence_for] += 1
+                            else:
+                                malformed_items += 1
+                        else:
+                            malformed_items += 1
+
                     continue
 
                 # ---------------------------------------------------------
@@ -224,6 +244,16 @@ def run(config: dict) -> None:
                     f"{'':<25} | "
                     f"{'':<8} | "
                     f"  └─ {variant_name}: {variant_count}"
+                )
+
+        structured = structured_counts.get(kind)
+
+        if structured:
+            for structured_key, structured_count in structured.most_common():
+                logger.info(
+                    f"{'':<25} | "
+                    f"{'':<8} | "
+                    f"  └─ {structured_key}: {structured_count}"
                 )
 
     logger.info("=" * 72 + "\n")
