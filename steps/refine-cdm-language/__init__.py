@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 from lingua import LanguageDetectorBuilder
 from tqdm import tqdm
@@ -13,10 +13,20 @@ logger = logging.getLogger(__name__)
 # Initialize the detector once at module load
 detector = LanguageDetectorBuilder.from_all_languages().build()
 
+# Explicit list of CDM item kinds that possess a .content list of ContentVariants
+SUPPORTED_CONTENT_KINDS: Set[str] = {
+    "narrative",
+    "turn",
+    "world",
+    "character",
+    "summary",
+}
+
 
 def detect_document_languages(
     doc: Document,
     target_kinds: Set[str] | None = None,
+    preferred_variants_by_kind: Dict[str, List[str]] | None = None,
     window_size: int = 5,
     min_confidence: float = 0.05,
     max_languages: int = 5,
@@ -25,9 +35,16 @@ def detect_document_languages(
     sliding/chunked windows, evaluates language confidence per window via lingua-py,
     aggregates maximum confidence scores per language across all windows, and returns
     (detected_languages, reasoning_string).
+
+    Text is extracted from content variants according to
+    `preferred_variants_by_kind`: for each item the preferred variant list is
+    consulted in order and the first available variant's text is used.
     """
     if target_kinds is None:
         target_kinds = {"turn", "narrative"}
+
+    if preferred_variants_by_kind is None:
+        preferred_variants_by_kind = {kind: ["original"] for kind in target_kinds}
 
     # 1. Gather all matching items across the document by item.kind
     target_items = [
@@ -48,15 +65,21 @@ def detect_document_languages(
         sample_texts = []
 
         for item in window_items:
-            # Handle list of variants or plain string content
+            kind = getattr(item, "kind", None)
             content_list = getattr(item, "content", [])
-            if isinstance(content_list, list):
-                for variant in content_list:
-                    text_val = getattr(variant, "text", None)
-                    if text_val and text_val.strip():
-                        sample_texts.append(text_val.strip())
-            elif isinstance(content_list, str) and content_list.strip():
-                sample_texts.append(content_list.strip())
+
+            # Resolve the preferred variant order for this kind;
+            # fall back to ["original"] then first available if nothing is configured.
+            kind_str = kind if kind is not None else ""
+            variant_prefs = preferred_variants_by_kind.get(
+                kind_str, ["original"]
+            )
+            selected_text = _select_variant_text(
+                content_list, variant_prefs
+            )
+
+            if selected_text:
+                sample_texts.append(selected_text)
 
         if not sample_texts:
             continue
@@ -106,11 +129,53 @@ def detect_document_languages(
     return detected_langs, reasoning
 
 
+def _select_variant_text(
+    content_list: Any,
+    preferred_variants: List[str],
+) -> str | None:
+    """Return the text of the first content variant whose name matches
+    `preferred_variants` in order.  Falls back to the first variant that has
+    text when none of the preferred names are present.
+    """
+    if isinstance(content_list, str):
+        return content_list.strip() or None
+
+    if not isinstance(content_list, list):
+        return None
+
+    # Try preferred variants in order
+    for pref_name in preferred_variants:
+        for variant in content_list:
+            text_val = getattr(variant, "text", None)
+            if (
+                getattr(variant, "name", None) == pref_name
+                and text_val
+                and text_val.strip()
+            ):
+                return text_val.strip()
+
+    # Fallback: first variant that has any text
+    for variant in content_list:
+        text_val = getattr(variant, "text", None)
+        if text_val and text_val.strip():
+            return text_val.strip()
+
+    return None
+
+
 def run(config: dict[str, Any]) -> None:
     """LilaKosha Pipeline Step: Language Refinement Pass
 
-    Inspects the initial turns of CDM records, detects languages using lingua-py,
+    Inspects targeted CDM record items, detects languages using lingua-py,
     and attaches/updates a CategorizationItem with category='language'.
+
+    Configuration Parameters:
+      - cdm_language_target: List of target definitions (kind and content
+        variant preference order).  All targeted kinds are introspected for
+        language.  Within each kind the first available variant matching the
+        preference list is used; falls back to the first variant that has text.
+      - start_uuid / stop_uuid: Optional range boundaries for target records.
+      - window_size, min_language_confidence, max_languages: lingua-py tuning.
     """
     processed_vol = Path(config["volumes"]["processed"])
     records_dir = processed_vol / "cdm" / "records"
@@ -121,11 +186,37 @@ def run(config: dict[str, Any]) -> None:
 
     record_files = sorted(records_dir.glob("*.json"))
 
-    # Optional range filtering via CLI parameters
+    # ------------------------------------------------------------------ #
+    # 1. Resolve Parameters                                              #
+    # ------------------------------------------------------------------ #
     params = config.get("parameters", {})
+
+    # --- Target configuration (kind + variant preference order) ---
+    targets = params.get("cdm_language_target")
+
+    if not targets:
+        # Fallback default target if none provided
+        targets = [{"kind": "turn", "variants": ["original"]}]
+
+    target_kinds: Set[str] = set()
+    preferred_variants_by_kind: Dict[str, List[str]] = {}
+    for target_spec in targets:
+        kind = target_spec.get("kind")
+        variants = target_spec.get("variants", [])
+
+        # Fail initially if specified target kind does not support ContentVariants
+        if kind not in SUPPORTED_CONTENT_KINDS:
+            raise ValueError(
+                f"Invalid target kind '{kind}' specified in "
+                "cdm_language_target. target validation failed. "
+                f"Allowed content kinds are: {sorted(SUPPORTED_CONTENT_KINDS)}"
+            )
+
+        target_kinds.add(kind)
+        preferred_variants_by_kind[kind] = variants if variants else ["original"]
+
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
-    target_kinds = set(params.get("target_kinds", ["turn", "narrative"]))
     window_size = params.get("window_size", 5)
     min_language_confidence = params.get("min_language_confidence", 0.05)
     max_languages = params.get("max_languages", 999)
@@ -136,7 +227,7 @@ def run(config: dict[str, Any]) -> None:
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
-        filtered_files = []
+        filtered_files: List[Any] = []
         for file in record_files:
             stem = file.stem
             if start_uuid and stem < str(start_uuid):
@@ -161,14 +252,15 @@ def run(config: dict[str, Any]) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 doc = Document.model_validate_json(f.read())
 
-            # Detect language codes and confidence trace on first n turns
+            # Detect language codes and confidence trace on targeted item kinds
             languages, reasoning_str = detect_document_languages(
-                    doc,
-                    target_kinds=target_kinds,
-                    window_size=window_size,
-                    min_confidence=min_language_confidence,
-                    max_languages=max_languages,
-                )
+                doc,
+                target_kinds=target_kinds,
+                preferred_variants_by_kind=preferred_variants_by_kind,
+                window_size=window_size,
+                min_confidence=min_language_confidence,
+                max_languages=max_languages,
+            )
 
             if not languages:
                 continue

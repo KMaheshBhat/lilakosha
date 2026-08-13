@@ -1,0 +1,276 @@
+# LilaKosha-MK1: Introspection & Refinement Blueprint
+
+pipeline:
+    - "refine-cdm-language"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+    generation: "G1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}"
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    # INFO: Source [lemonilia-rpgnet]: 9462 records
+    # INFO:   └─ Start UUID (pos 16834): 019ff224-c36f-7ed3-9c1a-236e94044191
+    # INFO:   └─ End UUID   (pos 26295): 019ff3da-d84c-7002-bb10-086fc0af63bb
+    start_uuid: 019ff224-c36f-7ed3-9c1a-236e94044191
+    stop_uuid: 019ff3da-d84c-7002-bb10-086fc0af63bb
+    min_language_confidence: 0.05
+    cdm_language_target:
+        - kind: "narrative"
+          variants:
+            - "refine-cdm-html-to-markdown"
+            - "original"
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260813091500-refine-cdm-language.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['refine-cdm-language']
+# INFO: Active Parameters: {'start_uuid': '019ff224-c36f-7ed3-9c1a-236e94044191', 'stop_uuid': '019ff3da-d84c-7002-bb10-086fc0af63bb', 'min_language_confidence': 0.05, 'cdm_language_target': [{'kind': 'narrative', 'variants': ['refine-cdm-html-to-markdown', 'original']}]}
+# INFO: --- Executing Step: REFINE-CDM-LANGUAGE ---
+# INFO: 🎯 Targeted Refinement Scope Activated (CDM Language):
+#     - Start Boundary: 019ff224-c36f-7ed3-9c1a-236e94044191
+#     - Stop Boundary:  019ff3da-d84c-7002-bb10-086fc0af63bb
+# INFO: Processing 9462 records for language categorization...
+# Refining CDM Languages: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9462/9462 [2:28:22<00:00,  1.06it/s]
+# INFO: ✅ Language refinement pass complete. Processed 9462 records.
+# ❯ ./run.sh pipeline/35-report-records.yml --hide_anomaly_details true --report_breakdown true
+# INFO: Applying runtime overrides: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['report-record-health', 'report-record-stats', 'report-cdm-items']
+# INFO: Active Parameters: {'hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: --- Executing Step: REPORT-RECORD-HEALTH ---
+# INFO: 📊 Running read-only telemetry audit across 26295 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 26295
+# INFO: Healthy Records:         26208 (99.67%)
+# INFO: Defective Records:       87
+# INFO: ============================================================
+# INFO: 📦 SOURCE RECORD BREAKDOWN
+# INFO: ============================================================
+# INFO:     PygmalionAI/PIPPA               : 16832 (64.01%)
+# INFO:     lemonilia/roleplaying-forums-raw: 9462 (35.98%)
+# INFO:     gutenberg:62                    : 1 (0.00%)
+# INFO: ============================================================
+# INFO: 📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-cdm-language (Target Source: ALL)
+# INFO:  ✅ PASSED              : 26295/26295 (100.00%)
+# INFO:     annotation          : 26295/26295 (100.00%)
+# INFO:     categorization_item : 26295/26295 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-characters (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16814/16832 (99.89%)
+# INFO:     annotation          : 16814/16832 (99.89%)
+# INFO:     bot detail          : 16831/16832 (99.99%)
+# INFO:     user info           : 16814/16832 (99.89%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-safety-dials (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16831/16832 (99.99%)
+# INFO:     annotation          : 16831/16832 (99.99%)
+# INFO:     sexual axis         : 16831/16832 (99.99%)
+# INFO:     violence axis       : 16831/16832 (99.99%)
+# INFO:     toxicity axis       : 16831/16832 (99.99%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-genre-theme (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16832/16832 (100.00%)
+# INFO:     annotation          : 16832/16832 (100.00%)
+# INFO:     primary genre       : 16832/16832 (100.00%)
+# INFO:     themes              : 16832/16832 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-grammar (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 16763/16832 (99.59%)
+# INFO:     annotation          : 16832/16832 (100.00%)
+# INFO:     prose               : 16763/16832 (99.59%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-cdm-html-to-markdown (Target Source: lemonilia/roleplaying-forums-raw)
+# INFO:  ✅ PASSED              : 9462/9462 (100.00%)
+# INFO:     annotation          : 9462/9462 (100.00%)
+# INFO:     narrative           : 9462/9462 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 798675
+# INFO:     Turns Converted         : 798502 (99.98%)
+# INFO:     Turns Remaining         : 173
+# INFO:     Estimated Local Compute : 0.2 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-RECORD-STATS ---
+# INFO: Computing aggregate profile statistics across 26295 records...
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 26295 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Unset           : 9464 (36.0%)
+# INFO:     - Explicit        : 6425 (24.4%)
+# INFO:     - Suggestive      : 6109 (23.2%)
+# INFO:     - Clean           : 4297 (16.3%)
+# INFO:   [Violence Axis]
+# INFO:     - None            : 10445 (39.7%)
+# INFO:     - Unset           : 9464 (36.0%)
+# INFO:     - Graphic         : 5910 (22.5%)
+# INFO:     - Combat          :  476 (1.8%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Unset           : 9464 (36.0%)
+# INFO:     - Safe            : 9042 (34.4%)
+# INFO:     - Harassment      : 7689 (29.2%)
+# INFO:     - Dangerous       :  100 (0.4%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Unset                  : 9463 (36.0%)
+# INFO:   - Fantasy                : 6072 (23.1%)
+# INFO:   - Romance                : 2347 (8.9%)
+# INFO:   - Sci-Fi                 : 2136 (8.1%)
+# INFO:   - Drama                  : 1902 (7.2%)
+# INFO:   - Slice of Life          : 1743 (6.6%)
+# INFO:   - Comedy                 : 1239 (4.7%)
+# INFO:   - Mystery & Thriller     :  750 (2.9%)
+# INFO:   - Action & Adventure     :  643 (2.4%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - [No Themes Assigned]       : 9463 (36.0%)
+# INFO:   - power-dynamics             : 1583 (6.0%)
+# INFO:   - vore                       : 1495 (5.7%)
+# INFO:   - size-difference            : 1440 (5.5%)
+# INFO:   - power-imbalance            : 1152 (4.4%)
+# INFO:   - slice-of-life              : 1087 (4.1%)
+# INFO:   - body-horror                : 1012 (3.8%)
+# INFO:   - power-exchange             :  800 (3.0%)
+# INFO:   - emotional-vulnerability    :  771 (2.9%)
+# INFO:   - roleplay                   :  738 (2.8%)
+# INFO:   - digestion                  :  612 (2.3%)
+# INFO:   - humiliation                :  568 (2.2%)
+# INFO:   - identity                   :  564 (2.1%)
+# INFO:   - femdom                     :  549 (2.1%)
+# INFO:   - dark-fantasy               :  525 (2.0%)
+# INFO:   - survival                   :  517 (2.0%)
+# INFO:   - predator-prey-dynamics     :  505 (1.9%)
+# INFO:   - found-family               :  501 (1.9%)
+# INFO:   - absurdist-humor            :  487 (1.9%)
+# INFO:   - explicit-sexual-content    :  483 (1.8%)
+# INFO:   - psychological-manipulation :  482 (1.8%)
+# INFO:   - moral-ambiguity            :  462 (1.8%)
+# INFO:   - mystery                    :  451 (1.7%)
+# INFO:   - transformation             :  435 (1.7%)
+# INFO:   - monster-girl               :  421 (1.6%)
+# INFO:   ... and 47610 other unique themes.
+# INFO: ------------------------------------------------------------
+# INFO: 🌐 LANGUAGE DISTRIBUTION
+# INFO:   - en                     : 26145 (99.4%)
+# INFO:   - tl                     :  304 (1.2%)
+# INFO:   - es                     :  158 (0.6%)
+# INFO:   - la                     :   86 (0.3%)
+# INFO:   - cy                     :   85 (0.3%)
+# INFO:   - yo                     :   84 (0.3%)
+# INFO:   - nl                     :   76 (0.3%)
+# INFO:   - de                     :   75 (0.3%)
+# INFO:   - nb                     :   73 (0.3%)
+# INFO:   - da                     :   52 (0.2%)
+# INFO:   - eo                     :   45 (0.2%)
+# INFO:   - sv                     :   44 (0.2%)
+# INFO:   - af                     :   35 (0.1%)
+# INFO:   - xh                     :   32 (0.1%)
+# INFO:   - nn                     :   31 (0.1%)
+# INFO:   - so                     :   24 (0.1%)
+# INFO:   - fr                     :   23 (0.1%)
+# INFO:   - ru                     :   22 (0.1%)
+# INFO:   - ts                     :   19 (0.1%)
+# INFO:   - st                     :   19 (0.1%)
+# INFO:   - ms                     :   16 (0.1%)
+# INFO:   - sw                     :   16 (0.1%)
+# INFO:   - sn                     :   16 (0.1%)
+# INFO:   - et                     :   15 (0.1%)
+# INFO:   - id                     :   14 (0.1%)
+# INFO:   - tn                     :   13 (0.0%)
+# INFO:   - lg                     :   10 (0.0%)
+# INFO:   - ca                     :    9 (0.0%)
+# INFO:   - sl                     :    8 (0.0%)
+# INFO:   - fi                     :    7 (0.0%)
+# INFO:   - ro                     :    7 (0.0%)
+# INFO:   - zu                     :    6 (0.0%)
+# INFO:   - pl                     :    5 (0.0%)
+# INFO:   - zh                     :    5 (0.0%)
+# INFO:   - pt                     :    5 (0.0%)
+# INFO:   - sk                     :    5 (0.0%)
+# INFO:   - mi                     :    5 (0.0%)
+# INFO:   - eu                     :    4 (0.0%)
+# INFO:   - ga                     :    4 (0.0%)
+# INFO:   - sq                     :    4 (0.0%)
+# INFO:   - ja                     :    3 (0.0%)
+# INFO:   - hu                     :    3 (0.0%)
+# INFO:   - vi                     :    3 (0.0%)
+# INFO:   - it                     :    3 (0.0%)
+# INFO:   - mk                     :    2 (0.0%)
+# INFO:   - cs                     :    2 (0.0%)
+# INFO:   - be                     :    1 (0.0%)
+# INFO:   - mn                     :    1 (0.0%)
+# INFO:   - bg                     :    1 (0.0%)
+# INFO:   - uk                     :    1 (0.0%)
+# INFO:   - hr                     :    1 (0.0%)
+# INFO:   - tr                     :    1 (0.0%)
+# INFO:   - is                     :    1 (0.0%)
+# INFO:   - lt                     :    1 (0.0%)
+# INFO:   - ko                     :    1 (0.0%)
+# INFO: ------------------------------------------------------------
+# INFO: 💬 CONVERSATION TURN DISTRIBUTION
+# INFO:   Records Analyzed      : 26295
+# INFO:   Total Turns           : 798675
+# INFO:   Minimum Turns         : 0
+# INFO:   Maximum Turns         : 11491
+# INFO:   Average Turns         : 30.4
+# INFO:   Median Turns          : 3
+# INFO:   Turn Count Buckets
+# INFO:     1–10               : 8022 (30.5%)
+# INFO:     11–25              : 3046 (11.6%)
+# INFO:     26–50              : 2163 (8.2%)
+# INFO:     51–100             : 1694 (6.4%)
+# INFO:     101–250            : 1337 (5.1%)
+# INFO:     251–500            :  414 (1.6%)
+# INFO:     501+               :  156 (0.6%)
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-CDM-ITEMS ---
+# INFO: Inspecting 26295 JSON records for item kinds and ContentVariant distributions...
+# Reviewing CDM Items: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 26295/26295 [05:51<00:00, 74.90it/s]
+# INFO: ========================================================================
+# INFO:  📊 CDM DOCUMENT ITEMS SUMMARY
+# INFO: ========================================================================
+# INFO: Total Documents Inspected : 26295
+# INFO: Total Items Counted       : 3148004
+# INFO: Malformed Items Detected  : 0
+# INFO: ------------------------------------------------------------------------
+# INFO: ITEM KIND                 | COUNT    | CONTENT SHAPE
+# INFO: ------------------------------------------------------------------------
+# INFO: narrative                 | 2161771  | variants=2161771
+# INFO:                           |          |   └─ original: 2161771
+# INFO:                           |          |   └─ refine-cdm-html-to-markdown: 2160719
+# INFO: turn                      | 798675   | variants=798675
+# INFO:                           |          |   └─ original: 798675
+# INFO:                           |          |   └─ refine-pippa-grammar: 798502
+# INFO: categorization            | 111455   | structured
+# INFO:                           |          |   └─ language: 26295
+# INFO:                           |          |   └─ theme: 17835
+# INFO:                           |          |   └─ genre: 16832
+# INFO:                           |          |   └─ sexuality: 16831
+# INFO:                           |          |   └─ violence: 16831
+# INFO:                           |          |   └─ toxicity: 16831
+# INFO: character                 | 49779    | variants=49779
+# INFO:                           |          |   └─ refine-pippa-characters: 35561
+# INFO:                           |          |   └─ original: 14218
+# INFO: sequence                  | 26324    | structured
+# INFO:                           |          |   └─ session: 16832
+# INFO:                           |          |   └─ thread: 9462
+# INFO:                           |          |   └─ chapter: 29
+# INFO:                           |          |   └─ book: 1
+# INFO: ========================================================================
+# INFO: ✅ Document item review complete. Inspected 26295 documents, 3148004 items, 0 malformed variant-bearing items.

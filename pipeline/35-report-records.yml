@@ -2,6 +2,7 @@
 pipeline:
     - "report-record-health"
     - "report-record-stats"
+    - "report-cdm-items"
 
 project:
     name: "LilaKosha"
