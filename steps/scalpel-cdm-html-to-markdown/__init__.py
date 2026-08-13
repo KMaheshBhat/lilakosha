@@ -4,45 +4,27 @@ from typing import Any
 
 from tqdm import tqdm
 
-from cdm.core import Document, TurnItem
+from cdm.core import Document
 from cdm.meta import add_annotation, remove_annotation, update_meta
 
 logger = logging.getLogger(__name__)
 
-
-def _check_user_info_health(health: Any) -> bool:
-    """Helper to safely extract 'user info' health flag across dict/model variants."""
-    if not health:
-        return False
-
-    breakdown = (
-        health.get("breakdown", {})
-        if isinstance(health, dict)
-        else getattr(health, "breakdown", {})
-    )
-    if not breakdown:
-        return False
-
-    refine_char = (
-        breakdown.get("refine-pippa-characters", {})
-        if isinstance(breakdown, dict)
-        else getattr(breakdown, "refine_pippa_characters", {})
-    )
-    if not refine_char:
-        return False
-
-    if isinstance(refine_char, dict):
-        return bool(refine_char.get("user info", False))
-
-    return bool(getattr(refine_char, "user_info", False))
+# Explicit list of CDM item kinds that possess a .content list of ContentVariants
+SUPPORTED_CONTENT_KINDS: set[str] = {
+    "narrative",
+    "turn",
+    "world",
+    "character",
+    "summary",
+}
 
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Restore Original Prose (PIPPA).
+    LilaKosha Scalpel Pass: Revert Markdown Variants (HTML to Markdown).
     Iterates through standalone Common Document Model (CDM) records, reverting
-    third-person narrative mutations back to their original first-person chat strings
-    by trimming refined ContentVariants from TurnItem instances.
+    markdownified HTML prose variants back to their original HTML state
+    by removing the 'refine-cdm-html-to-markdown' ContentVariants from items.
     Supports optional runtime range filtering via 'start_uuid' and
     'stop_uuid' parameters.
     """
@@ -65,11 +47,10 @@ def run(config: dict) -> None:
     params = config.get("parameters", {})
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
-    character_reset_sentinel = params.get("character_reset_sentinel", False)
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (PIPPA Grammar/Prose):\n"
+            f"🎯 Targeted Scalpel Scope Activated (CDM HTML to Markdown):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -79,14 +60,14 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for original prose restoration..."
+        f"Inspecting {len(record_files)} records for markdown variant removal..."
     )
 
     # 3. Main Operational Execution Loop
-    restored_count = 0
+    removed_count = 0
     skipped_range_count = 0
 
-    for file_path in tqdm(record_files, desc="Restoring Original Prose"):
+    for file_path in tqdm(record_files, desc="Removing Markdown Variants"):
         record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
 
         # Check floor constraint boundary
@@ -103,47 +84,43 @@ def run(config: dict) -> None:
             with open(file_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
 
-            if character_reset_sentinel:
-                if not _check_user_info_health(document.meta.health):
-                    continue
-
             modified_file = False
 
-            # Traverse TurnItems and remove the specific grammar variant
+            # Traverse content-carrying items and remove the specific markdown variant
             for item in document.items:
-                if not isinstance(item, TurnItem):
+                if item.kind not in SUPPORTED_CONTENT_KINDS:
                     continue
 
                 content = getattr(item, "content", None)
                 if not content:
                     continue
 
-                # Check if the refined grammar variant exists
+                # Check if the refined markdown variant exists
                 has_refined_variant = any(
-                    variant.name == "refine-pippa-grammar"
+                    variant.name == "refine-cdm-html-to-markdown"
                     for variant in content
                 )
 
                 if has_refined_variant:
-                    # Remove only the 'refine-pippa-grammar' variant
-                    # Keep all other variants
+                    # Remove only the 'refine-cdm-html-to-markdown' variant
+                    # Keep all other variants (e.g., 'original')
                     item.content = [
                         variant
                         for variant in content
-                        if variant.name != "refine-pippa-grammar"
+                        if variant.name != "refine-cdm-html-to-markdown"
                     ]
                     modified_file = True
 
             if modified_file:
-                # Filter out legacy grammar annotations
-                remove_annotation(document, "refine-pippa-grammar")
+                # Filter out legacy HTML to Markdown annotations
+                remove_annotation(document, "refine-cdm-html-to-markdown")
 
                 # Append surgical track annotation
                 add_annotation(
                     document,
-                    kind="scalpel-pippa-grammar",
+                    kind="scalpel-cdm-html-to-markdown",
                     content=(
-                        "roll-back of grammar mutations to original prose state "
+                        "roll-back of markdown mutations to original HTML state "
                         "via scalpel range"
                     ),
                 )
@@ -157,13 +134,13 @@ def run(config: dict) -> None:
                         document.model_dump_json(indent=2, by_alias=True)
                     )
 
-                restored_count += 1
+                removed_count += 1
 
         except Exception as e:
             logger.error(
-                f"Failed surgical prose rollback for document {file_path.name}: {e}"
+                f"Failed surgical markdown rollback for document {file_path.name}: {e}"
             )
 
-    logger.info("✅ Scalpel original prose restoration complete.")
-    logger.info(f"  Restored: {restored_count} records.")
+    logger.info("✅ Scalpel markdown variant removal complete.")
+    logger.info(f"  Restored: {removed_count} records.")
     logger.info(f"  Skipped out-of-range: {skipped_range_count} records.")
