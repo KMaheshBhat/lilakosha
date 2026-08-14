@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Clear Character Synthesis (PIPPA).
+    LilaKosha Scalpel Pass: Clear Character Synthesis (PIPPA) (v2).
     Iterates through standalone Common Document Model (CDM) records, purging synthesized
     character profiles from the timeline, resetting core identities inside the
     authoritative registry back to base tracking defaults, and cleaning historical
@@ -47,11 +47,19 @@ def run(config: dict) -> None:
     else:
         pc_names = None
 
+    # v2: Pre-filter record_files by file.stem before opening/parsing
     if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (PIPPA Character Synthesis):\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Character Synthesis v2):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
         )
     else:
         logger.info(
@@ -59,18 +67,21 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for synthesized character entities..."
+        f"Inspecting {len(record_files)} records for synthesized character"
+        " entities (v2)..."
     )
 
     # 3. Main Operational Execution Loop
     purged_count = 0
     skipped_range_count = 0
     skipped_name_count = 0
+    error_count = 0
 
-    for file_path in tqdm(record_files, desc="Purging Character Profiles"):
+    for file_path in tqdm(record_files, desc="Purging Character Profiles (v2)"):
         record_uuid = file_path.stem  # Extract tracking UUIDv7 token string
 
         # Enforce floor constraint boundary
+        # (should not happen after pre-filter, but keep for safety)
         if start_uuid and record_uuid < str(start_uuid):
             skipped_range_count += 1
             continue
@@ -143,9 +154,7 @@ def run(config: dict) -> None:
 
                 # F. Commit updates with by_alias=True
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(
-                        document.model_dump_json(indent=2, by_alias=True)
-                    )
+                    f.write(document.model_dump_json(indent=2, by_alias=True))
 
                 purged_count += 1
 
@@ -153,8 +162,10 @@ def run(config: dict) -> None:
             logger.error(
                 f"Failed surgical profile purge for document {file_path.name}: {e}"
             )
+            error_count += 1
 
-    logger.info("✅ Scalpel character clearance pass complete.")
+    logger.info("✅ Scalpel character clearance pass (v2) complete.")
     logger.info(f"  Purged: {purged_count} records.")
     logger.info(f"  Skipped by UUID range: {skipped_range_count} records.")
     logger.info(f"  Skipped by player-name filter: {skipped_name_count} records.")
+    logger.info(f"  Errors: {error_count} records.")

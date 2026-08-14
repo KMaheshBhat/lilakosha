@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Purge Corrupt CDM Records.
+    LilaKosha Purge Pass: Purge Corrupt CDM Records.
     Scans the CDM record directory, identifies invalid or corrupted JSON records
     (e.g., caused by interrupted writes or power outages), deletes the corrupted
     record files from disk, and removes their corresponding mapping entries from
@@ -43,14 +43,12 @@ def run(config: dict) -> None:
 
     if start_uuid or stop_uuid:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated:\n"
+            f"🎯 Targeted Purge Scope Activated:\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
     else:
-        logger.info(
-            "🔬 Scalpel Scope: Global Sweep for Corrupt CDM Records"
-        )
+        logger.info("🔬 Perge Scope: Global Sweep for Corrupt CDM Records")
 
     logger.info(f"Inspecting {len(record_files)} record files for corruption...")
 
@@ -89,7 +87,7 @@ def run(config: dict) -> None:
             )
             is_corrupt = True
 
-        # 4. Perform Surgical Purge on Corrupted Artifacts
+        # 4. Perform Purge on Corrupted Artifacts
         if is_corrupt:
             # Step A: Delete file from local record storage
             try:
@@ -97,9 +95,7 @@ def run(config: dict) -> None:
                     file_path.unlink()
                     logger.info(f"Deleted corrupt file: {file_path.name}")
             except Exception as file_err:
-                logger.error(
-                    f"Failed to delete file {file_path.name}: {file_err}"
-                )
+                logger.error(f"Failed to delete file {file_path.name}: {file_err}")
 
             # Step B: Purge record entry from LedgerIndex (in-memory + mapping.jsonl)
             try:
@@ -112,6 +108,6 @@ def run(config: dict) -> None:
 
             corrupt_count += 1
 
-    logger.info("✅ Corrupt CDM Scalpel pass completed.")
+    logger.info("✅ Corrupt CDM Purge pass completed.")
     logger.info(f"   Purged corrupt records: {corrupt_count}")
     logger.info(f"   Skipped out-of-range: {skipped_range_count}")

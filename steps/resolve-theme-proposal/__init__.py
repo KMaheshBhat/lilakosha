@@ -157,10 +157,7 @@ def run(config: dict) -> None:
 
                         # Normalize
                         normalized = (
-                            raw_tag.replace("-", " ")
-                            .replace("_", " ")
-                            .strip()
-                            .lower()
+                            raw_tag.replace("-", " ").replace("_", " ").strip().lower()
                         )
 
                         term_freq[normalized] += 1
@@ -208,9 +205,7 @@ def run(config: dict) -> None:
 
     # Group terms
     clusters_dict: dict[int, list[tuple[str, int]]] = {}
-    for term, count, cluster_id in zip(
-        normalized_terms, term_counts, cluster_labels
-    ):
+    for term, count, cluster_id in zip(normalized_terms, term_counts, cluster_labels):
         cid = int(cluster_id)
         if cid not in clusters_dict:
             clusters_dict[cid] = []

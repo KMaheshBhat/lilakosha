@@ -1,6 +1,6 @@
-# LilaKosha-MK1: Scalpel Blueprints
+# LilaKosha-MK1: Purge Corrupt CDM Blueprints
 pipeline:
-    - "scalpel-corrupt-cdm"
+    - "purge-cdm-corrupt"
 
 project:
     name: "LilaKosha"

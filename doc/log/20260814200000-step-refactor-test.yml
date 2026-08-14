@@ -1,0 +1,407 @@
+# LilaKosha-MK1: Smoke Test Blueprint
+pipeline:
+    - "init"
+    - "ingest-pippa"
+    - "ingest-gutenberg-62"
+    - "ingest-lemonilia-rpgnet"
+    - "refine-pippa-characters-v2"
+    - "refine-pippa-safety-dials-v2"
+    - "refine-pippa-genre-theme-v2"
+    - "refine-pippa-grammar-v2"
+    - "refine-cdm-html-to-markdown-v2"
+    - "refine-cdm-language-v2"
+    - "report-cdm-records"
+    - "report-cdm"
+
+project:
+    name: "LilaKosha"
+    mark: "MK1"
+
+volumes:
+    raw: "${LILAKOSHA_VOLUME_RAW}" # Unified landing zone
+    processed: "${LILAKOSHA_VOLUME_PROCESSED}" # Recap-augmented output
+    models: "${LILAKOSHA_VOLUME_MODELS}"
+    exports: "${LILAKOSHA_VOLUME_EXPORTS}"
+
+services:
+    local:
+        provider: openai-compatible
+        base_url: "${LILAKOSHA_SERVICE_LOCAL}"
+        api_key: dummy
+        model: local
+    openrouter:
+        provider: openai-compatible
+        base_url: https://openrouter.ai/api/v1
+        api_key: "${OPENROUTER_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    kilo:
+        provider: openai-compatible
+        base_url: https://api.kilo.ai/api/gateway
+        api_key: "${KILO_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free"
+        requests_per_minute: 20
+    groq:
+        provider: openai-compatible
+        base_url: https://api.groq.com/openai/v1
+        api_key: "${GROQ_API_KEY}"
+        model: "openai/gpt-oss-120b"
+        requests_per_minute: 3
+    google-gemini:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemini-3.1-flash-lite"
+        requests_per_minute: 12
+    google-gemma:
+        provider: openai-compatible
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        api_key: "${GEMINI_API_KEY}"
+        model: "gemma-4-31b-it"
+        requests_per_minute: 12
+        allows_think_control: false
+        allows_extra_body: false
+    cerebras:
+        provider: openai-compatible
+        base_url: https://api.cerebras.ai/v1
+        api_key: "${CEREBRAS_API_KEY}"
+        model: "gemma-4-31b"
+        requests_per_minute: 5
+        retry_on_rate_limit: true
+        allows_extra_body: false
+    nvidia:
+        provider: openai-compatible
+        base_url: https://integrate.api.nvidia.com/v1
+        api_key: "${NVIDIA_API_KEY}"
+        model: "nvidia/nemotron-3-ultra-550b-a55b"
+        # model: "nvidia/nemotron-3-super-120b-a12b"
+        allows_extra_body: false
+        requests_per_minute: 31
+        retry_on_rate_limit: true
+
+bindings:
+    refine-pippa-characters:
+        service: local
+        temperature: 0.1
+        max_tokens: 4096
+
+    refine-pippa-safety-dials:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
+
+    refine-pippa-genre-theme:
+        service: local
+        temperature: 0.1
+        max_tokens: 2048
+
+    refine-pippa-grammar:
+        service: local
+        temperature: 0.0
+        max_tokens: 2048
+
+parameters:
+    limit: 5
+    report_sections:
+      - health
+      - stats
+      - items
+      - char_names
+    report_hide_anomaly_details: true
+    report_breakdown: true
+
+# ============================================================================
+# EXECUTION NOTES
+# ============================================================================
+# ❯ ./run.sh pipeline/20260814200000-step-refactor-test.yml
+# INFO: Target Project: LilaKosha
+# INFO: Pipeline Sequence: ['init', 'ingest-pippa', 'ingest-gutenberg-62', 'ingest-lemonilia-rpgnet', 'refine-pippa-characters', 'refine-pippa-safety-dials', 'refine-pippa-genre-theme', 'refine-pippa-grammar', 'refine-cdm-html-to-markdown', 'refine-cdm-language', 'report-cdm-records', 'report-cdm']
+# INFO: Active Parameters: {'limit': 5, 'report_sections': ['health', 'stats', 'items', 'char_names'], 'report_hide_anomaly_details': True, 'report_breakdown': True}
+# INFO: --- Executing Step: INIT ---
+# INFO: =================================================================
+# INFO: 🛠️  LILAKOSHA MK1: INFRASTRUCTURE STAGING
+# INFO: =================================================================
+# INFO: =================================================================
+# <snip>
+# INFO: ✅ Infrastructure is staged for LilaKosha-G1.
+# INFO: =================================================================
+# INFO: --- Executing Step: INGEST-PIPPA ---
+# INFO: Processing local raw PIPPA dataset from /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/raw/PygmalionAI/PIPPA/pippa_deduped.jsonl (limit: 5) target: /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 64.22it/s]
+# INFO: ✅ Ingestion cycle tracking updated. Canvas objects written out to /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# INFO: --- Executing Step: INGEST-GUTENBERG-62 ---
+# INFO: Reading raw Gutenberg text from /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/raw/gutenberg/62/pg62.txt
+# INFO: ✅ Ingestion complete for gutenberg:62. Output written to /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records/01a000bb-2a1e-7921-946f-7559c7a21a6d.json
+# INFO: --- Executing Step: INGEST-LEMONILIA-RPGNET ---
+# INFO: Processing local raw RPGnet dataset from /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/raw/lemonilia/roleplaying-forums-raw (limit: 5, batch_size: 25) target: /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# Ingesting & Reconciling RPGnet: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00,  9.53row/s]INFO: RPGnet batch complete: 5 source row(s) processed, 5 thread document(s) changed, 113 post(s) newly added, 0 source row(s) skipped
+# Ingesting & Reconciling RPGnet: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00,  9.51row/s]
+# INFO: RPGnet ingestion & reconciliation complete: 5 source row(s) processed, 5 thread document(s) changed, 113 post(s) newly added, 0 source row(s) skipped. CDM records written to /mnt/e/local/work/personal/k.mahesh.bhat/projects/lilakosha/cdm/records
+# INFO: --- Executing Step: REFINE-PIPPA-CHARACTERS-V2 ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 11 records for Character Synthesis (v2)...
+# Refining Canvas Character Profiles (v2):   9%|██████████████▎                                                                                                                                               | 1/11 [00:41<06:56, 41.60s/it]================================================================================
+# MODEL RETURNED INVALID JSON
+# ================================================================================
+# Provider : http://localhost:8033
+# Model    : local
+# --------------------------------------------------------------------------------
+# ================================================================================
+# ================================================================================
+# INFERENCE REQUEST FAILED
+# ================================================================================
+# Provider : http://localhost:8033
+# Model    : local
+# ================================================================================
+# ERROR: Failed character extraction pass for canvas document 01a000bb-29d0-7f82-881f-ea683167acd9.json: Expecting value: line 1 column 1 (char 0)
+# Refining Canvas Character Profiles (v2): 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [04:58<00:00, 27.18s/it]
+# INFO: ✅ Character refinement script pass (v2) finished. Processed: 4, Skipped (range): 0, Errors: 1, Total calls executed: 0.
+# INFO: --- Executing Step: REFINE-PIPPA-SAFETY-DIALS-V2 ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 11 records for PIPPA Safety Dials Classification (v2)...
+# Evaluating Canvas Safety Dials (v2): 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:17<00:00,  1.56s/it]
+# INFO: ✅ Safety dials refinement script pass (v2) finished. Processed: 5, Skipped (range): 0, Errors: 0, Total calls executed: 5.
+# INFO: --- Executing Step: REFINE-PIPPA-GENRE-THEME-V2 ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Inspecting 11 records for PIPPA Genre & Theme Classification (v2)...
+# Classifying Canvas Genre & Themes (v2): 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:19<00:00,  1.77s/it]
+# INFO: ✅ Genre & theme refinement script pass (v2) finished. Processed: 5, Skipped (range): 0, Errors: 0, Total calls executed: 5.
+# INFO: --- Executing Step: REFINE-PIPPA-GRAMMAR-V2 ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No parameters provided)
+# INFO: Inspecting 11 records for PIPPA grammar processing (v2)...
+# Processing Canvas Files (v2): 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [12:54<00:00, 70.43s/it]
+# INFO: ✅ Step-by-step grammar refinement script pass (v2) finished. Processed: 5, Skipped (range): 0, Errors: 0, Total calls executed: 275.
+# INFO: --- Executing Step: REFINE-CDM-HTML-TO-MARKDOWN-V2 ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: --- Executing Step: REFINE-CDM-HTML-TO-MARKDOWN across 11 records ---
+# Converting HTML to Markdown (v2): 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:00<00:00, 22.66it/s]
+# INFO: ✅ REFINE-CDM-HTML-TO-MARKDOWN complete. Updated 6 records. Skipped 0 records due to errors.
+# INFO: --- Executing Step: REFINE-CDM-LANGUAGE-V2 ---
+# INFO: 🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)
+# INFO: Processing 11 records for language categorization...
+# Refining CDM Languages (v2): 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:01<00:00,  6.25it/s]
+# INFO: ✅ Language refinement pass (v2) complete. Processed: 5, Skipped (range): 0, Skipped (idempotent): 0, Errors: 0
+# INFO: --- Executing Step: REPORT-CDM-RECORDS ---
+# INFO: ============================================================
+# INFO: 📊 CDM RECORDS REPORT
+# INFO: ============================================================
+# INFO: Total Physical Files: 11
+# INFO: Total Indexed Records: 11
+# INFO: Start UUID: 01a000bb-29c3-7310-9af7-03f6c4efe2bd (Source: pippa)
+# INFO: ------------------------------------------------------------
+# INFO: ------------------------------------------------------------
+# INFO: Stop UUID: 01a000bb-2d23-7172-bfc3-bd72e658fdbf (Source: lemonilia-rpgnet)
+# INFO: ============================================================
+# INFO: 📍 SOURCE RANGES & BOUNDARIES
+# INFO: ============================================================
+# INFO: Source [pippa]: 5 records
+# INFO:   └─ Start UUID (pos 1): 01a000bb-29c3-7310-9af7-03f6c4efe2bd
+# INFO:   └─ End UUID   (pos 5): 01a000bb-2a04-7b43-bbf9-cb57c9ddf07e
+# INFO: ----------------------------------------
+# INFO: Source [gutenberg]: 1 records
+# INFO:   └─ Start UUID (pos 6): 01a000bb-2a1e-7921-946f-7559c7a21a6d
+# INFO:   └─ End UUID   (pos 6): 01a000bb-2a1e-7921-946f-7559c7a21a6d
+# INFO: ----------------------------------------
+# INFO: Source [lemonilia-rpgnet]: 5 records
+# INFO:   └─ Start UUID (pos 7): 01a000bb-2bdb-7613-ad0e-da19baeaf783
+# INFO:   └─ End UUID   (pos 11): 01a000bb-2d23-7172-bfc3-bd72e658fdbf
+# INFO: ============================================================
+# INFO: --- Executing Step: REPORT-CDM ---
+# INFO: Active report sections: health, stats, items, char_names
+# INFO: Running unified CDM report across records...
+# Scanning CDM Records: 11it [00:00, 105.90it/s]
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA PIPELINE DATA HEALTH REPORT
+# INFO: ============================================================
+# INFO: Total Records Evaluated: 11
+# INFO: Healthy Records:         4 (36.36%)
+# INFO: Defective Records:       7
+# INFO: ============================================================
+# INFO: 📦 SOURCE RECORD BREAKDOWN
+# INFO: ============================================================
+# INFO:     PygmalionAI/PIPPA               : 5 (45.45%)
+# INFO:     lemonilia/roleplaying-forums-raw: 5 (45.45%)
+# INFO:     gutenberg:62                    : 1 (9.09%)
+# INFO: ============================================================
+# INFO: ============================================================
+# INFO:  📈 PIPELINE STAGE BREAKDOWN
+# INFO: ============================================================
+# INFO: refine-cdm-language (Target Source: ALL)
+# INFO:  ✅ PASSED              : 5/11 (45.45%)
+# INFO:     annotation          : 5/11 (45.45%)
+# INFO:     categorization_item : 5/11 (45.45%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-characters (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 4/5 (80.00%)
+# INFO:     annotation          : 4/5 (80.00%)
+# INFO:     bot detail          : 5/5 (100.00%)
+# INFO:     user info           : 4/5 (80.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-safety-dials (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 5/5 (100.00%)
+# INFO:     annotation          : 5/5 (100.00%)
+# INFO:     sexual axis         : 5/5 (100.00%)
+# INFO:     violence axis       : 5/5 (100.00%)
+# INFO:     toxicity axis       : 5/5 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-genre-theme (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 5/5 (100.00%)
+# INFO:     annotation          : 5/5 (100.00%)
+# INFO:     primary genre       : 5/5 (100.00%)
+# INFO:     themes              : 5/5 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-pippa-grammar (Target Source: PygmalionAI/PIPPA)
+# INFO:  ✅ PASSED              : 5/5 (100.00%)
+# INFO:     annotation          : 5/5 (100.00%)
+# INFO:     prose               : 5/5 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO: refine-cdm-html-to-markdown (Target Source: lemonilia/roleplaying-forums-raw)
+# INFO:  ✅ PASSED              : 5/5 (100.00%)
+# INFO:     annotation          : 5/5 (100.00%)
+# INFO:     narrative           : 5/5 (100.00%)
+# INFO: ------------------------------------------------------------
+# INFO:  📝 Grammar Conversion Summary
+# INFO:     Total Turns             : 275
+# INFO:     Turns Converted         : 275 (100.00%)
+# INFO:     Turns Remaining         : 0
+# INFO:     Estimated Local Compute : 0.0 hours (@5s/turn)
+# INFO: ============================================================
+# INFO: ℹ️  Anomaly details hidden by configuration parameter flag.
+# INFO: ============================================================
+# INFO: ============================================================
+# INFO: 📊 LILAKOSHA DATASET DISTRIBUTION REPORT
+# INFO: ============================================================
+# INFO: Total Portfolio Volume: 11 records
+# INFO: ============================================================
+# INFO: 🔒 SAFETY DIAL DISTRIBUTIONS
+# INFO:   [Sexual Axis]
+# INFO:     - Unset           :    6 (54.5%)
+# INFO:     - Suggestive      :    4 (36.4%)
+# INFO:     - Explicit        :    1 (9.1%)
+# INFO:   [Violence Axis]
+# INFO:     - Unset           :    6 (54.5%)
+# INFO:     - None            :    5 (45.5%)
+# INFO:   [Toxicity Axis]
+# INFO:     - Unset           :    6 (54.5%)
+# INFO:     - Safe            :    5 (45.5%)
+# INFO: ------------------------------------------------------------
+# INFO: 🎭 PRIMARY GENRE MIX
+# INFO:   - Unset                  :    6 (54.5%)
+# INFO:   - Fantasy                :    4 (36.4%)
+# INFO:   - Romance                :    1 (9.1%)
+# INFO: ------------------------------------------------------------
+# INFO: 🏷️  TOP THEMATIC TAGS (FREQUENCY)
+# INFO:   - [No Themes Assigned]       :    6 (54.5%)
+# INFO:   - power-dynamics             :    2 (18.2%)
+# INFO:   - predation                  :    2 (18.2%)
+# INFO:   - vore                       :    2 (18.2%)
+# INFO:   - supernatural               :    2 (18.2%)
+# INFO:   - mythology                  :    2 (18.2%)
+# INFO:   - magic-supernatural         :    1 (9.1%)
+# INFO:   - identity-transformation    :    1 (9.1%)
+# INFO:   - romance                    :    1 (9.1%)
+# INFO:   - master-servant-trope       :    1 (9.1%)
+# INFO:   - hidden-identity            :    1 (9.1%)
+# INFO:   - gratitude-kindness         :    1 (9.1%)
+# INFO:   - survival                   :    1 (9.1%)
+# INFO:   - mystery                    :    1 (9.1%)
+# INFO:   - magic                      :    1 (9.1%)
+# INFO:   - exploration                :    1 (9.1%)
+# INFO:   - shapeshifting              :    1 (9.1%)
+# INFO:   - transformation             :    1 (9.1%)
+# INFO:   - size-difference            :    1 (9.1%)
+# INFO:   - rebirth                    :    1 (9.1%)
+# INFO:   - surrealism                 :    1 (9.1%)
+# INFO:   - body-horror                :    1 (9.1%)
+# INFO:   - enemies-to-lovers          :    1 (9.1%)
+# INFO:   - forced-proximity           :    1 (9.1%)
+# INFO:   - fate-supernatural-curse    :    1 (9.1%)
+# INFO:   ... and 5 other unique themes.
+# INFO: ------------------------------------------------------------
+# INFO: 🌐 LANGUAGE DISTRIBUTION
+# INFO:   - [No Languages Assigned] :    6 (54.5%)
+# INFO:   - en                     :    5 (45.5%)
+# INFO: ------------------------------------------------------------
+# INFO: 📖 NARRATIVE ITEM DISTRIBUTION
+# INFO:   Records Analyzed       : 11
+# INFO:   Total Narrative Items  : 1165
+# INFO:   Minimum Narrative Count: 0
+# INFO:   Maximum Narrative Count: 1052
+# INFO:   Average Narrative Count: 105.9
+# INFO:   Median Narrative Count : 1
+# INFO:   Narrative Count Buckets
+# INFO:     1–10               :    2 (18.2%)
+# INFO:     11–25              :    1 (9.1%)
+# INFO:     26–50              :    2 (18.2%)
+# INFO:     51–100             :    0 (0.0%)
+# INFO:     101–250            :    0 (0.0%)
+# INFO:     251–500            :    0 (0.0%)
+# INFO:     501+               :    1 (9.1%)
+# INFO: ------------------------------------------------------------
+# INFO: 💬 CONVERSATION TURN DISTRIBUTION
+# INFO:   Records Analyzed      : 11
+# INFO:   Total Turns           : 275
+# INFO:   Minimum Turns         : 0
+# INFO:   Maximum Turns         : 131
+# INFO:   Average Turns         : 25.0
+# INFO:   Median Turns          : 0
+# INFO:   Turn Count Buckets
+# INFO:     1–10               :    2 (18.2%)
+# INFO:     11–25              :    0 (0.0%)
+# INFO:     26–50              :    1 (9.1%)
+# INFO:     51–100             :    1 (9.1%)
+# INFO:     101–250            :    1 (9.1%)
+# INFO:     251–500            :    0 (0.0%)
+# INFO:     501+               :    0 (0.0%)
+# INFO: ============================================================
+# INFO: ========================================================================
+# INFO:  📊 CDM DOCUMENT ITEMS SUMMARY
+# INFO: ========================================================================
+# INFO: Total Records Inspected   : 11
+# INFO: Total Items Counted       : 1523
+# INFO: Malformed Items Detected  : 0
+# INFO: ------------------------------------------------------------------------
+# INFO: ITEM KIND                 | COUNT    | CONTENT SHAPE
+# INFO: ------------------------------------------------------------------------
+# INFO: narrative                 | 1165     | variants=1165
+# INFO:                           |          |   └─ original: 1165
+# INFO:                           |          |   └─ refine-cdm-html-to-markdown: 1165
+# INFO: turn                      | 275      | variants=275
+# INFO:                           |          |   └─ original: 275
+# INFO:                           |          |   └─ refine-pippa-grammar: 275
+# INFO: sequence                  | 40       | structured
+# INFO:                           |          |   └─ chapter: 29
+# INFO:                           |          |   └─ session: 5
+# INFO:                           |          |   └─ thread: 5
+# INFO:                           |          |   └─ book: 1
+# INFO: categorization            | 30       | structured
+# INFO:                           |          |   └─ sexuality: 5
+# INFO:                           |          |   └─ violence: 5
+# INFO:                           |          |   └─ toxicity: 5
+# INFO:                           |          |   └─ genre: 5
+# INFO:                           |          |   └─ theme: 5
+# INFO:                           |          |   └─ language: 5
+# INFO: character                 | 13       | variants=13
+# INFO:                           |          |   └─ refine-pippa-characters: 8
+# INFO:                           |          |   └─ original: 5
+# INFO: ========================================================================
+# INFO: ✅ Document item review complete. Inspected 11 records, 1523 items, 0 malformed variant-bearing items.
+# INFO: ============================================================
+# INFO:  📊 CHARACTER NAMES & GENDERS REPORT
+# INFO: ============================================================
+# INFO: UUID      PLAYER_NAME     PLAYER_GENDER   BOT_NAME        BOT_GENDER
+# INFO: 01a000bb-29c3-7310-9af7-03f6c4efe2bd      Dimo    male    Ayaka   female
+# INFO: 01a000bb-29d0-7f82-881f-ea683167acd9      User    unknown Tirsiak unknown
+# INFO: 01a000bb-29e1-7ab3-877d-534799285a03      Elias   male    Lunata Orion    female
+# INFO: 01a000bb-29ee-7e83-8a76-1714bfd2290d      Seraphina       female  Chitter female
+# INFO: 01a000bb-2a04-7b43-bbf9-cb57c9ddf07e      Leo     male    Ashley  female
+# INFO: 01a000bb-2a1e-7921-946f-7559c7a21a6d      N/A     N/A     N/A     N/A
+# INFO: 01a000bb-2bdb-7613-ad0e-da19baeaf783      N/A     N/A     N/A     N/A
+# INFO: 01a000bb-2bf1-7ed1-82e9-72c122021411      N/A     N/A     N/A     N/A
+# INFO: 01a000bb-2c15-7072-b9c0-4bcda6dc516c      N/A     N/A     N/A     N/A
+# INFO: 01a000bb-2c64-72b1-8c24-cf1c4d4d39c1      N/A     N/A     N/A     N/A
+# INFO: 01a000bb-2d23-7172-bfc3-bd72e658fdbf      N/A     N/A     N/A     N/A
+# INFO: ============================================================
+#
+# With test running good - the `-v2` prefixes will be removed after
+# deleting old steps.

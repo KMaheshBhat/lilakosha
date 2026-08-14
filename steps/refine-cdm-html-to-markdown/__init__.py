@@ -22,7 +22,7 @@ SUPPORTED_CONTENT_KINDS: Set[str] = {
 
 def run(config: Dict[str, Any]) -> None:
     """
-    LilaKosha Refinement Pass: HTML to Markdown CDM Refinement.
+    LilaKosha Refinement Pass: HTML to Markdown CDM Refinement (v2).
 
     Deterministically converts HTML prose variants into clean Markdown
     using markdownify.
@@ -67,6 +67,26 @@ def run(config: Dict[str, Any]) -> None:
     stop_uuid = params.get("stop_uuid")
 
     record_files = sorted(records_dir.glob("*.json"))
+
+    # v2: Pre-filter record_files by file.stem before opening/parsing
+    if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
+        logger.info(
+            f"🎯 Targeted Refinement Scope Activated (HTML to Markdown v2):\n"
+            f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
+        )
+    else:
+        logger.info(
+            "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
+        )
+
     logger.info(
         f"--- Executing Step: REFINE-CDM-HTML-TO-MARKDOWN across "
         f"{len(record_files)} records ---"
@@ -76,16 +96,10 @@ def run(config: Dict[str, Any]) -> None:
     skipped_error_count = 0
 
     # 3. Process CDM Records
-    for record_path in tqdm(record_files, desc="Converting HTML to Markdown"):
+    for record_path in tqdm(record_files, desc="Converting HTML to Markdown (v2)"):
         try:
             with open(record_path, "r", encoding="utf-8") as f:
                 document = Document.model_validate_json(f.read())
-
-            # Range filtering check
-            if start_uuid and document.id < start_uuid:
-                continue
-            if stop_uuid and document.id > stop_uuid:
-                continue
 
             doc_modified = False
 
@@ -142,8 +156,7 @@ def run(config: Dict[str, Any]) -> None:
                     document,
                     kind="refine-cdm-html-to-markdown",
                     content=(
-                        "Converted targeted HTML content variants to "
-                        "Markdown format."
+                        "Converted targeted HTML content variants to Markdown format."
                     ),
                 )
                 update_meta(document)

@@ -35,9 +35,9 @@ def run(config: dict[str, Any]) -> None:
 
             # Create standard sub-paths for unified model placement
             if label == "models":
-                (
-                    volume_path / "embeddings" / "bge-small-en-v1.5"
-                ).mkdir(parents=True, exist_ok=True)
+                (volume_path / "embeddings" / "bge-small-en-v1.5").mkdir(
+                    parents=True, exist_ok=True
+                )
                 (volume_path / "google" / "gemma-4-12b-it").mkdir(
                     parents=True, exist_ok=True
                 )
@@ -58,9 +58,7 @@ def run(config: dict[str, Any]) -> None:
                 )
 
         except Exception as e:
-            logger.error(
-                f"Failed to initialize volume '{label}' at {volume_path}: {e}"
-            )
+            logger.error(f"Failed to initialize volume '{label}' at {volume_path}: {e}")
 
     # 3. Operator Instructions for Model Acquisition
     raw_root = Path(str(volumes.get("raw", "[ERROR: RAW VOLUME MISSING]")))
@@ -89,7 +87,9 @@ def run(config: dict[str, Any]) -> None:
     logger.info("   > Download: https://huggingface.co/google/gemma-4-12b-it")
     logger.info(f"   > Place in: {model_non_abliterated}")
     logger.info("4. UNBOUND VARIANT (Abliterated/Uncensored Foundation):")
-    logger.info("   > Download: https://huggingface.co/OpenYourMind/gemma-4-12b-it-abliterated-uncensored")
+    logger.info(
+        "   > Download: https://huggingface.co/OpenYourMind/gemma-4-12b-it-abliterated-uncensored"
+    )
     logger.info(f"   > Place in: {model_abliterated}")
     logger.info(f"{'=' * 65}")
     logger.info("✅ Infrastructure is staged for LilaKosha-G1.")

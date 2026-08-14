@@ -77,9 +77,7 @@ def run(config: dict) -> None:
 
     total_lines = count_lines(pippa_file)
     max_count = (
-        min(total_lines, sample_limit)
-        if sample_limit is not None
-        else total_lines
+        min(total_lines, sample_limit) if sample_limit is not None else total_lines
     )
 
     # 3. Stream records individually from local raw JSONL file

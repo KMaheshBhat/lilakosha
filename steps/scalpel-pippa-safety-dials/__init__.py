@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Clear Safety Dials (PIPPA).
+    LilaKosha Scalpel Pass: Clear Safety Dials (PIPPA) (v2).
     Iterates through standalone Common Document Model (CDM) records, purging
     computed safety metrics from the items timeline and tracking annotations
     to allow clean evaluations. Supports optional runtime range filtering
@@ -37,30 +37,41 @@ def run(config: dict) -> None:
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
 
-    # Format localized diagnostic headers for clear Operator Experience (OX)
+    # v2: Pre-filter record_files by file.stem before opening/parsing
     if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (PIPPA Safety Dials):\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Safety Dials v2):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
         )
     else:
         logger.info(
             "🔬 Scalpel Scope: Global Sweep (No lexical range parameters provided)"
         )
 
-    logger.info(f"Inspecting {len(record_files)} files for safety metrics clearance...")
+    logger.info(
+        f"Inspecting {len(record_files)} files for safety metrics clearance (v2)..."
+    )
 
     # 3. Main Operational Execution Loop
     purged_count = 0
     skipped_range_count = 0
+    error_count = 0
 
     target_categories = {"sexuality", "violence", "toxicity"}
 
-    for file_path in tqdm(record_files, desc="Processing Scalpel Operation"):
+    for file_path in tqdm(record_files, desc="Processing Scalpel Operation (v2)"):
         record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
 
         # Check floor constraint boundary
+        # (should not happen after pre-filter, but keep for safety)
         if start_uuid and record_uuid < str(start_uuid):
             skipped_range_count += 1
             continue
@@ -108,9 +119,7 @@ def run(config: dict) -> None:
 
                 # 5. Commit modification atomicity directly to local slot
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(
-                        document.model_dump_json(indent=2, by_alias=True)
-                    )
+                    f.write(document.model_dump_json(indent=2, by_alias=True))
 
                 purged_count += 1
 
@@ -119,7 +128,9 @@ def run(config: dict) -> None:
                 f"Failed surgical safety metrics purge for document "
                 f"{file_path.name}: {e}"
             )
+            error_count += 1
 
-    logger.info("✅ Scalpel pass completed.")
+    logger.info("✅ Scalpel pass (v2) completed.")
     logger.info(f"  Purged: {purged_count} records.")
     logger.info(f"  Skipped out-of-range: {skipped_range_count} records.")
+    logger.info(f"  Errors: {error_count} records.")

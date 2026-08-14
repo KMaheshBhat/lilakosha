@@ -57,7 +57,8 @@ def run(config: dict) -> None:
         logger.info(f"UUID at position {i + 1}: {uuid_1001}")
 
     logger.info("-" * 60)
-    logger.info(f"Stop UUID: {sorted_records[-1]['uuid']} "
+    logger.info(
+        f"Stop UUID: {sorted_records[-1]['uuid']} "
         f"(Source: {sorted_records[-1].get('source', 'unknown')})"
     )
 
@@ -79,9 +80,7 @@ def run(config: dict) -> None:
                 f"  └─ Start UUID (pos {range_start_idx + 1}): "
                 f"{sorted_records[range_start_idx]['uuid']}"
             )
-            logger.info(
-                f"  └─ End UUID   (pos {idx}): {prev_rec['uuid']}"
-            )
+            logger.info(f"  └─ End UUID   (pos {idx}): {prev_rec['uuid']}")
             logger.info("-" * 40)
 
             current_source = src
@@ -94,8 +93,5 @@ def run(config: dict) -> None:
         f"  └─ Start UUID (pos {range_start_idx + 1}): "
         f"{sorted_records[range_start_idx]['uuid']}"
     )
-    logger.info(
-        f"  └─ End UUID   (pos {total_records}): "
-        f"{sorted_records[-1]['uuid']}"
-    )
+    logger.info(f"  └─ End UUID   (pos {total_records}): {sorted_records[-1]['uuid']}")
     logger.info("=" * 60)

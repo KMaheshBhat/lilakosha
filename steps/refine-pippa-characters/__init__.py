@@ -14,11 +14,17 @@ from cdm.core import (
     PronounSet,
     ResolvedMeta,
 )
-from cdm.meta import add_annotation, update_meta
+from cdm.meta import add_annotation, remove_annotation, update_meta
 from cdm.refine import CharacterSynthesisResponse
 from inference import Message, OpenAIInference
 
 logger = logging.getLogger(__name__)
+
+
+class InferenceBudgetExhausted(Exception):
+    """Internal exception to cleanly unwind execution loops."""
+
+    pass
 
 
 def load_jinja_templates(templates: list[str]) -> dict[str, str]:
@@ -37,7 +43,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Refinement Pass: Character Synthesis (PIPPA).
+    LilaKosha Refinement Pass: Character Synthesis (PIPPA) (v2).
     Operates incrementally over discrete CDM Document records using an inline
     idempotency check, resolving pronouns and updating the sealed identity registry.
     """
@@ -67,18 +73,28 @@ def run(config: dict) -> None:
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
 
+    # v2: Pre-filter record_files by file.stem before opening/parsing
     if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (PIPPA Characters):\n"
+            f"🎯 Targeted Refinement Scope Activated (PIPPA Characters v2):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
         )
     else:
         logger.info(
             "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
         )
 
-    logger.info(f"Inspecting {len(record_files)} records for Character Synthesis...")
+    logger.info(
+        f"Inspecting {len(record_files)} records for Character Synthesis (v2)..."
+    )
 
     skipped_range_count = 0
     binding = config["bindings"]["refine-pippa-characters"]
@@ -88,180 +104,223 @@ def run(config: dict) -> None:
     inference = OpenAIInference.from_service(service)
     requests_per_minute = service.get("requests_per_minute")
     next_request_time: float | None = None
+    max_inference_budget = binding.get("max_inference_budget")
+    inference_counter = 0
 
-    for file_path in tqdm(record_files, desc="Refining Canvas Character Profiles"):
-        record_uuid = file_path.stem
+    processed_count = 0
+    error_count = 0
 
-        # Check floor constraint boundary
-        if start_uuid and record_uuid < str(start_uuid):
-            skipped_range_count += 1
-            continue
+    try:
+        for file_path in tqdm(
+            record_files, desc="Refining Canvas Character Profiles (v2)"
+        ):
+            record_uuid = file_path.stem
 
-        # Check ceiling constraint boundary
-        if stop_uuid and record_uuid > str(stop_uuid):
-            skipped_range_count += 1
-            continue
-
-        try:
-            # 1. Load the standalone canvas document
-            with open(file_path, "r", encoding="utf-8") as f:
-                document = Document.model_validate_json(f.read())
-
-            resolved = document.meta.resolved or ResolvedMeta()
-            source = document.meta.source or {}
-
-            # Idempotency Check:
-            # Skip if a character profile item for the user already exists
-            already_refined = any(
-                item.kind == "character" and getattr(item, "entity_id", None) == "user"
-                for item in document.items
-            )
-            if already_refined:
+            # Check floor constraint boundary
+            # (should not happen after pre-filter, but keep for safety)
+            if start_uuid and record_uuid < str(start_uuid):
+                skipped_range_count += 1
                 continue
 
-            # Generate structured prompt inputs from templates
-            user_prompt = user_tmpl.render(session=document)
-            system_prompt = system_tmpl.render(session=document)
+            # Check ceiling constraint boundary
+            if stop_uuid and record_uuid > str(stop_uuid):
+                skipped_range_count += 1
+                continue
 
-            if requests_per_minute and next_request_time is not None:
-                now = time.monotonic()
-                if now < next_request_time:
-                    time.sleep(next_request_time - now)
+            doc_modified = False
 
             try:
-                result = inference.generate(
-                    messages=[
-                        Message.system(system_prompt),
-                        Message.user(user_prompt),
-                    ],
-                    response_model=CharacterSynthesisResponse,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
+                # 1. Load the standalone canvas document
+                with open(file_path, "r", encoding="utf-8") as f:
+                    document = Document.model_validate_json(f.read())
+
+                resolved = document.meta.resolved or ResolvedMeta()
+                source = document.meta.source or {}
+
+                # v2: Source scoping - only process PIPPA records
+                if source.get("source_identity") != "PygmalionAI/PIPPA":
+                    continue
+
+                # Idempotency Check:
+                # Skip if a character profile item for the user already exists
+                already_refined = any(
+                    item.kind == "character"
+                    and getattr(item, "entity_id", None) == "user"
+                    for item in document.items
                 )
-            finally:
-                if requests_per_minute:
-                    next_request_time = time.monotonic() + (60.0 / requests_per_minute)
+                if already_refined:
+                    continue
 
-            extracted_data = result.value
-            reasoning = result.reasoning
-            logger.debug(f"extracted_data: {extracted_data}")
+                # v2: Budget Boundary Verification
+                if max_inference_budget and inference_counter >= max_inference_budget:
+                    raise InferenceBudgetExhausted()
 
-            bot_id = source.get("bot_id", "unknown_bot")
-            identities = [
-                i
-                if isinstance(i, CharacterIdentity)
-                else CharacterIdentity.model_validate(i)
-                for i in source.get("identities", [])
-            ]
+                # Generate structured prompt inputs from templates
+                user_prompt = user_tmpl.render(session=document)
+                system_prompt = system_tmpl.render(session=document)
 
-            for identity in identities:
-                if identity.entity_id == "user":
-                    user_gender_raw = extracted_data.user_character.gender.lower()
-                    resolved_user_gender = (
-                        "male"
-                        if user_gender_raw == "male"
-                        else "female"
-                        if user_gender_raw == "female"
-                        else "neutral"
-                        if user_gender_raw == "neutral"
-                        else "unknown"
+                if requests_per_minute and next_request_time is not None:
+                    now = time.monotonic()
+                    if now < next_request_time:
+                        time.sleep(next_request_time - now)
+
+                try:
+                    result = inference.generate(
+                        messages=[
+                            Message.system(system_prompt),
+                            Message.user(user_prompt),
+                        ],
+                        response_model=CharacterSynthesisResponse,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
                     )
+                finally:
+                    if requests_per_minute:
+                        next_request_time = time.monotonic() + (
+                            60.0 / requests_per_minute
+                        )
 
-                    identity.name = extracted_data.user_character.name
-                    identity.gender = resolved_user_gender
-                    identity.pronouns = PronounSet(
-                        subjective=extracted_data.user_character.pronouns.subjective,
-                        objective=extracted_data.user_character.pronouns.objective,
-                        possessive=extracted_data.user_character.pronouns.possessive,
-                    )
+                extracted_data = result.value
+                reasoning = result.reasoning
+                logger.debug(f"extracted_data: {extracted_data}")
 
-                elif identity.entity_id == bot_id:
-                    bot_gender_raw = extracted_data.bot_character.gender.lower()
-                    resolved_bot_gender = (
-                        "male"
-                        if bot_gender_raw == "male"
-                        else "female"
-                        if bot_gender_raw == "female"
-                        else "neutral"
-                        if bot_gender_raw == "neutral"
-                        else "unknown"
-                    )
+                bot_id = source.get("bot_id", "unknown_bot")
+                identities = [
+                    i
+                    if isinstance(i, CharacterIdentity)
+                    else CharacterIdentity.model_validate(i)
+                    for i in source.get("identities", [])
+                ]
 
-                    identity.name = extracted_data.bot_character.name
-                    identity.gender = resolved_bot_gender
-                    identity.pronouns = PronounSet(
-                        subjective=extracted_data.bot_character.pronouns.subjective,
-                        objective=extracted_data.bot_character.pronouns.objective,
-                        possessive=extracted_data.bot_character.pronouns.possessive,
-                    )
+                for identity in identities:
+                    if identity.entity_id == "user":
+                        user_gender_raw = extracted_data.user_character.gender.lower()
+                        resolved_user_gender = (
+                            "male"
+                            if user_gender_raw == "male"
+                            else "female"
+                            if user_gender_raw == "female"
+                            else "neutral"
+                            if user_gender_raw == "neutral"
+                            else "unknown"
+                        )
 
-            resolved.identities = identities
-            document.meta.resolved = resolved
+                        identity.name = extracted_data.user_character.name
+                        identity.gender = resolved_user_gender
+                        identity.pronouns = PronounSet(
+                            subjective=extracted_data.user_character.pronouns.subjective,
+                            objective=extracted_data.user_character.pronouns.objective,
+                            possessive=extracted_data.user_character.pronouns.possessive,
+                        )
 
-            # Render character descriptions
-            user_character_content = character_detail_tmpl.render(
-                extracted_data.user_character
-            )
-            bot_character_content = character_detail_tmpl.render(
-                extracted_data.bot_character
-            )
+                    elif identity.entity_id == bot_id:
+                        bot_gender_raw = extracted_data.bot_character.gender.lower()
+                        resolved_bot_gender = (
+                            "male"
+                            if bot_gender_raw == "male"
+                            else "female"
+                            if bot_gender_raw == "female"
+                            else "neutral"
+                            if bot_gender_raw == "neutral"
+                            else "unknown"
+                        )
 
-            existing_char_count = sum(
-                1 for item in document.items if item.kind == "character"
-            )
+                        identity.name = extracted_data.bot_character.name
+                        identity.gender = resolved_bot_gender
+                        identity.pronouns = PronounSet(
+                            subjective=extracted_data.bot_character.pronouns.subjective,
+                            objective=extracted_data.bot_character.pronouns.objective,
+                            possessive=extracted_data.bot_character.pronouns.possessive,
+                        )
 
-            bot_character_detail = CharacterItem(
-                id=f"character-{existing_char_count + 1:06d}",
-                kind="character",
-                entity_id=bot_id,
-                content=[
-                    ContentVariant(
-                        name="refine-pippa-characters",
-                        text=bot_character_content.strip(),
-                    )
-                ],
-            )
-            user_character_info = CharacterItem(
-                id=f"character-{existing_char_count + 2:06d}",
-                kind="character",
-                entity_id="user",
-                content=[
-                    ContentVariant(
-                        name="refine-pippa-characters",
-                        text=user_character_content.strip(),
-                    )
-                ],
-            )
+                resolved.identities = identities
+                document.meta.resolved = resolved
 
-            # Insert character profiles at the start of the item list
-            document.items.insert(0, bot_character_detail)
-            document.items.insert(1, user_character_info)
+                # Render character descriptions
+                user_character_content = character_detail_tmpl.render(
+                    extracted_data.user_character
+                )
+                bot_character_content = character_detail_tmpl.render(
+                    extracted_data.bot_character
+                )
 
-            # Append annotation tracking
-            add_annotation(
-                document,
-                kind="refine-pippa-characters",
-                content=(
-                    "refined bot character details and user character info "
-                    "inside registry and timeline"
-                ),
-                reasoning=reasoning,
-            )
+                existing_char_count = sum(
+                    1 for item in document.items if item.kind == "character"
+                )
 
-            # Update document stats and metadata
-            update_meta(document)
+                bot_character_detail = CharacterItem(
+                    id=f"character-{existing_char_count + 1:06d}",
+                    kind="character",
+                    entity_id=bot_id,
+                    content=[
+                        ContentVariant(
+                            name="refine-pippa-characters",
+                            text=bot_character_content.strip(),
+                        )
+                    ],
+                )
+                user_character_info = CharacterItem(
+                    id=f"character-{existing_char_count + 2:06d}",
+                    kind="character",
+                    entity_id="user",
+                    content=[
+                        ContentVariant(
+                            name="refine-pippa-characters",
+                            text=user_character_content.strip(),
+                        )
+                    ],
+                )
 
-            # Commit changes back to disk
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(document.model_dump_json(indent=2, by_alias=True))
+                # Insert character profiles at the start of the item list
+                document.items.insert(0, bot_character_detail)
+                document.items.insert(1, user_character_info)
 
-        except Exception as e:
-            logger.error(
-                f"Failed character extraction pass for canvas "
-                f"document {file_path.name}: {e}"
-            )
+                doc_modified = True
+
+                # Append annotation tracking
+                # v2: Clean annotation hygiene
+                remove_annotation(document, "refine-pippa-characters")
+                add_annotation(
+                    document,
+                    kind="refine-pippa-characters",
+                    content=(
+                        "refined bot character details and user character info "
+                        "inside registry and timeline"
+                    ),
+                    reasoning=reasoning,
+                )
+
+                # Update document stats and metadata
+                update_meta(document)
+
+                # Commit changes back to disk only if modified
+                if doc_modified:
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(document.model_dump_json(indent=2, by_alias=True))
+
+                processed_count += 1
+
+            except InferenceBudgetExhausted:
+                raise
+            except Exception as e:
+                logger.error(
+                    f"Failed character extraction pass for canvas "
+                    f"document {file_path.name}: {e}"
+                )
+                error_count += 1
+                continue
+
+    except InferenceBudgetExhausted:
+        logger.info(
+            f"🛑 Inference quota budget fully consumed "
+            f"({max_inference_budget}/{max_inference_budget} requests allocation). "
+            f"Gracefully terminating execution loops."
+        )
 
     logger.info(
-        f"✅ Character refinement script pass finished. "
-        f"Skipped out-of-range: {skipped_range_count} records."
+        f"✅ Character refinement script pass (v2) finished. "
+        f"Processed: {processed_count}, "
+        f"Skipped (range): {skipped_range_count}, "
+        f"Errors: {error_count}, "
+        f"Total calls executed: {inference_counter}."
     )

@@ -39,7 +39,7 @@ def _check_user_info_health(health: Any) -> bool:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Restore Original Prose (PIPPA).
+    LilaKosha Scalpel Pass: Restore Original Prose (PIPPA) (v2).
     Iterates through standalone Common Document Model (CDM) records, reverting
     third-person narrative mutations back to their original first-person chat strings
     by trimming refined ContentVariants from TurnItem instances.
@@ -67,11 +67,19 @@ def run(config: dict) -> None:
     stop_uuid = params.get("stop_uuid")
     character_reset_sentinel = params.get("character_reset_sentinel", False)
 
+    # v2: Pre-filter record_files by file.stem before opening/parsing
     if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (PIPPA Grammar/Prose):\n"
+            f"🎯 Targeted Scalpel Scope Activated (PIPPA Grammar/Prose v2):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
         )
     else:
         logger.info(
@@ -79,17 +87,19 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"Inspecting {len(record_files)} records for original prose restoration..."
+        f"Inspecting {len(record_files)} records for original prose restoration (v2)..."
     )
 
     # 3. Main Operational Execution Loop
     restored_count = 0
     skipped_range_count = 0
+    error_count = 0
 
-    for file_path in tqdm(record_files, desc="Restoring Original Prose"):
+    for file_path in tqdm(record_files, desc="Restoring Original Prose (v2)"):
         record_uuid = file_path.stem  # Extract the tracking UUIDv7 token string
 
         # Check floor constraint boundary
+        # (should not happen after pre-filter, but keep for safety)
         if start_uuid and record_uuid < str(start_uuid):
             skipped_range_count += 1
             continue
@@ -120,8 +130,7 @@ def run(config: dict) -> None:
 
                 # Check if the refined grammar variant exists
                 has_refined_variant = any(
-                    variant.name == "refine-pippa-grammar"
-                    for variant in content
+                    variant.name == "refine-pippa-grammar" for variant in content
                 )
 
                 if has_refined_variant:
@@ -153,9 +162,7 @@ def run(config: dict) -> None:
 
                 # Commit updates back to disk with alias alignment
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(
-                        document.model_dump_json(indent=2, by_alias=True)
-                    )
+                    f.write(document.model_dump_json(indent=2, by_alias=True))
 
                 restored_count += 1
 
@@ -163,7 +170,9 @@ def run(config: dict) -> None:
             logger.error(
                 f"Failed surgical prose rollback for document {file_path.name}: {e}"
             )
+            error_count += 1
 
-    logger.info("✅ Scalpel original prose restoration complete.")
+    logger.info("✅ Scalpel original prose restoration (v2) complete.")
     logger.info(f"  Restored: {restored_count} records.")
     logger.info(f"  Skipped out-of-range: {skipped_range_count} records.")
+    logger.info(f"  Errors: {error_count} records.")

@@ -21,7 +21,7 @@ def _parse_target_uuids(raw_targets: str | list | None) -> set[str]:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Scalpel Pass: Targeted CDM Record Purge.
+    LilaKosha Purge Pass: Targeted CDM Record Purge.
     Surgically removes specific CDM record file(s) from disk and unregisters
     their mapping entries from the master LedgerIndex.
 
@@ -49,7 +49,7 @@ def run(config: dict) -> None:
 
     if not target_uuids and not start_uuid and not stop_uuid:
         logger.error(
-            "❌ Aborting scalpel operation: No target scope parameters provided! "
+            "❌ Aborting purge operation: No target scope parameters provided! "
             "Please specify 'target_uuid', 'start_uuid', or 'stop_uuid'."
         )
         return
@@ -59,13 +59,13 @@ def run(config: dict) -> None:
     # 3. Determine Execution Mode
     if target_uuids:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (Explicit UUID List):\n"
+            f"🎯 Targeted Purge Scope Activated (Explicit UUID List):\n"
             f"    - Target Count: {len(target_uuids)}\n"
             f"    - UUIDs: {', '.join(sorted(target_uuids))}"
         )
     else:
         logger.info(
-            f"🎯 Targeted Scalpel Scope Activated (Lexical Range):\n"
+            f"🎯 Targeted Purge Scope Activated (Lexical Range):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
             f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
         )
@@ -129,7 +129,7 @@ def run(config: dict) -> None:
                 skipped_range_count += 1
                 continue
 
-            # Execute surgical delete for range item
+            # Execute purge for range item
             try:
                 file_path.unlink(missing_ok=True)
                 ledger_index.delete_record(record_uuid)
@@ -141,7 +141,7 @@ def run(config: dict) -> None:
 
         logger.info(f"  Skipped out-of-range: {skipped_range_count}")
 
-    logger.info("✅ Targeted CDM Scalpel pass complete.")
+    logger.info("✅ Targeted CDM Purge pass complete.")
     logger.info(f"   Purged records: {purged_count}")
     if failed_count > 0:
         logger.error(f"   Failed operations: {failed_count}")

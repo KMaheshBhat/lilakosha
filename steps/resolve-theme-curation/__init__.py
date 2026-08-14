@@ -89,9 +89,7 @@ def run(config: dict) -> None:
                 if not isinstance(raw_tag, str) or not raw_tag.strip():
                     continue
 
-                normalized = (
-                    raw_tag.replace("-", " ").replace("_", " ").strip().lower()
-                )
+                normalized = raw_tag.replace("-", " ").replace("_", " ").strip().lower()
 
                 if normalized in normalized_to_canonical:
                     canonical = normalized_to_canonical[normalized]
@@ -122,11 +120,14 @@ def run(config: dict) -> None:
             else:
                 if sorted_canonical_themes:
                     # Calculate new categorization item ID
-                    existing_cat_count = sum(
-                        1
-                        for item in document.items
-                        if item.kind == "categorization"
-                    ) + 1
+                    existing_cat_count = (
+                        sum(
+                            1
+                            for item in document.items
+                            if item.kind == "categorization"
+                        )
+                        + 1
+                    )
 
                     target_item = CategorizationItem(
                         id=f"categorization-{existing_cat_count:06d}",

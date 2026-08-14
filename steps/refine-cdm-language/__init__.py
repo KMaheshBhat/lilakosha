@@ -6,7 +6,7 @@ from lingua import LanguageDetectorBuilder
 from tqdm import tqdm
 
 from cdm.core import CategorizationItem, Document
-from cdm.meta import add_annotation, update_meta
+from cdm.meta import add_annotation, remove_annotation, update_meta
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +48,7 @@ def detect_document_languages(
 
     # 1. Gather all matching items across the document by item.kind
     target_items = [
-        item for item in doc.items
-        if getattr(item, "kind", None) in target_kinds
+        item for item in doc.items if getattr(item, "kind", None) in target_kinds
     ]
 
     if not target_items:
@@ -71,12 +70,8 @@ def detect_document_languages(
             # Resolve the preferred variant order for this kind;
             # fall back to ["original"] then first available if nothing is configured.
             kind_str = kind if kind is not None else ""
-            variant_prefs = preferred_variants_by_kind.get(
-                kind_str, ["original"]
-            )
-            selected_text = _select_variant_text(
-                content_list, variant_prefs
-            )
+            variant_prefs = preferred_variants_by_kind.get(kind_str, ["original"])
+            selected_text = _select_variant_text(content_list, variant_prefs)
 
             if selected_text:
                 sample_texts.append(selected_text)
@@ -105,7 +100,8 @@ def detect_document_languages(
 
     # 3. Filter by min_confidence threshold
     valid_scores = [
-        (iso, score) for iso, score in max_scores_by_lang.items()
+        (iso, score)
+        for iso, score in max_scores_by_lang.items()
         if score >= min_confidence
     ]
 
@@ -164,7 +160,7 @@ def _select_variant_text(
 
 
 def run(config: dict[str, Any]) -> None:
-    """LilaKosha Pipeline Step: Language Refinement Pass
+    """LilaKosha Pipeline Step: Language Refinement Pass (v2)
 
     Inspects targeted CDM record items, detects languages using lingua-py,
     and attaches/updates a CategorizationItem with category='language'.
@@ -176,6 +172,8 @@ def run(config: dict[str, Any]) -> None:
         preference list is used; falls back to the first variant that has text.
       - start_uuid / stop_uuid: Optional range boundaries for target records.
       - window_size, min_language_confidence, max_languages: lingua-py tuning.
+      - cdm_language_mode: "recompute" (default), "skip-if-present", or
+        "overwrite" to control re-run behavior.
     """
     processed_vol = Path(config["volumes"]["processed"])
     records_dir = processed_vol / "cdm" / "records"
@@ -221,21 +219,23 @@ def run(config: dict[str, Any]) -> None:
     min_language_confidence = params.get("min_language_confidence", 0.05)
     max_languages = params.get("max_languages", 999)
 
+    # v2: Explicit idempotency/recompute mode
+    cdm_language_mode = params.get("cdm_language_mode", "recompute")
+
+    # v2: Pre-filter record_files by file.stem before opening/parsing
     if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (CDM Language):\n"
+            f"🎯 Targeted Refinement Scope Activated (CDM Language v2):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
         )
-        filtered_files: List[Any] = []
-        for file in record_files:
-            stem = file.stem
-            if start_uuid and stem < str(start_uuid):
-                continue
-            if stop_uuid and stem > str(stop_uuid):
-                continue
-            filtered_files.append(file)
-        record_files = filtered_files
     else:
         logger.info(
             "🔬 Refinement Scope: Global Sweep (No lexical range parameters provided)"
@@ -246,11 +246,35 @@ def run(config: dict[str, Any]) -> None:
     )
 
     processed_count = 0
+    skipped_range_count = 0
+    skipped_idempotent_count = 0
+    error_count = 0
 
-    for file_path in tqdm(record_files, desc="Refining CDM Languages"):
+    for file_path in tqdm(record_files, desc="Refining CDM Languages (v2)"):
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 doc = Document.model_validate_json(f.read())
+
+            # v2: Idempotency check based on configured mode
+            existing_item = None
+            for item in doc.items:
+                if (
+                    isinstance(item, CategorizationItem)
+                    or item.kind == "categorization"
+                ) and getattr(item, "category", None) == "language":
+                    existing_item = item
+                    break
+
+            if existing_item:
+                if cdm_language_mode == "skip-if-present":
+                    skipped_idempotent_count += 1
+                    continue
+                elif cdm_language_mode == "overwrite":
+                    # Will overwrite below
+                    pass
+                else:  # "recompute"
+                    # Will overwrite below (default behavior preserved)
+                    pass
 
             # Detect language codes and confidence trace on targeted item kinds
             languages, reasoning_str = detect_document_languages(
@@ -264,16 +288,6 @@ def run(config: dict[str, Any]) -> None:
 
             if not languages:
                 continue
-
-            # Check if a 'language' CategorizationItem already exists
-            existing_item = None
-            for item in doc.items:
-                if (
-                    isinstance(item, CategorizationItem)
-                    or item.kind == "categorization"
-                ) and getattr(item, "category", None) == "language":
-                    existing_item = item
-                    break
 
             if existing_item:
                 existing_item.value = languages
@@ -289,7 +303,8 @@ def run(config: dict[str, Any]) -> None:
                 )
                 doc.items.append(lang_item)
 
-            # Record step annotation trace
+            # v2: Record step annotation trace with clean hygiene
+            remove_annotation(doc, "refine-cdm-language")
             add_annotation(
                 doc,
                 kind="refine-cdm-language",
@@ -308,7 +323,12 @@ def run(config: dict[str, Any]) -> None:
             logger.error(
                 f"Failed processing language detection for {file_path.name}: {e}"
             )
+            error_count += 1
 
     logger.info(
-        f"✅ Language refinement pass complete. Processed {processed_count} records."
+        f"✅ Language refinement pass (v2) complete. "
+        f"Processed: {processed_count}, "
+        f"Skipped (range): {skipped_range_count}, "
+        f"Skipped (idempotent): {skipped_idempotent_count}, "
+        f"Errors: {error_count}"
     )

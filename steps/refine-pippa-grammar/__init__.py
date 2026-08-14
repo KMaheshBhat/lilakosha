@@ -7,7 +7,7 @@ from jinja2 import BaseLoader, Environment
 from tqdm import tqdm
 
 from cdm.core import ContentVariant, Document, TurnItem
-from cdm.meta import add_annotation, has_annotation, update_meta
+from cdm.meta import add_annotation, remove_annotation, update_meta
 from cdm.refine import SingleTurnGrammarResponse
 from inference import Message, OpenAIInference
 
@@ -26,9 +26,7 @@ def load_jinja_templates(templates: list[str]) -> dict[str, str]:
         result = {}
         ref = importlib.resources.files("steps.refine-pippa-grammar.templates")
         for template in templates:
-            template_str = (ref / f"{template}.jinja2").read_text(
-                encoding="utf-8"
-            )
+            template_str = (ref / f"{template}.jinja2").read_text(encoding="utf-8")
             result[template] = template_str.strip()
         return result
     except Exception as e:
@@ -46,10 +44,20 @@ def get_variant_text(item: TurnItem, variant_name: str) -> str | None:
 
 def run(config: dict) -> None:
     """
-    LilaKosha Refinement Pass: Single-Turn Grammar Revision (PIPPA).
+    LilaKosha Refinement Pass: Single-Turn Grammar Revision (PIPPA) (v2).
     Iterates through standalone canvas documents, evaluating and rewriting unrefined
     turns one-by-one into a third-person, past-tense novelistic prose format.
     """
+    # v2: Fail-fast validation of required config and templates
+    try:
+        binding = config["bindings"]["refine-pippa-grammar"]
+        service = config["services"][binding["service"]]
+    except (KeyError, TypeError) as e:
+        logger.error(
+            f"Failed to resolve inference config for refine-pippa-grammar: {e}"
+        )
+        return
+
     templates_str = load_jinja_templates(["system", "user"])
     jinja_env = Environment(loader=BaseLoader())
     user_tmpl = jinja_env.from_string(templates_str["user"])
@@ -74,26 +82,30 @@ def run(config: dict) -> None:
     start_uuid = params.get("start_uuid")
     stop_uuid = params.get("stop_uuid")
 
+    # v2: Pre-filter record_files by file.stem before opening/parsing
     if start_uuid or stop_uuid:
+        record_files = [
+            f
+            for f in record_files
+            if (not start_uuid or f.stem >= str(start_uuid))
+            and (not stop_uuid or f.stem <= str(stop_uuid))
+        ]
         logger.info(
-            f"🎯 Targeted Refinement Scope Activated (PIPPA Grammar):\n"
+            f"🎯 Targeted Refinement Scope Activated (PIPPA Grammar v2):\n"
             f"    - Start Boundary: {start_uuid or '[-∞ Unbound]'}\n"
-            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}"
+            f"    - Stop Boundary:  {stop_uuid or '[+∞ Unbound]'}\n"
+            f"    - Pre-filtered to {len(record_files)} candidate files"
         )
     else:
-        logger.info(
-            "🔬 Refinement Scope: Global Sweep (No parameters provided)"
-        )
+        logger.info("🔬 Refinement Scope: Global Sweep (No parameters provided)")
 
     logger.info(
-        f"Inspecting {len(record_files)} records for PIPPA grammar processing..."
+        f"Inspecting {len(record_files)} records for PIPPA grammar processing (v2)..."
     )
 
     CONTEXT_WINDOW_SIZE = 5
 
     skipped_range_count = 0
-    binding = config["bindings"]["refine-pippa-grammar"]
-    service = config["services"][binding["service"]]
     temperature = binding.get("temperature", 0.3)
     inference = OpenAIInference.from_service(service)
     requests_per_minute = service.get("requests_per_minute")
@@ -103,11 +115,15 @@ def run(config: dict) -> None:
     max_inference_budget = binding.get("max_inference_budget")
     inference_counter = 0
 
+    processed_count = 0
+    error_count = 0
+
     try:
-        for file_path in tqdm(record_files, desc="Processing Canvas Files"):
+        for file_path in tqdm(record_files, desc="Processing Canvas Files (v2)"):
             record_uuid = file_path.stem
 
             # Check floor constraint boundary
+            # (should not happen after pre-filter, but keep for safety)
             if start_uuid and record_uuid < str(start_uuid):
                 skipped_range_count += 1
                 continue
@@ -121,13 +137,16 @@ def run(config: dict) -> None:
                 with open(file_path, "r", encoding="utf-8") as f:
                     document = Document.model_validate_json(f.read())
 
+                # v2: Source scoping - only process PIPPA records
+                source = document.meta.source or {}
+                if source.get("source_identity") != "PygmalionAI/PIPPA":
+                    continue
+
                 history_turns = []
 
                 # Iterate through tracking transaction items
                 progress_desc = f" → {file_path.name[:12]}..."
-                for item in tqdm(
-                    document.items, desc=progress_desc, leave=False
-                ):
+                for item in tqdm(document.items, desc=progress_desc, leave=False):
                     if not isinstance(item, TurnItem):
                         continue
 
@@ -141,6 +160,8 @@ def run(config: dict) -> None:
                         history_turns.append(item)
                         continue
 
+                    doc_modified = False
+
                     try:
                         # 1. Budget Boundary Verification
                         if (
@@ -149,9 +170,7 @@ def run(config: dict) -> None:
                         ):
                             raise InferenceBudgetExhausted()
 
-                        history_context = history_turns[
-                            -CONTEXT_WINDOW_SIZE:
-                        ]
+                        history_context = history_turns[-CONTEXT_WINDOW_SIZE:]
 
                         # Render context parameters passing layout to templates
                         user_prompt = user_tmpl.render(
@@ -165,37 +184,24 @@ def run(config: dict) -> None:
                         current_text = (
                             get_variant_text(item, "refine-pippa-grammar")
                             or get_variant_text(item, "original")
-                            or (
-                                item.content[0].text if item.content else ""
-                            )
+                            or (item.content[0].text if item.content else "")
                         )
 
                         # Estimate raw token overhead (1 word ≈ 1.3 tokens)
-                        est_input_tokens = int(
-                            len(current_text.split()) * 1.3
-                        )
+                        est_input_tokens = int(len(current_text.split()) * 1.3)
 
                         # Establish a baseline floor of 8192 tokens
-                        unbound_max_tokens = max(
-                            8192, int(est_input_tokens * 3.0)
-                        )
+                        unbound_max_tokens = max(8192, int(est_input_tokens * 3.0))
 
-                        if (
-                            requests_per_minute
-                            and next_request_time is not None
-                        ):
+                        if requests_per_minute and next_request_time is not None:
                             now = time.monotonic()
                             if now < next_request_time:
                                 time.sleep(next_request_time - now)
 
                         extra_body_payload = (
-                            {"thinking_budget_tokens": 0}
-                            if allows_extra_body
-                            else {}
+                            {"thinking_budget_tokens": 0} if allows_extra_body else {}
                         )
-                        reasoning_effort = (
-                            "none" if allows_think_control else None
-                        )
+                        reasoning_effort = "none" if allows_think_control else None
 
                         try:
                             result = inference.generate(
@@ -222,13 +228,9 @@ def run(config: dict) -> None:
 
                         # Update turn state inline using ContentVariant lineage
                         if not has_orig:
-                            initial_text = (
-                                item.content[0].text if item.content else ""
-                            )
+                            initial_text = item.content[0].text if item.content else ""
                             item.content.append(
-                                ContentVariant(
-                                    name="original", text=initial_text
-                                )
+                                ContentVariant(name="original", text=initial_text)
                             )
 
                         # Update or insert refine-pippa-grammar variant
@@ -251,25 +253,27 @@ def run(config: dict) -> None:
                                 )
                             )
 
+                        doc_modified = True
+
                         # Append tracking step annotation if not present
-                        if not has_annotation(document, "refine-pippa-grammar"):
-                            add_annotation(
-                                document,
-                                kind="refine-pippa-grammar",
-                                content="step-by-step single-turn third-person",
-                                reasoning=reasoning,
-                            )
+                        # v2: Clean annotation hygiene - always remove then add
+                        remove_annotation(document, "refine-pippa-grammar")
+                        add_annotation(
+                            document,
+                            kind="refine-pippa-grammar",
+                            content="step-by-step single-turn third-person",
+                            reasoning=reasoning,
+                        )
 
                         # Re-materialize layout metric statistics post-mutation
                         update_meta(document)
 
-                        # Flush state to flat file post-mutation
-                        with open(file_path, "w", encoding="utf-8") as f:
-                            f.write(
-                                document.model_dump_json(
-                                    indent=2, by_alias=True
+                        # Flush state to flat file post-mutation only if modified
+                        if doc_modified:
+                            with open(file_path, "w", encoding="utf-8") as f:
+                                f.write(
+                                    document.model_dump_json(indent=2, by_alias=True)
                                 )
-                            )
 
                     except InferenceBudgetExhausted:
                         raise
@@ -282,6 +286,9 @@ def run(config: dict) -> None:
 
                     history_turns.append(item)
 
+                if doc_modified:
+                    processed_count += 1
+
             except InferenceBudgetExhausted:
                 raise
             except Exception as e:
@@ -289,6 +296,7 @@ def run(config: dict) -> None:
                     f"Failed step-by-step grammar pass for canvas "
                     f"document {file_path.name}: {e}"
                 )
+                error_count += 1
 
     except InferenceBudgetExhausted:
         logger.info(
@@ -298,7 +306,9 @@ def run(config: dict) -> None:
         )
 
     logger.info(
-        f"✅ Step-by-step grammar refinement script pass finished. "
-        f"Skipped out-of-range: {skipped_range_count} records. "
+        f"✅ Step-by-step grammar refinement script pass (v2) finished. "
+        f"Processed: {processed_count}, "
+        f"Skipped (range): {skipped_range_count}, "
+        f"Errors: {error_count}, "
         f"Total calls executed: {inference_counter}."
     )

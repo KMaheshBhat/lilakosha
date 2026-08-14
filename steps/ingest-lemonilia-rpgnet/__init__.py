@@ -230,9 +230,7 @@ def extract_author(post: Tag) -> tuple[str, str]:
 
     author_id = ""
 
-    author_link = post.select_one(
-        "a[data-user-id]"
-    )
+    author_link = post.select_one("a[data-user-id]")
 
     if isinstance(author_link, Tag):
         author_id = get_safe_attribute(
@@ -241,9 +239,7 @@ def extract_author(post: Tag) -> tuple[str, str]:
         ).strip()
 
     if not author_name:
-        name_node = post.select_one(
-            '[itemprop="author"] [itemprop="name"]'
-        )
+        name_node = post.select_one('[itemprop="author"] [itemprop="name"]')
 
         if isinstance(name_node, Tag):
             author_name = name_node.get_text(
@@ -259,9 +255,7 @@ def extract_timestamp(post: Tag) -> str:
     Extract the ISO-8601 publication timestamp.
     """
 
-    time_node = post.select_one(
-        "time[datetime]"
-    )
+    time_node = post.select_one("time[datetime]")
 
     if not isinstance(time_node, Tag):
         return ""
@@ -280,25 +274,19 @@ def extract_post_content(post: Tag) -> str:
     HTML -> Markdown is performed later by refine-cdm-html-to-markdown.
     """
 
-    user_content = post.select_one(
-        "div.message-userContent"
-    )
+    user_content = post.select_one("div.message-userContent")
 
     if not isinstance(user_content, Tag):
         return ""
 
-    message_body = user_content.select_one(
-        "article.message-body"
-    )
+    message_body = user_content.select_one("article.message-body")
 
     if isinstance(message_body, Tag):
         content_node = message_body
     else:
         content_node = user_content
 
-    wrapper = content_node.select_one(
-        "div.bbWrapper"
-    )
+    wrapper = content_node.select_one("div.bbWrapper")
 
     if isinstance(wrapper, Tag):
         content_node = wrapper
@@ -339,61 +327,41 @@ def extract_posts_from_html(
         "html.parser",
     )
 
-    thread_title = extract_thread_title(
-        soup
-    )
+    thread_title = extract_thread_title(soup)
 
     posts: List[Dict[str, Any]] = []
 
-    post_articles = soup.select(
-        "article.message.message--post"
-    )
+    post_articles = soup.select("article.message.message--post")
 
     for post_index, article in enumerate(
         post_articles,
         start=1,
     ):
-        post_id = extract_post_id(
-            article
-        )
+        post_id = extract_post_id(article)
 
         if not post_id:
             logger.warning(
-                "Skipping RPGnet post without post ID "
-                "(post index %s)",
+                "Skipping RPGnet post without post ID (post index %s)",
                 post_index,
             )
             continue
 
-        thread_url = extract_thread_url(
-            article
-        )
+        thread_url = extract_thread_url(article)
 
-        thread_id, thread_slug = (
-            extract_thread_identity(
-                thread_url
-            )
-        )
+        thread_id, thread_slug = extract_thread_identity(thread_url)
 
         if not thread_id:
             logger.warning(
-                "Skipping RPGnet post %s: "
-                "unable to determine thread identity",
+                "Skipping RPGnet post %s: unable to determine thread identity",
                 post_id,
             )
             continue
 
-        author_id, author_name = extract_author(
-            article
-        )
+        author_id, author_name = extract_author(article)
 
-        timestamp = extract_timestamp(
-            article
-        )
+        timestamp = extract_timestamp(article)
 
-        post_html = extract_post_content(
-            article
-        )
+        post_html = extract_post_content(article)
 
         if not post_html:
             logger.warning(
@@ -458,9 +426,7 @@ def rebuild_thread_sequence(
     """
 
     narrative_items = [
-        item
-        for item in document.items
-        if isinstance(item, NarrativeItem)
+        item for item in document.items if isinstance(item, NarrativeItem)
     ]
 
     def sort_key(
@@ -501,22 +467,14 @@ def rebuild_thread_sequence(
             numeric_post_id,
         )
 
-    narrative_items.sort(
-        key=sort_key
-    )
+    narrative_items.sort(key=sort_key)
 
-    narrative_item_ids = [
-        item.id
-        for item in narrative_items
-    ]
+    narrative_item_ids = [item.id for item in narrative_items]
 
     document.items = [
         item
         for item in document.items
-        if not (
-            isinstance(item, SequenceItem)
-            and item.id == "seq-thread-000001"
-        )
+        if not (isinstance(item, SequenceItem) and item.id == "seq-thread-000001")
     ]
 
     document.items.append(
@@ -549,21 +507,14 @@ def reconcile_thread(
         (document_changed, newly_added_post_count)
     """
 
-    native_thread_key = (
-        f"rpgnet:thread:{thread_id}"
-    )
+    native_thread_key = f"rpgnet:thread:{thread_id}"
 
     target_uuid = ledger_index.get_uuid(
         "lemonilia-rpgnet",
         native_thread_key,
     )
 
-    target_file = (
-        records_dir
-        / f"{target_uuid}.json"
-        if target_uuid
-        else None
-    )
+    target_file = records_dir / f"{target_uuid}.json" if target_uuid else None
 
     document: Document
     is_new_document = False
@@ -572,18 +523,13 @@ def reconcile_thread(
     # Load existing document
     # ------------------------------------------------------------------
 
-    if (
-        target_file is not None
-        and target_file.exists()
-    ):
+    if target_file is not None and target_file.exists():
         with open(
             target_file,
             "r",
             encoding="utf-8",
         ) as handle:
-            document = Document(
-                **json.load(handle)
-            )
+            document = Document(**json.load(handle))
 
         if document.meta.annotations is None:
             document.meta.annotations = []
@@ -597,14 +543,9 @@ def reconcile_thread(
 
         first_post = thread_posts[0]
 
-        thread_slug = first_post[
-            "thread_slug"
-        ]
+        thread_slug = first_post["thread_slug"]
 
-        canonical_thread_url = (
-            f"/index.php?threads/"
-            f"{thread_slug}.{thread_id}/"
-        )
+        canonical_thread_url = f"/index.php?threads/{thread_slug}.{thread_id}/"
 
         metadata_payload: Dict[str, Any] = {
             "section_url": section_url,
@@ -619,10 +560,7 @@ def reconcile_thread(
             meta=metadata_payload,
         )
 
-        target_file = (
-            records_dir
-            / f"{target_uuid}.json"
-        )
+        target_file = records_dir / f"{target_uuid}.json"
 
         meta_obj = DocumentMeta()
 
@@ -659,39 +597,26 @@ def reconcile_thread(
     narrative_item_ids: List[str] = []
 
     for item in document.items:
-
         if not isinstance(
             item,
             NarrativeItem,
         ):
             continue
 
-        narrative_item_ids.append(
-            item.id
-        )
+        narrative_item_ids.append(item.id)
 
         for variant in item.content:
-
             if variant.name != "original":
                 continue
 
-            extra_fields = (
-                variant.model_extra
-                or {}
-            )
+            extra_fields = variant.model_extra or {}
 
-            post_id = extra_fields.get(
-                "post_id"
-            )
+            post_id = extra_fields.get("post_id")
 
             if post_id:
-                post_id_to_item[
-                    str(post_id)
-                ] = item
+                post_id_to_item[str(post_id)] = item
 
-    next_counter = get_next_narrative_counter(
-        narrative_item_ids
-    )
+    next_counter = get_next_narrative_counter(narrative_item_ids)
 
     new_posts_added = False
     posts_updated = False
@@ -702,34 +627,20 @@ def reconcile_thread(
     # ------------------------------------------------------------------
 
     for post in thread_posts:
+        post_id = str(post["post_id"])
 
-        post_id = str(
-            post["post_id"]
-        )
-
-        existing_item = (
-            post_id_to_item.get(
-                post_id
-            )
-        )
+        existing_item = post_id_to_item.get(post_id)
 
         # --------------------------------------------------------------
         # Existing post: reconcile
         # --------------------------------------------------------------
 
         if existing_item is not None:
-
-            for index, variant in enumerate(
-                existing_item.content
-            ):
-
+            for index, variant in enumerate(existing_item.content):
                 if variant.name != "original":
                     continue
 
-                extra_fields = (
-                    variant.model_extra
-                    or {}
-                )
+                extra_fields = variant.model_extra or {}
 
                 old_text = variant.text
 
@@ -768,44 +679,23 @@ def reconcile_thread(
                     )
                 )
 
-                new_author_id = str(
-                    post["author_id"]
-                    or ""
-                )
+                new_author_id = str(post["author_id"] or "")
 
-                new_author_name = str(
-                    post["author"]
-                    or ""
-                )
+                new_author_name = str(post["author"] or "")
 
-                new_timestamp = str(
-                    post["timestamp"]
-                    or ""
-                )
+                new_timestamp = str(post["timestamp"] or "")
 
-                new_post_url = str(
-                    post["post_url"]
-                    or ""
-                )
+                new_post_url = str(post["post_url"] or "")
 
-                new_thread_url = str(
-                    post["thread_url"]
-                    or ""
-                )
+                new_thread_url = str(post["thread_url"] or "")
 
                 changed = (
-                    old_text
-                    != post["text"]
-                    or old_author_id
-                    != new_author_id
-                    or old_author_name
-                    != new_author_name
-                    or old_timestamp
-                    != new_timestamp
-                    or old_post_url
-                    != new_post_url
-                    or old_thread_url
-                    != new_thread_url
+                    old_text != post["text"]
+                    or old_author_id != new_author_id
+                    or old_author_name != new_author_name
+                    or old_timestamp != new_timestamp
+                    or old_post_url != new_post_url
+                    or old_thread_url != new_thread_url
                 )
 
                 if changed:
@@ -824,9 +714,7 @@ def reconcile_thread(
                         },
                     )
 
-                    existing_item.content[
-                        index
-                    ] = updated_variant
+                    existing_item.content[index] = updated_variant
 
                     posts_updated = True
 
@@ -837,10 +725,7 @@ def reconcile_thread(
         # --------------------------------------------------------------
 
         else:
-
-            item_id = (
-                f"narrative-{next_counter:06d}"
-            )
+            item_id = f"narrative-{next_counter:06d}"
 
             next_counter += 1
 
@@ -865,17 +750,11 @@ def reconcile_thread(
                 ],
             )
 
-            document.items.append(
-                narrative_item
-            )
+            document.items.append(narrative_item)
 
-            narrative_item_ids.append(
-                item_id
-            )
+            narrative_item_ids.append(item_id)
 
-            post_id_to_item[
-                post_id
-            ] = narrative_item
+            post_id_to_item[post_id] = narrative_item
 
             new_posts_added = True
             newly_added_posts += 1
@@ -884,11 +763,7 @@ def reconcile_thread(
     # Rebuild ordered thread sequence
     # ------------------------------------------------------------------
 
-    if (
-        is_new_document
-        or new_posts_added
-        or posts_updated
-    ):
+    if is_new_document or new_posts_added or posts_updated:
         rebuild_thread_sequence(
             document,
             thread_id,
@@ -899,16 +774,8 @@ def reconcile_thread(
     # Append ingestion lineage annotation
     # ------------------------------------------------------------------
 
-    if (
-        is_new_document
-        or new_posts_added
-        or posts_updated
-    ):
-        status = (
-            "created"
-            if is_new_document
-            else "reconciled"
-        )
+    if is_new_document or new_posts_added or posts_updated:
+        status = "created" if is_new_document else "reconciled"
 
         if document.meta.annotations is None:
             document.meta.annotations = []
@@ -928,9 +795,7 @@ def reconcile_thread(
     # Update CDM materialized metadata
     # ------------------------------------------------------------------
 
-    update_meta(
-        document
-    )
+    update_meta(document)
 
     # ------------------------------------------------------------------
     # Write CDM document
@@ -949,9 +814,7 @@ def reconcile_thread(
         )
 
     return (
-        is_new_document
-        or new_posts_added
-        or posts_updated,
+        is_new_document or new_posts_added or posts_updated,
         newly_added_posts,
     )
 
@@ -979,7 +842,6 @@ def process_batch(
     skipped_rows = 0
 
     for row in rows:
-
         raw_record = dict(
             zip(
                 column_names,
@@ -994,12 +856,7 @@ def process_batch(
             )
         )
 
-        raw_html = (
-            raw_record.get(
-                "contents"
-            )
-            or ""
-        )
+        raw_html = raw_record.get("contents") or ""
 
         if not raw_html:
             skipped_rows += 1
@@ -1009,9 +866,7 @@ def process_batch(
         # Extract all posts from this source page
         # --------------------------------------------------------------
 
-        incoming_posts = extract_posts_from_html(
-            raw_html
-        )
+        incoming_posts = extract_posts_from_html(raw_html)
 
         if not incoming_posts:
             skipped_rows += 1
@@ -1027,16 +882,13 @@ def process_batch(
         ] = defaultdict(list)
 
         for post in incoming_posts:
-            posts_by_thread[
-                post["thread_id"]
-            ].append(post)
+            posts_by_thread[post["thread_id"]].append(post)
 
         # --------------------------------------------------------------
         # Reconcile each represented thread
         # --------------------------------------------------------------
 
         for thread_id, thread_posts in posts_by_thread.items():
-
             if not thread_id:
                 continue
 
@@ -1084,26 +936,14 @@ def run(config: dict) -> None:
     # 1. Resolve source and destination volumes
     # ------------------------------------------------------------------
 
-    raw_vol = Path(
-        config["volumes"]["raw"]
-    )
+    raw_vol = Path(config["volumes"]["raw"])
 
-    rpgnet_dir = (
-        raw_vol
-        / "raw"
-        / "lemonilia"
-        / "roleplaying-forums-raw"
-    )
+    rpgnet_dir = raw_vol / "raw" / "lemonilia" / "roleplaying-forums-raw"
 
-    parquet_pattern = (
-        rpgnet_dir
-        / "RPGnet--roleplay-by-post-play-forum--part*.parquet"
-    )
+    parquet_pattern = rpgnet_dir / "RPGnet--roleplay-by-post-play-forum--part*.parquet"
 
     parquet_files = list(
-        rpgnet_dir.glob(
-            "RPGnet--roleplay-by-post-play-forum--part*.parquet"
-        )
+        rpgnet_dir.glob("RPGnet--roleplay-by-post-play-forum--part*.parquet")
     )
 
     if not parquet_files:
@@ -1112,19 +952,11 @@ def run(config: dict) -> None:
             "Ensure the 'acquire' step has executed successfully."
         )
 
-    processed_vol = Path(
-        config["volumes"]["processed"]
-    )
+    processed_vol = Path(config["volumes"]["processed"])
 
-    cdm_root = (
-        processed_vol
-        / "cdm"
-    )
+    cdm_root = processed_vol / "cdm"
 
-    records_dir = (
-        cdm_root
-        / "records"
-    )
+    records_dir = cdm_root / "records"
 
     records_dir.mkdir(
         parents=True,
@@ -1135,27 +967,18 @@ def run(config: dict) -> None:
     # 2. Instantiate cross-source LedgerIndex
     # ------------------------------------------------------------------
 
-    mapping_file = (
-        cdm_root
-        / "mapping.jsonl"
-    )
+    mapping_file = cdm_root / "mapping.jsonl"
 
-    ledger_index = LedgerIndex(
-        mapping_file
-    )
+    ledger_index = LedgerIndex(mapping_file)
 
-    timestamp = datetime.now().strftime(
-        "%Y%m%d%H%M%S"
-    )
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
     parameters = config.get(
         "parameters",
         {},
     )
 
-    sample_limit = parameters.get(
-        "limit"
-    )
+    sample_limit = parameters.get("limit")
 
     batch_size = int(
         parameters.get(
@@ -1165,9 +988,7 @@ def run(config: dict) -> None:
     )
 
     if batch_size <= 0:
-        raise ValueError(
-            f"batch_size must be greater than zero, got {batch_size}"
-        )
+        raise ValueError(f"batch_size must be greater than zero, got {batch_size}")
 
     logger.info(
         "Processing local raw RPGnet dataset from %s "
@@ -1188,9 +1009,7 @@ def run(config: dict) -> None:
     limit_clause = ""
 
     if sample_limit is not None:
-        limit_clause = (
-            f" LIMIT {int(sample_limit)}"
-        )
+        limit_clause = f" LIMIT {int(sample_limit)}"
 
     query = f"""
         SELECT
@@ -1204,9 +1023,7 @@ def run(config: dict) -> None:
     # 4. Open DuckDB and stream bounded batches
     # ------------------------------------------------------------------
 
-    con = duckdb.connect(
-        database=":memory:"
-    )
+    con = duckdb.connect(database=":memory:")
 
     processed_documents = 0
     processed_posts = 0
@@ -1214,70 +1031,45 @@ def run(config: dict) -> None:
     processed_source_rows = 0
 
     try:
-        cursor = con.execute(
-            query
-        )
+        cursor = con.execute(query)
 
-        column_names = [
-            description[0]
-            for description in con.description
-        ]
+        column_names = [description[0] for description in con.description]
 
         # Do not fetchall().
         #
         # DuckDB keeps the query cursor alive while we consume it in
         # bounded batches. At most batch_size source rows are materialized
         # here at a time.
-        progress_total = (
-            int(sample_limit)
-            if sample_limit is not None
-            else None
-        )
+        progress_total = int(sample_limit) if sample_limit is not None else None
 
         with tqdm(
             total=progress_total,
             desc="Ingesting & Reconciling RPGnet",
             unit="row",
         ) as progress:
-
             while True:
-
-                rows = cursor.fetchmany(
-                    batch_size
-                )
+                rows = cursor.fetchmany(batch_size)
 
                 if not rows:
                     break
 
-                batch_documents, batch_posts, batch_skipped = (
-                    process_batch(
-                        rows=rows,
-                        column_names=column_names,
-                        records_dir=records_dir,
-                        ledger_index=ledger_index,
-                        timestamp=timestamp,
-                    )
+                batch_documents, batch_posts, batch_skipped = process_batch(
+                    rows=rows,
+                    column_names=column_names,
+                    records_dir=records_dir,
+                    ledger_index=ledger_index,
+                    timestamp=timestamp,
                 )
 
-                processed_source_rows += len(
-                    rows
-                )
+                processed_source_rows += len(rows)
 
-                processed_documents += (
-                    batch_documents
-                )
+                processed_documents += batch_documents
 
-                processed_posts += (
-                    batch_posts
-                )
+                processed_posts += batch_posts
 
-                skipped_rows += (
-                    batch_skipped
-                )
+                skipped_rows += batch_skipped
 
-                progress.update(
-                    len(rows)
-                )
+                progress.update(len(rows))
 
                 logger.info(
                     "RPGnet batch complete: "

@@ -1,6 +1,6 @@
-# LilaKosha-MK1: Scalpel Blueprints
+# LilaKosha-MK1: Purge CDM Record Blueprints
 pipeline:
-  - "scalpel-cdm-record"
+  - "purge-cdm-record"
 
 project:
   name: "LilaKosha"
