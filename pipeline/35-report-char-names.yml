@@ -1,6 +1,6 @@
-# LilaKosha-MK1: Report on Record Health and Statistics
+# LilaKosha-MK1: Report on Character Names and Genders
 pipeline:
-    - "report-char-names"
+    - "report-cdm"
 
 project:
     name: "LilaKosha"
@@ -9,3 +9,7 @@ project:
 
 volumes:
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    report_sections:
+      - char_names

@@ -1,6 +1,6 @@
 # LilaKosha-MK1: Aggregate report on Document.items
 pipeline:
-    - "report-cdm-items"
+    - "report-cdm"
 
 project:
     name: "LilaKosha"
@@ -9,3 +9,7 @@ project:
 
 volumes:
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    report_sections:
+      - items

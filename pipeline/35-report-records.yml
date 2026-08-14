@@ -1,8 +1,6 @@
 # LilaKosha-MK1: Report on Record Health and Statistics
 pipeline:
-    - "report-record-health"
-    - "report-record-stats"
-    - "report-cdm-items"
+    - "report-cdm"
 
 project:
     name: "LilaKosha"
@@ -12,3 +10,9 @@ project:
 volumes:
     raw: "${LILAKOSHA_VOLUME_RAW}"
     processed: "${LILAKOSHA_VOLUME_PROCESSED}"
+
+parameters:
+    report_sections:
+      - health
+      - stats
+      - items
